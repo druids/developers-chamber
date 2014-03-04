@@ -14,6 +14,8 @@ setup(
     packages=find_packages(),
     install_requires=[
         'django>=1.6',
+        'gitpython>=0.3.2.RC1',
+        'git',
     ],
     zip_safe=False
 )
