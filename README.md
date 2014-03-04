@@ -18,9 +18,9 @@ and
 TEMPLATE_CONTEXT_PROCESSORS = (
     'project_info.get_project_info',
 )
-```
 
 PIP_CONFIG = 'pip.json'
+```
 
 ### Create a pip.json (the name depends on you, but must be same in Django configuration)
 
