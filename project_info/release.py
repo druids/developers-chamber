@@ -27,7 +27,7 @@ def release(project_dir, release_type='patch', files=['pip.json'], next_branch='
     g.checkout(next_branch)
 
     current_version = '0.1.0'
-    any_config = os.path.join(pwd, files[0])
+    any_config = os.path.join(project_dir, files[0])
     if any_config and os.path.isfile(any_config):
         handler = open(any_config)
         json_data = json.load(handler)
@@ -61,7 +61,7 @@ def release(project_dir, release_type='patch', files=['pip.json'], next_branch='
     substitution = '"version": "%s"' % str_version
     for f in files:
         try:
-            handler = open(os.path.join(pwd, f), 'r+')
+            handler = open(os.path.join(project_dir, f), 'r+')
             replaced = regexp.sub(substitution, handler.read())
             handler.seek(0)
             handler.write(replaced)
