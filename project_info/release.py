@@ -1,4 +1,3 @@
-from django.conf import settings
 import json
 import os.path
 import git
@@ -8,40 +7,27 @@ import re
 RELEASE_TYPES = ('major', 'minor', 'patch')
 
 
-def release(release_type='patch'):
-
-    config = {
-        'files': ['pip.json'],
-        'next_branch': 'next',
-        'origin_repo': 'origin',
-        'project_dir': settings.PROJECT_DIR
-    }
-    custom = settings.RELEASE_CONFIG or {}
-    config.update(custom)
-
-    origin = config['origin_repo']
-    next_branch = config['next_branch']
-    pwd = config['project_dir']
+def release(project_dir, release_type='patch', files=['pip.json'], next_branch='next', origin='origin'):
 
     if not release_type in RELEASE_TYPES:
         info = release_type, ', '.join(RELEASE_TYPES)
         print 'An invalid release type given: %s \nExpected: %s' % info
         return 1
 
-    if len(config['files']) is 0:
+    if len('files') is 0:
         print 'Given no files to release a version'
         return 2
 
     # GitPython does not support merge --no-ff or what?
-    git_cmd = git.cmd.Git(pwd)
+    git_cmd = git.cmd.Git(project_dir)
 
-    repo = git.Repo(pwd)
+    repo = git.Repo(project_dir)
     g = repo.git
 
     g.checkout(next_branch)
 
     current_version = '0.1.0'
-    any_config = os.path.join(pwd, config['files'][0])
+    any_config = os.path.join(pwd, files[0])
     if any_config and os.path.isfile(any_config):
         handler = open(any_config)
         json_data = json.load(handler)
@@ -73,7 +59,7 @@ def release(release_type='patch'):
 
     regexp = re.compile('"version": "[0-9][0-9]*\.[0-9][0-9]*(\.)?([0-9][0-9]*)?"')
     substitution = '"version": "%s"' % str_version
-    for f in config['files']:
+    for f in files:
         try:
             handler = open(os.path.join(pwd, f), 'r+')
             replaced = regexp.sub(substitution, handler.read())
@@ -84,7 +70,7 @@ def release(release_type='patch'):
             print 'An error occurred: %s' % e
             return 4
 
-    g.add(config['files'])
+    g.add(files)
     g.commit(m=str_version)
     g.tag(str_version)
 
