@@ -9,4 +9,4 @@ def get_project_info(req):
         json_data = open(settings.PIP_CONFIG)
         pip = json.load(json_data)
         json_data.close()
-    return dict(('PROJECT_' + k.upper(), v) for k, v in pip.iteritems())
+    return dict(('PROJECT_' + k.upper(), v) for k, v in pip.items())
