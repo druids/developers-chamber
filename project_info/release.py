@@ -5,17 +5,29 @@ import os.path
 import git
 import re
 import sys
-import operator
 
 
 RELEASE_TYPES = ('major', 'minor', 'patch')
 
 VERSION_RE = re.compile('"version": "[0-9][0-9]*\.[0-9][0-9]*(\.)?([0-9][0-9]*)?"')
 
+
+def inc(num):
+    return num + 1
+
+
+def zero(num):
+    return 0
+
+
+def iden(num):
+    return num
+
+
 VERSION_DELTA = {
-    'major': (1, 0, 0),
-    'minor': (0, 1, 0),
-    'patch': (0, 0, 1),
+    'major': (inc, zero, zero),
+    'minor': (iden, inc, zero),
+    'patch': (iden, iden, inc),
 }
 
 
@@ -44,8 +56,8 @@ def write_version(project_dir, f, substitution, str_version):
 
 
 def compose_version(release_type, current_version):
-    delta = VERSION_DELTA[release_type] if release_type in VERSION_DELTA else VERSION_DELTA['patch']
-    return map(operator.add, current_version, delta)
+    version_func = VERSION_DELTA[release_type] if release_type in VERSION_DELTA else VERSION_DELTA['patch']
+    return (func(current_version[i]) for i, func in enumerate(version_func))
 
 
 def merge_branch(git_cmd, g, branch, no_ff_commit, release_branch, origin):
@@ -90,7 +102,7 @@ def release(project_dir, release_type='patch', files=['pip.json'], next_branch='
         error('An invalid version format given: {}'.format(current_version))
         return 3
 
-    version = compose_version(release_type, map(int, tokens))
+    version = compose_version(release_type, tuple(map(int, tokens)))
     str_version = '.'.join(str(item) for item in version)
     g.pull(origin, next_branch)
 
