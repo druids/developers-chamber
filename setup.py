@@ -14,8 +14,10 @@ setup(
     include_package_data=True,
     packages=find_packages(),
     install_requires=[
-        'django>=1.6',
+        'django>=1.11',
         'gitpython>=0.3.2.RC1',
+        'click==7.0',
     ],
+    scripts=['project_info/bin/project-info.py'],
     zip_safe=False
 )
