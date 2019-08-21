@@ -15,9 +15,14 @@ setup(
     packages=find_packages(),
     install_requires=[
         'django>=1.11',
-        'gitpython>=0.3.2.RC1',
+        'gitpython>=2.1.12',
         'click==7.0',
+        'requests>=2.22.0',
     ],
-    scripts=['project_info/bin/project-info.py'],
+    scripts=[
+        'project_info/bin/release-version.py',
+        'project_info/bin/release-git.py',
+        'project_info/bin/release-bitbucket.py',
+    ],
     zip_safe=False
 )
