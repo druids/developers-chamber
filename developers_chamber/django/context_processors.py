@@ -1,4 +1,4 @@
-from project_info import get_project_info_dict
+from developers_chamber.django import get_project_info_dict
 
 
 def get_project_info(request):

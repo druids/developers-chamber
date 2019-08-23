@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 import click
 
-from project_info.version_utils import bump_to_next_version as bump_to_next_version_func
-from project_info.version_utils import get_next_version, get_version
-from project_info.types import EnumType, ReleaseType
+from developers_chamber.version_utils import bump_to_next_version as bump_to_next_version_func
+from developers_chamber.version_utils import get_next_version, get_version
+from developers_chamber.types import EnumType, ReleaseType
 
 
 @click.group()

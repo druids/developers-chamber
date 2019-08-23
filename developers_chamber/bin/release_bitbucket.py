@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 import click
 
-from project_info.git_utils import get_current_branch_name
-from project_info.bitbucket_utils import create_merge_release_pull_request as create_merge_release_pull_request_func
+from developers_chamber.git_utils import get_current_branch_name
+from developers_chamber.bitbucket_utils import create_merge_release_pull_request as \
+    create_merge_release_pull_request_func
 
 
 @click.group()

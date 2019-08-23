@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 import click
 
-from project_info.git_utils import create_release_branch as create_release_branch_func
-from project_info.git_utils import create_deployment_branch as create_deployment_branch_func
-from project_info.git_utils import checkout_to_release_branch as checkout_to_release_branch_func
-from project_info.git_utils import commit_version as commit_version_func
-from project_info.git_utils import merge_release_branch as merge_release_branch_func
-from project_info.version_utils import get_next_version, get_version
-from project_info.types import EnumType, ReleaseType
+from developers_chamber.git_utils import create_release_branch as create_release_branch_func
+from developers_chamber.git_utils import create_deployment_branch as create_deployment_branch_func
+from developers_chamber.git_utils import checkout_to_release_branch as checkout_to_release_branch_func
+from developers_chamber.git_utils import commit_version as commit_version_func
+from developers_chamber.git_utils import merge_release_branch as merge_release_branch_func
+from developers_chamber.version_utils import get_next_version, get_version
+from developers_chamber.types import EnumType, ReleaseType
 
 
 @click.group()

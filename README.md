@@ -1,5 +1,5 @@
-django-project-info
-===================
+Developers-chamber
+==================
 
 A small plugin which takes a configuration (like Bower or npm) and it provides data via context processors.
 
@@ -9,17 +9,17 @@ Usage
 ### Register plugin in requirements.txt and in you Django configuration
 
 ```python
-https://github.com/lukasrychtecky/django-project-info/tarball/0.1.0#egg=django-project-info-0.1.0
+pip install developers-chamber
 ```
 
 and
 
 ```python
 TEMPLATE_CONTEXT_PROCESSORS = (
-    'project_info.context_processors.get_project_info',
+    'developers_chamber.django.context_processors.get_project_info',
 )
 
-PIP_CONFIG = 'pip.json'
+PIP_CONFIG = 'version.json'
 ```
 
 ### Create a pip.json (the name depends on you, but must be same in Django configuration)
@@ -34,34 +34,20 @@ PIP_CONFIG = 'pip.json'
 
 ### Templates
 
-All values from `pip.json` are available in a template via the context processor. Every key is capitalized and prefixed by PROJECT_, e.g. version becomes PROJECT_VERSION.
+All values from `version.json` are available in a template via the context processor. Every key is capitalized and prefixed by PROJECT_, e.g. version becomes PROJECT_VERSION.
 
 ### Helpers
 
-If you want to get only parsed pip.json file you can use get_project_info_dict
+There are several helpers for development and releasing, you can use it as scripts:
 
-```python
-from project_info import get_project_info_dict
+* release-bitbucket - support creating bitbucket pull-requests
+* release-git - helpers for creating release/deployment branches
+* release-version - helpers for changing project version
 
-get_project_info_dict()
-```
+more informations you will obtain with `--help`:
 
-You can specify pip config file
-
-```python
-get_project_info_dict('pip.json')
-```
-
-If you want to get only project version use
-
-```python
-from project_info import get_version
-
-get_version()
-```
-
-again first parameter can be pip config file
-
-```python
-get_version('pip.json')
+```bash
+release-bitbucket --help
+release-git --help
+release-version --help
 ```
