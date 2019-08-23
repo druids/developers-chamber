@@ -1,0 +1,2 @@
+# Your app in editable mode.
+-e ../
