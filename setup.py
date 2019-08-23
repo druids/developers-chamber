@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='django-project-info',
-    version='0.4.0',
+    version='1.0.0',
     description='A small plugin which takes a configuration (like Bower or npm) and it provides data via context'
     'processors.',
     keywords='django, project-info',
