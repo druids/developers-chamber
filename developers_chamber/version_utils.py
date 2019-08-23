@@ -1,8 +1,6 @@
 import json
 import os
-import git
 import re
-import sys
 
 from click import BadParameter
 
