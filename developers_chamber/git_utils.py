@@ -1,8 +1,6 @@
-import json
 import os
 import git
 import re
-import sys
 
 from git import GitCommandError
 
@@ -39,11 +37,19 @@ def create_deployment_branch(environment, remote_name=None, branch_name=None):
     source_branch_name = repo.head.reference
     deployment_branch_name = 'deploy-{}'.format(environment)
 
+    try:
+        g.branch('-D', deployment_branch_name)
+    except GitCommandError:
+        # Branch not exits
+        pass
+
     g.checkout('HEAD', b=deployment_branch_name)
     g.commit('--allow-empty', message='Deployment of "{}"'.format(source_branch_name))
 
     if remote_name:
-        g.push(remote_name, deployment_branch_name)
+        g.push(remote_name, deployment_branch_name, force=True)
+
+    g.checkout(source_branch_name)
     return deployment_branch_name
 
 
@@ -103,5 +109,4 @@ def merge_release_branch(to_branch_name=None, remote_name=None):
 
 def get_current_branch_name():
     repo = git.Repo(os.getcwd())
-    g = repo.git
-    return repo.head.reference
+    return str(repo.head.reference)

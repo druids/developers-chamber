@@ -16,11 +16,10 @@ setup(
         'gitpython>=2.1.12',
         'click==7.0',
         'requests>=2.22.0',
+        'python-dotenv>=0.10.3',
     ],
     entry_points={'console_scripts': [
-        'release-version=developers_chamber.bin.release_version:cli',
-        'release-git=developers_chamber.bin.release_git:cli',
-        'release-bitbucket=developers_chamber.bin.release_bitbucket:cli',
+        'pydev=developers_chamber.bin.pydev:cli',
     ]},
     zip_safe=False
 )
