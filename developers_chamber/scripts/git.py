@@ -8,6 +8,7 @@ from developers_chamber.git_utils import create_deployment_branch as create_depl
 from developers_chamber.git_utils import checkout_to_release_branch as checkout_to_release_branch_func
 from developers_chamber.git_utils import commit_version as commit_version_func
 from developers_chamber.git_utils import merge_release_branch as merge_release_branch_func
+from developers_chamber.git_utils import bump_version_from_release_branch as bump_version_from_release_branch_func
 from developers_chamber.version_utils import get_next_version, get_version
 from developers_chamber.types import EnumType, ReleaseType
 
@@ -63,6 +64,20 @@ def git_checkout_to_release_branch():
     click.echo(
         'Git is on "{}" branch now'.format(
             checkout_to_release_branch_func()
+        )
+    )
+
+
+@cli.command()
+@click.option('--file',  help='path to the version file', type=str, default=default_version_files, required=True,
+              multiple=True)
+def git_bump_version_from_release_branch(file):
+    """
+    Get version from release branch and bump version files
+    """
+    click.echo(
+        'Version bumped to "{}"'.format(
+            bump_version_from_release_branch_func(file)
         )
     )
 
