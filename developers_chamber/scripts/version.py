@@ -3,8 +3,8 @@ import os
 import click
 
 from developers_chamber.scripts import cli
-from developers_chamber.version_utils import bump_to_next_version as bump_to_next_version_func
-from developers_chamber.version_utils import get_next_version, get_version
+from developers_chamber.version import bump_to_next_version as bump_to_next_version_func
+from developers_chamber.version import get_next_version, get_version
 from developers_chamber.types import EnumType, ReleaseType
 
 

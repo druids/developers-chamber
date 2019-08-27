@@ -3,12 +3,12 @@ import os
 import click
 
 from developers_chamber.scripts import cli
-from developers_chamber.git_utils import create_release_branch as create_release_branch_func
-from developers_chamber.git_utils import create_deployment_branch as create_deployment_branch_func
-from developers_chamber.git_utils import checkout_to_release_branch as checkout_to_release_branch_func
-from developers_chamber.git_utils import commit_version as commit_version_func
-from developers_chamber.git_utils import merge_release_branch as merge_release_branch_func
-from developers_chamber.version_utils import get_next_version, get_version
+from developers_chamber.git import create_release_branch as create_release_branch_func
+from developers_chamber.git import create_deployment_branch as create_deployment_branch_func
+from developers_chamber.git import checkout_to_release_branch as checkout_to_release_branch_func
+from developers_chamber.git import commit_version as commit_version_func
+from developers_chamber.git import merge_release_branch as merge_release_branch_func
+from developers_chamber.version import get_next_version, get_version
 from developers_chamber.types import EnumType, ReleaseType
 
 from .version import default_version_files

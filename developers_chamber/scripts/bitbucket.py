@@ -3,8 +3,8 @@ import os
 import click
 
 from developers_chamber.scripts import cli
-from developers_chamber.git_utils import get_current_branch_name
-from developers_chamber.bitbucket_utils import create_merge_release_pull_request as \
+from developers_chamber.git import get_current_branch_name
+from developers_chamber.bitbucket import create_merge_release_pull_request as \
     create_merge_release_pull_request_func
 
 

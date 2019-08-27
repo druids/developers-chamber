@@ -31,7 +31,7 @@ def create_release_branch(version, release_type, remote_name=None, branch_name=N
     return release_branch_name
 
 
-def create_deployment_branch(environment, remote_name=None, branch_name=None):
+def create_deployment_branch(environment, remote_name=None):
     repo = git.Repo(os.getcwd())
     g = repo.git
     source_branch_name = repo.head.reference
@@ -110,3 +110,16 @@ def merge_release_branch(to_branch_name=None, remote_name=None):
 def get_current_branch_name():
     repo = git.Repo(os.getcwd())
     return str(repo.head.reference)
+
+
+def create_branch(source_branch_name, branch_name, remote_name=None):
+    repo = git.Repo(os.getcwd())
+    g = repo.git
+
+    g.checkout(source_branch_name)
+    if remote_name:
+        g.pull(remote_name, source_branch_name)
+
+    g.checkout('HEAD', b=branch_name)
+
+    return branch_name
