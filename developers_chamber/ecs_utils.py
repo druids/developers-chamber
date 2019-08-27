@@ -1,8 +1,10 @@
+import logging
 import sys
 
 import boto3
 from botocore.client import Config
 
+LOGGER = logging.getLogger()
 
 
 def _get_ecs_client(region):
@@ -21,8 +23,8 @@ def deploy_new_task(cluster, service, task_name, image, region):
         ]
     )
 
-    print('Image: {}'.format(image))
-    print('Old task definition:\n{}'.format(old_task))
+    LOGGER.info('Image: {}'.format(image))
+    LOGGER.info('Old task definition:\n{}'.format(old_task))
 
     definition = old_task['taskDefinition']
     definition['containerDefinitions'][0]['image'] = image
@@ -59,4 +61,4 @@ def stop_service(cluster, service, region):
         desiredCount=0,
     )
 
-    print('Service response:\n{}'.format(response))
+    LOGGER.info('Service response:\n{}'.format(response))
