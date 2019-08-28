@@ -14,12 +14,12 @@ def _get_ecs_client(region):
     )
 
 
-def deploy_new_task(cluster, service, task_name, image, region):
+def deploy_new_task_definition(cluster, service, task_definition, image, region):
     ecs_client = _get_ecs_client(region)
     old_task = ecs_client.describe_task_definition(
-        taskDefinition=task_name,
+        taskDefinition=task_definition,
         include=[
-            'TAGS'
+            'TAGS',
         ]
     )
 
@@ -48,7 +48,7 @@ def deploy_new_task(cluster, service, task_name, image, region):
     ecs_client.update_service(
         cluster=cluster,
         service=service,
-        taskDefinition='{}:{}'.format(task_name, revision),
+        taskDefinition='{}:{}'.format(task_definition, revision),
         forceNewDeployment=True,
     )
 
