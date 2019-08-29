@@ -17,6 +17,7 @@ setup(
         'click==7.0',
         'requests>=2.22.0',
         'python-dotenv>=0.10.3',
+        'boto3',
     ],
     entry_points={'console_scripts': [
         'pydev=developers_chamber.bin.pydev:cli',
