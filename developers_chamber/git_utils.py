@@ -6,10 +6,12 @@ from git import GitCommandError
 
 from click import BadParameter, UsageError
 
+from .version_utils import bump_version
 from .types import ReleaseType
 
 
 DEPLOYMENT_COMMIT_PATTERN = r'^Deployment of "(?P<branch_name>.+)"$'
+RELEASE_BRANCH_PATTERN = r'^(?P<release_type>(release|patch))-(?P<version>[0-9]+\.[0-9]+\.[0-9]+)$'
 
 
 def create_release_branch(version, release_type, remote_name=None, branch_name=None):
@@ -67,6 +69,17 @@ def checkout_to_release_branch(remote_name=None):
     return branch_name
 
 
+def bump_version_from_release_branch(files=['version.json']):
+    repo = git.Repo(os.getcwd())
+    g = repo.git
+
+    RELEASE_BRANCH_PATTERN = re.match(RELEASE_BRANCH_PATTERN, repo.head.reference)
+    if not match:
+        raise UsageError('Invalid release branch')
+    bump_version(match.group('version'), files)
+    return match.group('version')
+
+
 def commit_version(version, files=['version.json'], remote_name=None):
     repo = git.Repo(os.getcwd())
     g = repo.git
@@ -74,13 +87,13 @@ def commit_version(version, files=['version.json'], remote_name=None):
     try:
         g.add(files)
         g.commit(m=str(version))
-    except GitCommandError:
-        raise UsageError('Version files was not changed')
+    except GitCommandError as ex:
+        raise UsageError('Version files was not changed or another git error was raised: {}'.format(ex))
 
     try:
         g.tag(str(version))
-    except GitCommandError:
-        raise UsageError('Tag {} already exists'.format(version))
+    except GitCommandError as ex:
+        raise UsageError('Tag {} already exists or another git error was raised: {}'.format(version, ex))
 
     if remote_name:
         g.push(remote_name, repo.head.reference)
