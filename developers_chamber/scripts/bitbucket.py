@@ -14,15 +14,20 @@ default_destination_branch_name = os.environ.get('BITBUCKET_BRANCH_NAME', 'next'
 default_repository_name = os.environ.get('BITBUCKET_REPOSITORY')
 
 
-@cli.command()
+@cli.group()
+def bitbucket():
+    """Bitbucket commands"""
+
+
+@bitbucket.command()
 @click.option('--username', help='username', type=str, required=True, default=default_username)
 @click.option('--password', help='password', type=str, required=True,
               default=default_password)
-@click.option('--source_branch_name', help='source git branch name', type=str)
-@click.option('--destination_branch_name', help='destination git branch name', type=str, required=True,
+@click.option('--source-branch-name', help='source git branch name', type=str)
+@click.option('--destination-branch-name', help='destination git branch name', type=str, required=True,
               default=default_destination_branch_name)
-@click.option('--repository_name', help='git repository name', type=str, required=True, default=default_repository_name)
-def bitbucket_create_release_pull_request(username, password, source_branch_name, destination_branch_name,
+@click.option('--repository-name', help='git repository name', type=str, required=True, default=default_repository_name)
+def create_release_pull_request(username, password, source_branch_name, destination_branch_name,
                                           repository_name):
     """
     Create new pull request to the bitbucket repository
