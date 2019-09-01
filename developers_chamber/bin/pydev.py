@@ -5,6 +5,7 @@ from developers_chamber.scripts import cli
 from developers_chamber.scripts.bitbucket import *
 from developers_chamber.scripts.ecs import *
 from developers_chamber.scripts.git import *
+from developers_chamber.scripts.docker import *
 from developers_chamber.scripts.version import *
 from dotenv import load_dotenv
 
