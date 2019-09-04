@@ -18,7 +18,7 @@ setup(
         'requests',
         'python-dotenv>=0.10.3',
         'boto3',
-        'docker>=4.0.2',
+        'docker',
     ],
     entry_points={'console_scripts': [
         'pydev=developers_chamber.bin.pydev:cli',
