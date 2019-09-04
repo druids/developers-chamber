@@ -61,3 +61,22 @@ def stop_service(cluster, service, region):
     )
 
     LOGGER.info('Service response:\n{}'.format(response))
+
+
+def run_task(cluster, task_definition, command, name, region):
+    ecs_client = _get_ecs_client(region)
+    response = ecs_client.run_task(
+        cluster=cluster,
+        taskDefinition=task_definition,
+        overrides={
+            'containerOverrides': [
+                {
+                    'name': name,
+                    'command': command.split(' '),
+                },
+            ],
+        },
+        count=1,
+    )
+
+    return response
