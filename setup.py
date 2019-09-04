@@ -15,7 +15,7 @@ setup(
     install_requires=[
         'gitpython>=2.1.12',
         'click==7.0',
-        'requests>=2.22.0',
+        'requests',
         'python-dotenv>=0.10.3',
         'boto3',
         'docker>=4.0.2',
