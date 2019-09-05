@@ -73,7 +73,7 @@ def bump_version_from_release_branch(files=['version.json']):
     repo = git.Repo(os.getcwd())
     g = repo.git
 
-    RELEASE_BRANCH_PATTERN = re.match(RELEASE_BRANCH_PATTERN, repo.head.reference)
+    match = re.match(RELEASE_BRANCH_PATTERN, repo.head.reference)
     if not match:
         raise UsageError('Invalid release branch')
     bump_version(match.group('version'), files)
