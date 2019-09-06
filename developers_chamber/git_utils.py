@@ -36,7 +36,7 @@ def create_release_branch(version, release_type, remote_name=None, branch_name=N
 def create_deployment_branch(environment, remote_name=None, branch_name=None):
     repo = git.Repo(os.getcwd())
     g = repo.git
-    source_branch_name = repo.head.reference
+    source_branch_name = str(repo.head.reference)
     deployment_branch_name = 'deploy-{}'.format(environment)
 
     try:
@@ -73,7 +73,7 @@ def bump_version_from_release_branch(files=['version.json']):
     repo = git.Repo(os.getcwd())
     g = repo.git
 
-    match = re.match(RELEASE_BRANCH_PATTERN, repo.head.reference)
+    match = re.match(RELEASE_BRANCH_PATTERN, str(repo.head.reference))
     if not match:
         raise UsageError('Invalid release branch')
     bump_version(match.group('version'), files)
@@ -96,14 +96,14 @@ def commit_version(version, files=['version.json'], remote_name=None):
         raise UsageError('Tag {} already exists or another git error was raised: {}'.format(version, ex))
 
     if remote_name:
-        g.push(remote_name, repo.head.reference)
+        g.push(remote_name, str(repo.head.reference))
         g.push(remote_name, str(version))
 
 
 def merge_release_branch(to_branch_name=None, remote_name=None):
     repo = git.Repo(os.getcwd())
     g = repo.git
-    source_branch_name = repo.head.reference
+    source_branch_name = str(repo.head.reference)
 
     g.checkout(to_branch_name)
     if remote_name:
