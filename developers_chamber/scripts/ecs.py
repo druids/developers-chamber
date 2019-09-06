@@ -13,6 +13,7 @@ from developers_chamber.ecs_utils import get_tasks_for_service as get_tasks_for_
 from developers_chamber.ecs_utils import get_task_definition_for_service as get_task_definition_for_service_func
 from developers_chamber.ecs_utils import start_service_and_wait_for_tasks_to_start as start_service_and_wait_for_tasks_to_start_func
 from developers_chamber.ecs_utils import stop_service_and_wait_for_tasks_to_stop as stop_service_and_wait_for_tasks_to_stop_func
+from developers_chamber.ecs_utils import migrate_service as migrate_service_func
 from developers_chamber.scripts import cli
 
 
@@ -90,13 +91,13 @@ def run_task_and_wait_for_success(cluster, task_definition, command, name, succe
 
 @ecs.command()
 @click.option('--cluster', help='ECS cluster name', type=str, default=default_cluster, required=True)
+@click.option('--service', help='ECS service name', type=str, required=True)
 @click.option('--command', help='command to run', type=str, required=True)
-@click.option('--name', help='ECS task name', type=str, required=True)
 @click.option('--success-string', help='String that is considered a success code', type=str, default='0', required=True)
 @click.option('--region', help='AWS region', type=str, default=default_region, required=True)
 def migrate_service(cluster, service, command, success_string, region):
     """Run a single task based on service's task definition in AWS ECS and wait for it to stop with success."""
-    run_task_and_wait_for_success_func(cluster, task_definition, command, name, success_string, region)
+    migrate_service_func(cluster, service, command, success_string, region)
 
 @ecs.command()
 @click.option('--cluster', help='ECS cluster name', type=str, default=default_cluster, required=True)
