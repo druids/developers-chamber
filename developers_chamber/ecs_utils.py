@@ -228,7 +228,7 @@ def wait_for_tasks_to_start(cluster, tasks, region):
         raise ClickException(ex)
 
 
-def migrate_service(cluster, service, command, succes_string, region):
+def migrate_service(cluster, service, command, success_string, region):
     ecs_client = _get_ecs_client(region)
     task_definition = get_task_definition_for_service(cluster=cluster, service=service, region=region)
     latest_task_definition = task_definition[:task_definition.rfind(':')]
@@ -241,7 +241,7 @@ def migrate_service(cluster, service, command, succes_string, region):
     
     run_task_and_wait_for_success(
         cluster=cluster, 
-        latest_task_definition=latest_task_definition, 
+        task_definition=latest_task_definition, 
         command=command, 
         name=name, 
         success_string=success_string,
