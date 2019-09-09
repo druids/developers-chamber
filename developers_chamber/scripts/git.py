@@ -25,11 +25,11 @@ def git():
 
 
 @git.command()
-@click.option('--release_type', help='release type', type=EnumType(ReleaseType), required=True)
-@click.option('--file',  help='path to the version file', type=str, default=default_version_files[0], required=True)
-@click.option('--remote-name', help='remote repository name if you want to push the new branch', type=str,
+@click.option('--release_type', '-t', help='release type', type=EnumType(ReleaseType), required=True)
+@click.option('--file', '-f',  help='path to the version file', type=str, default=default_version_files[0], required=True)
+@click.option('--remote-name', '-r', help='remote repository name if you want to push the new branch', type=str,
               default=default_remote_name)
-@click.option('--branch-name', help='branch name if you want to create branch from another repository', type=str,
+@click.option('--branch-name', '-b', help='branch name if you want to create branch from another repository', type=str,
               default=default_branch_name)
 def create_release_branch(release_type, file, remote_name, branch_name):
     """
@@ -47,8 +47,8 @@ def create_release_branch(release_type, file, remote_name, branch_name):
 
 
 @git.command()
-@click.option('--environment', help='deployment environment', type=str, required=True)
-@click.option('--remote-name', help='remote repository name if you want to push the new branch', type=str,
+@click.option('--environment', '-e', help='deployment environment', type=str, required=True)
+@click.option('--remote-name', '-r', help='remote repository name if you want to push the new branch', type=str,
               default=default_remote_name)
 def create_deployment_branch(environment, remote_name):
     """
@@ -74,7 +74,7 @@ def checkout_to_release_branch():
 
 
 @git.command()
-@click.option('--file',  help='path to the version file', type=str, default=default_version_files, required=True,
+@click.option('--file', '-f',  help='path to the version file', type=str, default=default_version_files, required=True,
               multiple=True)
 def bump_version_from_release_branch(file):
     """
@@ -88,9 +88,9 @@ def bump_version_from_release_branch(file):
 
 
 @git.command()
-@click.option('--file',  help='path to the version file', type=str, default=default_version_files, required=True,
+@click.option('--file', '-f',  help='path to the version file', type=str, default=default_version_files, required=True,
               multiple=True)
-@click.option('--remote-name', help='remote repository name if you want to push the new branch', type=str,
+@click.option('--remote-name', '-r', help='remote repository name if you want to push the new branch', type=str,
               default=default_remote_name)
 def commit_version(file, remote_name):
     """
@@ -101,8 +101,8 @@ def commit_version(file, remote_name):
 
 
 @git.command()
-@click.option('--to_branch-name', help='branch name', type=str, required=True)
-@click.option('--remote-name', help='remote repository name if you want to push the new branch', type=str,
+@click.option('--to_branch-name', '-t', help='branch name', type=str, required=True)
+@click.option('--remote-name', '-r', help='remote repository name if you want to push the new branch', type=str,
               default=default_remote_name)
 def merge_release_branch(to_branch_name, remote_name):
     """

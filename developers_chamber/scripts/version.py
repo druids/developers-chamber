@@ -17,9 +17,9 @@ def version():
 
 
 @version.command()
-@click.option('--release-type', help='release type', type=EnumType(ReleaseType), required=True)
-@click.option('--build-hash',  help='hash of the build', type=str)
-@click.option('--file',  help='path to the version file', type=str, default=default_version_files, required=True,
+@click.option('--release-type', '-r', help='release type', type=EnumType(ReleaseType), required=True)
+@click.option('--build-hash', '-h',  help='hash of the build', type=str)
+@click.option('--file', '-f',  help='path to the version file', type=str, default=default_version_files, required=True,
               multiple=True)
 def bump_to_next(release_type, build_hash, file):
     """
@@ -28,9 +28,10 @@ def bump_to_next(release_type, build_hash, file):
     click.echo(bump_to_next_version_func(release_type, build_hash, file))
 
 
-@version.command()
-@click.option('--file', help='path to the version file', type=str, default=default_version_files[0], required=True)
-def print(file):
+@version.command(name='print')
+@click.option('--file', '-f', help='path to the version file', type=str, default=default_version_files[0],
+              required=True)
+def print_version(file):
     """
     Return current project version according to version JSON file
     """
@@ -38,9 +39,10 @@ def print(file):
 
 
 @version.command()
-@click.option('--release-type', help='release type', type=EnumType(ReleaseType), required=True)
-@click.option('--build-hash',  help='hash of the build', type=str)
-@click.option('--file',  help='path to the version file', type=str, default=default_version_files[0], required=True)
+@click.option('--release-type', '-r', help='release type', type=EnumType(ReleaseType), required=True)
+@click.option('--build-hash', '-h',  help='hash of the build', type=str)
+@click.option('--file', '-f',  help='path to the version file', type=str, default=default_version_files[0],
+              required=True)
 def print_next(release_type, build_hash, file):
     """
     Return next version according to input release type, build hash and version JSON file

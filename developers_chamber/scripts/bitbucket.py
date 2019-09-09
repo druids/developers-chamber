@@ -20,15 +20,15 @@ def bitbucket():
 
 
 @bitbucket.command()
-@click.option('--username', help='username', type=str, required=True, default=default_username)
-@click.option('--password', help='password', type=str, required=True,
+@click.option('--username', '-u', help='username', type=str, required=True, default=default_username)
+@click.option('--password', '-p', help='password', type=str, required=True,
               default=default_password)
-@click.option('--source-branch-name', help='source git branch name', type=str)
-@click.option('--destination-branch-name', help='destination git branch name', type=str, required=True,
+@click.option('--source-branch-name', '-s', help='source git branch name', type=str)
+@click.option('--destination-branch-name', '-d', help='destination git branch name', type=str, required=True,
               default=default_destination_branch_name)
-@click.option('--repository-name', help='git repository name', type=str, required=True, default=default_repository_name)
-def create_release_pull_request(username, password, source_branch_name, destination_branch_name,
-                                          repository_name):
+@click.option('--repository-name', '-r', help='git repository name', type=str, required=True,
+              default=default_repository_name)
+def create_release_pull_request(username, password, source_branch_name, destination_branch_name, repository_name):
     """
     Create new pull request to the bitbucket repository
     """
