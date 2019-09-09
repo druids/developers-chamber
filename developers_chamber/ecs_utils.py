@@ -255,6 +255,7 @@ def migrate_service(cluster, service, command, success_string, region):
     ecs_client = _get_ecs_client(region)
     task_definition = get_task_definition_for_service(cluster=cluster, service=service, region=region)
     latest_task_definition = task_definition[:task_definition.rfind(':')]
+    latest_task_definition_name = latest_task_definition[latest_task_definition.rfind('/')+1:]
     containers = ecs_client.describe_task_definition(taskDefinition=latest_task_definition)['taskDefinition']['containerDefinitions']
     
     if len(containers) != 1:
@@ -264,7 +265,7 @@ def migrate_service(cluster, service, command, success_string, region):
     
     run_task_and_wait_for_success(
         cluster=cluster, 
-        task_definition=latest_task_definition, 
+        task_definition=latest_task_definition_name,
         command=command, 
         name=name, 
         success_string=success_string,
@@ -303,11 +304,11 @@ def run_task_and_wait_for_success(cluster, task_definition, command, name, succe
 
         raise ClickException(response['tasks'][0])
 
-    exit_code = response['tasks'][0]['containers'][0].get('exitCode', UNDEFINED)
-    LOGGER.info('Container exit code: \'{}\''.format(exit_code))
-
     for event in get_log_events(log_group=task_definition, log_stream='ecs/{}/{}'.format(name,task_id), region=region):
         LOGGER.info('[task/{}] {}'.format(task_id, event['message'].rstrip()))
+
+    exit_code = response['tasks'][0]['containers'][0].get('exitCode', UNDEFINED)
+    LOGGER.info('Container exit code: \'{}\''.format(exit_code))
 
     if exit_code == UNDEFINED:
         raise ClickException('Container exit code: \'{}\''.format(exit_code))
