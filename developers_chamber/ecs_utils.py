@@ -1,19 +1,32 @@
 import logging
-
 import boto3
 from botocore.client import Config
 from botocore.exceptions import ClientError
-
 from click import ClickException
 
 LOGGER = logging.getLogger()
-
 
 def _get_ecs_client(region):
     return boto3.client(
         'ecs',
         config=Config(region_name=region),
     )
+
+
+def _get_logs_client(region):
+    return boto3.client(
+        'logs',
+        config=Config(region_name=region),
+    )
+
+
+def get_log_events(log_group, log_stream, region):
+    logs_client = _get_logs_client(region)
+    try:
+        resp = logs_client.get_log_events(logGroupName=log_group, logStreamName=log_stream, limit=10000)
+    except ClientError as ex:
+        raise ClickException(ex)
+    return resp['events']
 
 
 def register_new_task_definition(task_definition, image, region):
@@ -172,22 +185,32 @@ def stop_services(cluster, region):
 def run_task(cluster, task_definition, command, name, region):
     ecs_client = _get_ecs_client(region)
 
-    try: 
-        response = ecs_client.run_task(
-            cluster=cluster,
-            taskDefinition=task_definition,
-            overrides={
-                'containerOverrides': [
-                    {
-                        'name': name,
-                        'command': command.split(' '),
-                    },
-                ],
-            },
-            count=1,
-        )
-    except ClientError as ex:
-        raise ClickException(ex)
+    if command is None:
+        try:
+            response = ecs_client.run_task(
+                cluster=cluster,
+                taskDefinition=task_definition,
+                count=1,
+            )
+        except ClientError as ex:
+            raise ClickException(ex)
+    else:
+        try:
+            response = ecs_client.run_task(
+                cluster=cluster,
+                taskDefinition=task_definition,
+                overrides={
+                    'containerOverrides': [
+                        {
+                            'name': name,
+                            'command': [command]
+                        },
+                    ],
+                },
+                count=1,
+            )
+        except ClientError as ex:
+            raise ClickException(ex)
 
     return response['tasks'][0]['taskArn']
 
@@ -252,22 +275,46 @@ def migrate_service(cluster, service, command, success_string, region):
 def run_task_and_wait_for_success(cluster, task_definition, command, name, success_string, region):
     ecs_client = _get_ecs_client(region)
     task = run_task(cluster=cluster, task_definition=task_definition, command=command, name=name, region=region)
+    task_id = task.split('/')[1]
+
+    LOGGER.info('Running task: \'{}\''.format(task))
+
     wait_for_task_to_stop(cluster=cluster, task=task, region=region)
+
     response = ecs_client.describe_tasks(cluster=cluster, tasks=[task])
 
-    stop_code = response['tasks'][0]['stopCode']
-    LOGGER.info('Task stop code: {}'.format(stop_code))
+    UNDEFINED = 'UNDEFINED'
 
-    if stop_code != 'EssentialContainerExited':
-        stop_reason = response['tasks'][0]['containers'][0]['reason']
-        LOGGER.info('Container stop reason: {}'.format(stop_reason))
-        raise ClickException(stop_reason)
+    task_stop_code = response['tasks'][0].get('stopCode', UNDEFINED)
+    LOGGER.info('Task stop code: \'{}\''.format(task_stop_code))
 
-    exit_code = response['tasks'][0]['containers'][0]['exitCode']
-    LOGGER.info('Container exit code: {}'.format(exit_code))
+    if task_stop_code != 'EssentialContainerExited':
+        contianer_stop_reason = response['tasks'][0]['containers'][0].get('reason', UNDEFINED)
+        LOGGER.info('Container stop reason: \'{}\''.format(contianer_stop_reason))
+
+        if contianer_stop_reason != UNDEFINED:
+            raise ClickException(contianer_stop_reason)
+
+        task_stop_reason = response['tasks'][0].get('stoppedReason', UNDEFINED)
+        LOGGER.info('Task stop reason: \'{}\''.format(task_stop_reason))
+
+        if task_stop_reason != UNDEFINED:
+            raise ClickException(task_stop_reason)
+
+        raise ClickException(response['tasks'][0])
+
+    exit_code = response['tasks'][0]['containers'][0].get('exitCode', UNDEFINED)
+    LOGGER.info('Container exit code: \'{}\''.format(exit_code))
+
+    for event in get_log_events(log_group=task_definition, log_stream='ecs/{}/{}'.format(name,task_id), region=region):
+        LOGGER.info('[task/{}] {}'.format(task_id, event['message'].rstrip()))
+
+    if exit_code == UNDEFINED:
+        raise ClickException('Container exit code: \'{}\''.format(exit_code))
 
     if str(exit_code) != success_string:
-        raise ClickException("Container exit code is not equal to success_string: {} (expected: {})".format(exit_code, success_string))
+        raise ClickException("Container exit code is not equal to success_string: \'{}\' (expected: \'{}\')".format(exit_code, success_string))
+    LOGGER.info('Success')
 
 
 def get_services_arns(cluster, region):

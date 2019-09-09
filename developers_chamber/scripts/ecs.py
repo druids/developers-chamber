@@ -1,5 +1,4 @@
 import os
-
 import click
 
 from developers_chamber.ecs_utils import deploy_new_task_definition as deploy_new_task_definition_func
@@ -81,7 +80,7 @@ def run_task(cluster, task_definition, command, name, region):
 @ecs.command()
 @click.option('--cluster', help='ECS cluster name', type=str, default=default_cluster, required=True)
 @click.option('--task-definition', help='ECS task definition name', type=str, required=True)
-@click.option('--command', help='command to run', type=str, required=True)
+@click.option('--command', help='command to run', type=str, default=None)
 @click.option('--name', help='ECS task name', type=str, required=True)
 @click.option('--success-string', help='String that is considered a success', type=str, default='0', required=True)
 @click.option('--region', help='AWS region', type=str, default=default_region, required=True)
