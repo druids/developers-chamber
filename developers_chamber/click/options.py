@@ -21,3 +21,35 @@ class RequiredIfNotEmpty(click.Option):
                 self.prompt = None
 
         return super().handle_parse_result(ctx, opts, args)
+
+
+class ContainerDirToCopyType(click.ParamType):
+
+    def convert(self, value, param, ctx):
+        try:
+            container_name, container_dir, host_dir = value.split(':')
+            return container_name, container_dir, host_dir
+        except ValueError:
+            self.fail(
+                'Invalid value "{}" format must be "DOCKER_CONTAINER_NAME:CONTAINER_DIRECTORY:HOST_DIRECTORY"'.format(
+                    value
+                ),
+                param,
+                ctx,
+            )
+
+
+class ContaineCommandType(click.ParamType):
+
+    def convert(self, value, param, ctx):
+        try:
+            container_name, command = value.split(':')
+            return container_name, command
+        except ValueError:
+            self.fail(
+                'Invalid value "{}" format must be "DOCKER_CONTAINER_NAME:COMMAND"'.format(
+                    value
+                ),
+                param,
+                ctx,
+            )

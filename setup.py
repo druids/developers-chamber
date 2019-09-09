@@ -19,6 +19,7 @@ setup(
         'python-dotenv>=0.10.3',
         'boto3',
         'docker',
+        'python-hosts',
     ],
     entry_points={'console_scripts': [
         'pydev=developers_chamber.bin.pydev:cli',
