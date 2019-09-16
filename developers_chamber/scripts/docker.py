@@ -14,9 +14,9 @@ def docker():
 
 
 @docker.command()
-@click.option('-u', '--username', help='registry username', type=str, cls=RequiredIfNotEmpty,
+@click.option('--username', '-u', help='registry username', type=str, cls=RequiredIfNotEmpty,
               required_if_empty='password')
-@click.option('-p', '--password', help='registry password', type=str, cls=RequiredIfNotEmpty,
+@click.option('--password', '-p', help='registry password', type=str, cls=RequiredIfNotEmpty,
               required_if_empty='username')
 @click.option('-r', '--registry', help='registry url', type=str, default='hub.docker.com')
 def login(username, password, registry):
@@ -24,14 +24,14 @@ def login(username, password, registry):
 
 
 @docker.command()
-@click.option('-s', '--source-image', help='source image including tag', type=str, required=True)
-@click.option('-t', '--target-image', help='target image including tag', type=str, required=True)
+@click.option('--source-image', '-s', help='source image including tag', type=str, required=True)
+@click.option('--target-image', '-t', help='target image including tag', type=str, required=True)
 def tag(source_image, target_image):
     click.echo(tag_func(source_image, target_image))
 
 
 @docker.command()
-@click.option('-r', '--repository', help='repository', type=str, required=True)
-@click.option('-t', '--tag', help='image tag', type=str, default='latest')
+@click.option('--repository', '-r', help='repository', type=str, required=True)
+@click.option('--tag', '-t', help='image tag', type=str, default='latest')
 def push_image(repository, tag):
     click.echo(push_image_func(repository, tag))
