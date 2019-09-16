@@ -1,7 +1,7 @@
 import logging
 import boto3
 from botocore.client import Config
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, WaiterError
 from click import ClickException
 
 LOGGER = logging.getLogger()
@@ -220,7 +220,7 @@ def wait_for_task_to_stop(cluster, task, region):
     waiter = ecs_client.get_waiter('tasks_stopped')
     try:
         waiter.wait(cluster=cluster, tasks=[task])
-    except ClientError as ex:
+    except (ClientError, WaiterError) as ex:
         raise ClickException(ex)
 
 
@@ -229,7 +229,7 @@ def wait_for_tasks_to_stop(cluster, tasks, region):
     waiter = ecs_client.get_waiter('tasks_stopped')
     try:
         waiter.wait(cluster=cluster, tasks=tasks)
-    except ClientError as ex:
+    except (ClientError, WaiterError) as ex:
         raise ClickException(ex)
 
 
@@ -334,6 +334,11 @@ def stop_service_and_wait_for_tasks_to_stop(cluster, service, region):
     ecs_client = _get_ecs_client(region)
     tasks = get_tasks_for_service(cluster=cluster, service=service, region=region)
     stop_service(cluster=cluster, service=service, region=region)
+
+    if not tasks:
+        LOGGER.info('No active tasks found in service \'{}\''.format(service))
+        return
+
     wait_for_tasks_to_stop(cluster=cluster, tasks=tasks, region=region)
 
 
