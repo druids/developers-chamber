@@ -7,7 +7,7 @@ import shutil
 
 from click import ClickException, BadParameter
 
-from python_hosts import Hosts, HostsEntry
+from python_hosts.hosts import Hosts, HostsEntry
 from python_hosts.exception import UnableToWriteHosts
 
 
