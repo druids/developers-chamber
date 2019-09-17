@@ -13,6 +13,7 @@ def login_client(username, password, registry):
         raise click.UsageError('Login to registry "{}" failed with following message: {}'.format(registry,
                                                                                                  ex.explanation))
 
+
 def tag(source_image, target_image):
     try:
         image = client.images.get(source_image)
