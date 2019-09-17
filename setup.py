@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='developers-chamber',
-    version='0.0.12',
+    version='0.0.13',
     description='A small plugin which help with development, deployment, git',
     keywords='django, skripts, easy live, git, bitbucket, Jira',
     author='Druids team',
@@ -19,7 +19,7 @@ setup(
         'python-dotenv>=0.10.3',
         'boto3==1.9.230',
         'docker==4.0.2',
-        'python-hosts==4.0.6',
+        'python-hosts==0.4.6',
     ],
     entry_points={'console_scripts': [
         'pydev=developers_chamber.bin.pydev:cli',
