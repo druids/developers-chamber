@@ -15,11 +15,11 @@ setup(
     install_requires=[
         'gitpython>=2.1.12',
         'click==7.0',
-        'requests',
+        'requests==2.22.0',
         'python-dotenv>=0.10.3',
-        'boto3',
-        'docker',
-        'python-hosts',
+        'boto3==1.9.230',
+        'docker==4.0.2',
+        'python-hosts==4.0.6',
     ],
     entry_points={'console_scripts': [
         'pydev=developers_chamber.bin.pydev:cli',
