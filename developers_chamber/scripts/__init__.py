@@ -14,8 +14,10 @@ def find_and_replace_command_variable(arg, command):
     match = re.match(r'^--(?P<arg_name>[^=\ ]+)[\ =](?P<arg_value>.+)', arg)
     if match:
         arg_name, arg_value = match.groups()
-        if '$({})'.format(arg_name) in command:
-            return True, command.replace('$({})'.format(arg_name), arg_value)
+        if '${}'.format(arg_name) in command:
+            return True, command.replace('${}'.format(arg_name), arg_value)
+        elif '${}'.format(arg_name.replace('-', '_')) in command:
+            return True, command.replace('${}'.format(arg_name.replace('-', '_')), arg_value)
     return False, command
 
 
@@ -30,7 +32,7 @@ for k, v in json.loads(os.environ.get('ALIASES', '{}')).items():
             alias_args = []
             for arg in ctx.args:
                 replaced_arg, command = find_and_replace_command_variable(arg, command)
-                if replaced_arg:
+                if not replaced_arg:
                     alias_args.append(arg)
 
             cli.main(args=shlex.split(command) + alias_args)

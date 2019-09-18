@@ -4,7 +4,9 @@ from botocore.client import Config
 from botocore.exceptions import ClientError, WaiterError
 from click import ClickException
 
+
 LOGGER = logging.getLogger()
+
 
 def _get_ecs_client(region):
     return boto3.client(
