@@ -8,8 +8,11 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # Load configuration
-load_dotenv(dotenv_path=str(Path.home() / '.pydev' / 'pydev.conf'))
-load_dotenv(dotenv_path=str(Path.cwd() / '.pydev' / 'pydev.conf'))
+for config_path in (Path.home(), Path.cwd()):
+    if (config_path / '.pydev').exists() and (config_path / '.pydev').is_dir():
+        for file in (config_path / '.pydev').iterdir():
+            if file.is_file() and file.suffix == '.conf':
+                load_dotenv(dotenv_path=str(file))
 
 from developers_chamber.scripts import cli
 from developers_chamber.scripts.bitbucket import *
