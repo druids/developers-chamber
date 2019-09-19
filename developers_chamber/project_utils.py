@@ -1,27 +1,17 @@
-import os
-import subprocess
 import logging
-import sys
-
+import os
+import shutil
+import subprocess
 from pathlib import Path
 
-import shutil
-
-from click import ClickException, BadParameter
-
-from python_hosts.hosts import Hosts, HostsEntry
+from click import BadParameter, ClickException
 from python_hosts.exception import UnableToWriteHosts
+from python_hosts.hosts import Hosts, HostsEntry
+
+from developers_chamber.utils import call_command
 
 
 LOGGER = logging.getLogger()
-
-
-def call_command(command):
-    try:
-        LOGGER.info(command if isinstance(command, str) else ' '.join(command))
-        subprocess.check_call(command, stdout=sys.stdout, shell=isinstance(command, str))
-    except subprocess.CalledProcessError:
-        raise ClickException('Command returned error')
 
 
 def get_command_output(command):

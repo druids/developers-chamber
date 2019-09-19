@@ -18,7 +18,6 @@ setup(
         'requests==2.22.0',
         'python-dotenv>=0.10.3',
         'boto3==1.9.230',
-        'docker==4.0.2',
         'python-hosts==0.4.6',
     ],
     entry_points={'console_scripts': [
