@@ -58,11 +58,15 @@ def set_domain(domain):
 @click.option('--compose-file', '-f', help='Compose file', type=str, required=True, multiple=True,
               default=default_compose_files)
 @click.option('--container', '-c', help='Container name', type=str, required=False, multiple=True)
-def build(project_name, compose_file, container):
+@click.option('--container-dir-to-copy', '-d',
+              help='Container dir which will be copied after build in format '
+                   'DOCKER_CONTAINER_NAME:CONTAINER_DIRECTORY:HOST_DIRECTORY',
+              type=ContainerDirToCopyType(), required=True, multiple=True, default=default_containers_dir_to_copy)
+def build(project_name, compose_file, container, container_dir_to_copy):
     """
     Build docker container
     """
-    compose_build(project_name, compose_file, container)
+    compose_build(project_name, compose_file, container, container_dir_to_copy)
 
 
 @project.command(
