@@ -8,7 +8,7 @@ from click import BadParameter, ClickException
 from python_hosts.exception import UnableToWriteHosts
 from python_hosts.hosts import Hosts, HostsEntry
 
-from developers_chamber.utils import call_command
+from developers_chamber.utils import call_command, call_compose_command
 
 
 LOGGER = logging.getLogger()
@@ -40,11 +40,24 @@ def _call_compose_command(project_name, compose_files, command, containers=None,
     compose_command += list(containers) if containers else []
     if extra_command:
         compose_command.append(extra_command)
-    call_command(compose_command)
+    call_compose_command(compose_command)
 
 
-def compose_build(project_name, compose_files, containers=None):
+def compose_build(project_name, compose_files, containers=None, containers_dir_to_copy=None):
+    for container_name, _, host_dir in containers_dir_to_copy:
+        if not containers or container_name in containers:
+            shutil.rmtree(Path.cwd() / host_dir, ignore_errors=True)
+            os.makedirs(Path.cwd() / host_dir)
+
     _call_compose_command(project_name, compose_files, 'build', containers)
+
+    for container_name, container_dir, host_dir in containers_dir_to_copy:
+        if not containers or container_name in containers:
+            call_command([
+                'docker', 'run', '-v', '{}:/copy_tmp'.format(Path.cwd() / host_dir),
+                '{}_{}'.format(project_name, container_name),
+                "cp -r {}/* /copy_tmp/".format(container_dir)
+            ])
 
 
 def compose_run(project_name, compose_files, containers, command):
@@ -85,26 +98,13 @@ def compose_install(project_name, compose_files, var_dirs=None, containers_dir_t
         Path.cwd() / var_dir for var_dir in var_dirs or ()
     ]
 
-    for _, _, host_dir in containers_dir_to_copy:
-        shutil.rmtree(Path.cwd() / host_dir, ignore_errors=True)
-
     for var_dir in var_dirs:
         shutil.rmtree(var_dir, ignore_errors=True)
 
     for var_dir in var_dirs:
         os.makedirs(var_dir)
 
-    for _, _, host_dir in containers_dir_to_copy:
-        os.makedirs(Path.cwd() / host_dir)
-
-    compose_build(project_name, compose_files)
-
-    for container_name, container_dir, host_dir in containers_dir_to_copy:
-        call_command([
-            'docker', 'run', '-v', '{}:/copy_tmp'.format(Path.cwd() / host_dir),
-            '{}_{}'.format(project_name, container_name),
-            "cp -r {}/* /copy_tmp/".format(container_dir)
-        ])
+    compose_build(project_name, compose_files, containers_dir_to_copy=containers_dir_to_copy)
 
     for container_name, command in install_container_commands or ():
         compose_run(project_name, compose_files, [container_name], command)
