@@ -19,6 +19,8 @@ setup(
         'python-dotenv>=0.10.3',
         'boto3==1.9.230',
         'python-hosts==0.4.6',
+        'isort==4.3.21',
+        'coloredlogs==10.0',
     ],
     entry_points={'console_scripts': [
         'pydev=developers_chamber.bin.pydev:cli',
