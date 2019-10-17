@@ -22,30 +22,44 @@ def _get_logs_client(region):
     )
 
 
+def _get_autoscaling_client(region):
+    return boto3.client(
+        'application-autoscaling',
+    )
+
+
 def get_log_events(log_group, log_stream, region):
     logs_client = _get_logs_client(region)
+
     try:
-        resp = logs_client.get_log_events(logGroupName=log_group, logStreamName=log_stream, limit=10000)
+        resp = logs_client.get_log_events(
+            logGroupName=log_group,
+            logStreamName=log_stream,
+            limit=10000,
+        )
     except ClientError as ex:
         raise ClickException(ex)
+
     return resp['events']
 
 
 def register_new_task_definition(task_definition, image, region):
     ecs_client = _get_ecs_client(region)
-    
+
     try:
         old_task_definition = ecs_client.describe_task_definition(
             taskDefinition=task_definition,
             include=[
                 'TAGS',
-            ]
+            ],
         )
     except ClientError as ex:
         raise ClickException(ex)
 
     LOGGER.info('Image: {}'.format(image))
-    LOGGER.info('Old task definition ARN: {}'.format(old_task_definition['taskDefinition']['taskDefinitionArn']))
+    LOGGER.info('Old task definition ARN: {}'.format(
+        old_task_definition['taskDefinition']['taskDefinitionArn']),
+    )
 
     definition = old_task_definition['taskDefinition']
     definition['containerDefinitions'][0]['image'] = image
@@ -69,19 +83,32 @@ def register_new_task_definition(task_definition, image, region):
     except ClientError as ex:
         raise ClickException(ex)
 
-    LOGGER.info('New task definition ARN: {}'.format(response['taskDefinition']['taskDefinitionArn']))
-    return response['taskDefinition']['taskDefinitionArn']
+    new_task_definition_arn = response['taskDefinition']['taskDefinitionArn']
+    LOGGER.info('New task definition ARN: {}'.format(new_task_definition_arn))
+
+    return new_task_definition_arn
 
 
 def get_task_definition_for_service(cluster, service, region):
     ecs_client = _get_ecs_client(region)
-    services = ecs_client.describe_services(cluster=cluster, services=[service])
+
+    services = ecs_client.describe_services(
+        cluster=cluster,
+        services=[service],
+    )
 
     number_of_services = len(services['services'])
+
     if number_of_services > 1:
-        raise ClickException('More than one service with the same name found: {}'.format(len(services['services'])))
+        raise ClickException(
+            'More than one service with the same name found: {}'.format(
+                len(services['services']),
+            )
+        )
     elif number_of_services == 0:
-        raise ClickException('No services with the name \'{}\' found.'.format(service))
+        raise ClickException(
+            'No services with the name \'{}\' found.'.format(service)
+        )
 
     return services['services'][0]['taskDefinition']
 
@@ -97,7 +124,13 @@ def update_service_to_latest_task_definition(cluster, service, region):
     )
     new_task_definition_arn = new_task_definition['taskDefinition']['taskDefinitionArn']
     LOGGER.info('New task definition ARN: {}'.format(new_task_definition_arn))
-    update_service_to_new_task_definition(cluster=cluster, service=service, task_definition=new_task_definition_arn, region=region)
+
+    update_service_to_new_task_definition(
+        cluster=cluster,
+        service=service,
+        task_definition=new_task_definition_arn,
+        region=region,
+    )
 
 
 def update_service_to_new_task_definition(cluster, service, task_definition, region):
@@ -116,14 +149,29 @@ def update_service_to_new_task_definition(cluster, service, task_definition, reg
 
 def deploy_new_task_definition(cluster, service, task_definition, image, region):
     ecs_client = _get_ecs_client(region)
-    new_task_definition = register_new_task_definition(task_definition, image, region)
-    update_service_to_new_task_definition(cluster=cluster, service=service, task_definition=new_task_definition, region=region)
+
+    new_task_definition = register_new_task_definition(task_definition=task_definition, image=image, region=region)
+
+    update_service_to_new_task_definition(
+        cluster=cluster,
+        service=service,
+        task_definition=new_task_definition,
+        region=region,
+    )
 
 
 def start_service(cluster, service, count, region):
+    if count is None:
+        try:
+            count = get_min_capacity_for_service(cluster=cluster, service=service, region=region)
+        except ClickException as ex:
+            raise ClickException(
+                'Set explicit count or set up autoscaling with minimum capacity.\n{}'.format(ex)
+            )
+
     ecs_client = _get_ecs_client(region)
 
-    LOGGER.info('Starting service: {}'.format(service))
+    LOGGER.info('Starting service: {} [count={}]'.format(service, count))
 
     try:
         response = ecs_client.update_service(
@@ -137,16 +185,29 @@ def start_service(cluster, service, count, region):
 
 def start_services(cluster, count, region):
     ecs_client = _get_ecs_client(region)
+
     services = get_services_arns(cluster=cluster, region=region)
 
+    if count is not None and count < 1:
+        raise ClickException('Count must be greater than zero or \'None\' to be determined from autoscaling targets.')
+
     for service in services:
+        count_per_service = count
+        service_name = service.split('/')[1]
+        if count_per_service is None:
+            try:
+                count_per_service = get_min_capacity_for_service(cluster=cluster, service=service_name, region=region)
+            except ClickException as ex:
+                raise ClickException(
+                    'Set explicit count or set up autoscaling with minimum capacity.\n{}'.format(ex)
+                )
 
         LOGGER.info('Starting service: {}'.format(service))
         try:
             ecs_client.update_service(
                 cluster=cluster,
                 service=service,
-                desiredCount=count
+                desiredCount=count_per_service,
             )
         except ClientError as ex:
             raise ClickException(ex)
@@ -154,7 +215,9 @@ def start_services(cluster, count, region):
 
 def stop_service(cluster, service, region):
     ecs_client = _get_ecs_client(region)
+
     LOGGER.info('Stopping service: {}'.format(service))
+
     try:
         response = ecs_client.update_service(
             cluster=cluster,
@@ -167,6 +230,7 @@ def stop_service(cluster, service, region):
 
 def stop_services(cluster, region):
     ecs_client = _get_ecs_client(region)
+
     try:
         services = get_services_arns(cluster=cluster, region=region)
     except ClientError as ex:
@@ -178,7 +242,7 @@ def stop_services(cluster, region):
             ecs_client.update_service(
                 cluster=cluster,
                 service=service,
-                desiredCount=0
+                desiredCount=0,
             )
         except ClientError as ex:
             raise ClickException(ex)
@@ -189,7 +253,7 @@ def run_task(cluster, task_definition, command, name, region):
 
     if command is None:
         try:
-            response = ecs_client.run_task(
+            resp = ecs_client.run_task(
                 cluster=cluster,
                 taskDefinition=task_definition,
                 count=1,
@@ -198,7 +262,7 @@ def run_task(cluster, task_definition, command, name, region):
             raise ClickException(ex)
     else:
         try:
-            response = ecs_client.run_task(
+            resp = ecs_client.run_task(
                 cluster=cluster,
                 taskDefinition=task_definition,
                 overrides={
@@ -214,75 +278,119 @@ def run_task(cluster, task_definition, command, name, region):
         except ClientError as ex:
             raise ClickException(ex)
 
-    return response['tasks'][0]['taskArn']
+    return resp['tasks'][0]['taskArn']
 
 
-def wait_for_task_to_stop(cluster, task, region):
+def wait_for_task_to_stop(cluster, task, timeout, region):
     ecs_client = _get_ecs_client(region)
     waiter = ecs_client.get_waiter('tasks_stopped')
+
+    LOGGER.info('Waiting for task {} to stop.'.format(task))
+
     try:
-        waiter.wait(cluster=cluster, tasks=[task])
+        waiter.wait(
+            cluster=cluster,
+            tasks=[task],
+            WaiterConfig={
+                'Delay': 1,
+                'MaxAttempts': timeout,
+            },
+        )
     except (ClientError, WaiterError) as ex:
         raise ClickException(ex)
 
+    LOGGER.info('Task stopped.')
 
-def wait_for_tasks_to_stop(cluster, tasks, region):
+
+def wait_for_tasks_to_stop(cluster, tasks, timeout, region):
     ecs_client = _get_ecs_client(region)
     waiter = ecs_client.get_waiter('tasks_stopped')
+
+    LOGGER.info('Waiting for tasks {} to stop.'.format(tasks))
+
     try:
-        waiter.wait(cluster=cluster, tasks=tasks)
+        waiter.wait(
+            cluster=cluster,
+            tasks=tasks,
+            WaiterConfig={
+                'Delay': 1,
+                'MaxAttempts': timeout,
+            },
+        )
     except (ClientError, WaiterError) as ex:
         raise ClickException(ex)
+
+    LOGGER.info('All tasks stopped.')
 
 
 def wait_for_task_to_start(cluster, task, region):
     ecs_client = _get_ecs_client(region)
     waiter = ecs_client.get_waiter('tasks_running')
+
+    LOGGER.info('Waiting for task {} to start.'.format(task))
+
     try:
         waiter.wait(cluster=cluster, tasks=[task])
-    except ClientError as ex:
+    except (ClientError, WaiterError) as ex:
         raise ClickException(ex)
 
 
 def wait_for_tasks_to_start(cluster, tasks, region):
     ecs_client = _get_ecs_client(region)
     waiter = ecs_client.get_waiter('tasks_running')
+
+    LOGGER.info('Waiting for tasks {} to start.'.format(tasks))
+
     try:
         waiter.wait(cluster=cluster, tasks=tasks)
-    except ClientError as ex:
+    except (ClientError, WaiterError) as ex:
         raise ClickException(ex)
 
 
-def migrate_service(cluster, service, command, success_string, region):
+def migrate_service(cluster, service, command, success_string, timeout, region):
     ecs_client = _get_ecs_client(region)
+
     task_definition = get_task_definition_for_service(cluster=cluster, service=service, region=region)
+
     latest_task_definition = task_definition[:task_definition.rfind(':')]
-    latest_task_definition_name = latest_task_definition[latest_task_definition.rfind('/')+1:]
-    containers = ecs_client.describe_task_definition(taskDefinition=latest_task_definition)['taskDefinition']['containerDefinitions']
-    
-    if len(containers) != 1:
-        raise ClickException('Exactly one container is allowed to be specified in service.\nNumber of containers specified: {}'.format(len(containers)))
-    
-    name = containers[0]['name']
-    
+    latest_task_definition_name = latest_task_definition[latest_task_definition.rfind('/') + 1:]
+
+    resp = ecs_client.describe_task_definition(taskDefinition=latest_task_definition)
+    container_definitions = resp['taskDefinition']['containerDefinitions']
+
+    if len(container_definitions) != 1:
+        raise ClickException(
+            ('Exactly one container is allowed to be specified in service.\n'
+             'Number of containers specified: {}'.format(len(container_definitions)))
+        )
+
+    container_name = container_definitions[0]['name']
+
     run_task_and_wait_for_success(
-        cluster=cluster, 
+        cluster=cluster,
         task_definition=latest_task_definition_name,
-        command=command, 
-        name=name, 
+        command=command,
+        name=container_name,
         success_string=success_string,
-        region=region
+        timeout=timeout,
+        region=region,
     )
 
 
-def run_task_and_wait_for_success(cluster, task_definition, command, name, success_string, region):
+def run_task_and_wait_for_success(cluster, task_definition, command, name, success_string, timeout, region):
     ecs_client = _get_ecs_client(region)
-    task = run_task(cluster=cluster, task_definition=task_definition, command=command, name=name, region=region)
+    task = run_task(
+        cluster=cluster,
+        task_definition=task_definition,
+        command=command,
+        name=name,
+        region=region,
+    )
     task_id = task.split('/')[1]
 
     LOGGER.info('Running task: \'{}\''.format(task))
 
-    wait_for_task_to_stop(cluster=cluster, task=task, region=region)
+    wait_for_task_to_stop(cluster=cluster, task=task, timeout=timeout, region=region)
 
     response = ecs_client.describe_tasks(cluster=cluster, tasks=[task])
 
@@ -306,7 +414,8 @@ def run_task_and_wait_for_success(cluster, task_definition, command, name, succe
 
         raise ClickException(response['tasks'][0])
 
-    for event in get_log_events(log_group=task_definition, log_stream='ecs/{}/{}'.format(name,task_id), region=region):
+    for event in get_log_events(log_group=task_definition, log_stream='ecs/{}/{}'.format(name, task_id),
+                                region=region):
         LOGGER.info('[task/{}] {}'.format(task_id, event['message'].rstrip()))
 
     exit_code = response['tasks'][0]['containers'][0].get('exitCode', UNDEFINED)
@@ -316,37 +425,78 @@ def run_task_and_wait_for_success(cluster, task_definition, command, name, succe
         raise ClickException('Container exit code: \'{}\''.format(exit_code))
 
     if str(exit_code) != success_string:
-        raise ClickException("Container exit code is not equal to success_string: \'{}\' (expected: \'{}\')".format(exit_code, success_string))
+        raise ClickException(
+            "Container exit code is not equal to success_string: \'{}\' (expected: \'{}\')".format(
+                exit_code,
+                success_string,
+            )
+        )
     LOGGER.info('Success')
 
 
 def get_services_arns(cluster, region):
     ecs_client = _get_ecs_client(region)
-    services_arns = ecs_client.list_services(cluster=cluster)['serviceArns']
+    resp = ecs_client.list_services(cluster=cluster)
+    services_arns = resp['serviceArns']
     return services_arns
 
 
 def get_tasks_for_service(cluster, service, region):
     ecs_client = _get_ecs_client(region)
-    tasks_arns = ecs_client.list_tasks(cluster=cluster, serviceName=service)['taskArns']
+    resp = ecs_client.list_tasks(cluster=cluster, serviceName=service)
+    tasks_arns = resp['taskArns']
     return tasks_arns
 
 
-def stop_service_and_wait_for_tasks_to_stop(cluster, service, region):
+def stop_service_and_wait_for_tasks_to_stop(cluster, service, timeout, region):
     ecs_client = _get_ecs_client(region)
+
     tasks = get_tasks_for_service(cluster=cluster, service=service, region=region)
+
     stop_service(cluster=cluster, service=service, region=region)
 
     if not tasks:
         LOGGER.info('No active tasks found in service \'{}\''.format(service))
         return
 
-    wait_for_tasks_to_stop(cluster=cluster, tasks=tasks, region=region)
+    wait_for_tasks_to_stop(cluster=cluster, tasks=tasks, timeout=timeout, region=region)
 
 
 def start_service_and_wait_for_tasks_to_start(cluster, service, count, region):
-    """ This function is currently not working as the tasks are not started immediately after the update of desired count"""
+    """ This function is currently not working as the tasks are not started
+    immediately after the update of desired count
+    """
     ecs_client = _get_ecs_client(region)
-    tasks = get_tasks_for_service(cluster=cluster, service=service, region=region)
+
     start_service(cluster=cluster, service=service, count=count, region=region)
+
+    tasks = get_tasks_for_service(cluster=cluster, service=service, region=region)
     wait_for_tasks_to_start(cluster=cluster, tasks=tasks, region=region)
+
+
+def get_min_capacity_for_service(cluster, service, region):
+    as_client = _get_autoscaling_client(region)
+
+    response = as_client.describe_scalable_targets(
+        ServiceNamespace='ecs',
+        ResourceIds=[
+            'service/{}/{}'.format(cluster, service),
+        ],
+    )
+    targets = response['ScalableTargets']
+
+    if len(targets) < 1:
+        raise ClickException(
+            'No scalable targets found for cluster \'{}\' and service name \'{}\''.format(
+                cluster,
+                service,
+            )
+        )
+    elif len(targets) > 1:
+        raise ClickException(
+            'Exactly one service per cluster is supported. Services found: {}'.format(
+                len(targets)
+            )
+        )
+
+    return int(targets[0].get('MinCapacity'))

@@ -20,6 +20,7 @@ from developers_chamber.scripts import cli
 default_region = os.environ.get('AWS_REGION')
 default_cluster = os.environ.get('AWS_ECS_CLUSTER')
 
+
 @cli.group()
 def ecs():
     """ECS commands"""
@@ -66,7 +67,7 @@ def stop_service(cluster, service, region):
 @ecs.command()
 @click.option('--cluster', '-c', help='ECS cluster name', type=str, default=default_cluster, required=True)
 @click.option('--service', '-s', help='ECS service name', type=str, required=True)
-@click.option('--count', '-o', help='Desired count for service', type=int, default=1, required=True)
+@click.option('--count', '-o', help='Desired count for service', type=int)
 @click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
 def start_service(cluster, service, count, region):
     """Start an AWS ECS service by updating its desiredCount to 0."""
@@ -101,10 +102,11 @@ def run_task_and_wait_for_success(cluster, task_definition, command, name, succe
 @click.option('--service', '-s', help='ECS service name', type=str, required=True)
 @click.option('--command', '-m', help='command to run', type=str, required=True)
 @click.option('--success-string', help='String that is considered a success code', type=str, default='0', required=True)
+@click.option('--timeout', '-o', help='Seconds to wait before exiting with fail state', type=int, default=600)
 @click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
-def migrate_service(cluster, service, command, success_string, region):
+def migrate_service(cluster, service, command, success_string, timeout, region):
     """Run a single task based on service's task definition in AWS ECS and wait for it to stop with success."""
-    migrate_service_func(cluster, service, command, success_string, region)
+    migrate_service_func(cluster, service, command, success_string, timeout, region)
 
 
 @ecs.command()
@@ -128,8 +130,8 @@ def get_task_definition_for_service(cluster, service, region):
 @ecs.command()
 @click.option('--cluster', '-c', help='ECS cluster name', type=str, default=default_cluster, required=True)
 @click.option('--service', '-s', help='ECS service name', type=str, required=True)
+@click.option('--timeout', '-o', help='Seconds to wait before exiting with fail state', type=int, default=600)
 @click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
-def stop_service_and_wait_for_tasks_to_stop(cluster, service, region):
+def stop_service_and_wait_for_tasks_to_stop(cluster, service, timeout, region):
     """ Stop service and wait for the tasks to stop """
-    stop_service_and_wait_for_tasks_to_stop_func(cluster, service, region)
-
+    stop_service_and_wait_for_tasks_to_stop_func(cluster, service, timeout, region)
