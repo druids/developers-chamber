@@ -1,0 +1,24 @@
+name: Publish Python distributions to TestPyPI
+on: push
+jobs:
+  build-n-publish:
+    name: Build and publish
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@master
+    - name: Set up Python 3.7
+      if: startsWith(github.event.ref, 'refs/tags')
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+    - name: Replace version
+      if: startsWith(github.event.ref, 'refs/tags')
+      run: sed -i 's/__version__/'"${GITHUB_REF:10}"'/' setup.py
+    - name: Build package dist
+      if: startsWith(github.event.ref, 'refs/tags')
+      run: python setup.py sdist
+    - name: Publish distribution to PyPI
+      if: startsWith(github.event.ref, 'refs/tags')
+      uses: pypa/gh-action-pypi-publish@v1.0.0a0
+      with:
+        password: ${{ secrets.pypi_password }}
