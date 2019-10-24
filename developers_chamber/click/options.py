@@ -25,6 +25,8 @@ class RequiredIfNotEmpty(click.Option):
 
 class ContainerDirToCopyType(click.ParamType):
 
+    name = 'container_dir_to_copy'
+
     def convert(self, value, param, ctx):
         try:
             container_name, container_dir, host_dir = value.split(':')
@@ -40,6 +42,8 @@ class ContainerDirToCopyType(click.ParamType):
 
 
 class ContainerCommandType(click.ParamType):
+
+    name = 'container_command_type'
 
     def convert(self, value, param, ctx):
         try:
