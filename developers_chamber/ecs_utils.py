@@ -25,6 +25,7 @@ def _get_logs_client(region):
 def _get_autoscaling_client(region):
     return boto3.client(
         'application-autoscaling',
+        config=Config(region_name=region),
     )
 
 
