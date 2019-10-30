@@ -14,6 +14,7 @@ from developers_chamber.ecs_utils import get_task_definition_for_service as get_
 from developers_chamber.ecs_utils import stop_service_and_wait_for_tasks_to_stop as \
     stop_service_and_wait_for_tasks_to_stop_func
 from developers_chamber.ecs_utils import migrate_service as migrate_service_func
+from developers_chamber.ecs_utils import t_stop_services_and_wait_for_tasks_to_stop as t_stop_services_and_wait_for_tasks_to_stop_func
 from developers_chamber.scripts import cli
 
 
@@ -135,3 +136,14 @@ def get_task_definition_for_service(cluster, service, region):
 def stop_service_and_wait_for_tasks_to_stop(cluster, service, timeout, region):
     """ Stop service and wait for the tasks to stop """
     stop_service_and_wait_for_tasks_to_stop_func(cluster, service, timeout, region)
+
+
+@ecs.command()
+@click.option('--cluster', '-c', help='ECS cluster name', type=str, default=default_cluster, required=True)
+@click.option('--services', '-s', help='ECS services names separated by comma', type=str, required=True)
+@click.option('--timeout', '-o', help='Seconds to wait before exiting with fail state', type=int, default=600)
+@click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
+def stop_services_and_wait_for_tasks_to_stop(cluster, services, timeout, region):
+    """ Stop services and wait for the tasks to stop """
+    services = services.split(',')
+    t_stop_services_and_wait_for_tasks_to_stop_func(cluster, services, timeout, region)

@@ -1,5 +1,6 @@
 import logging
 import boto3
+import threading
 from botocore.client import Config
 from botocore.exceptions import ClientError, WaiterError
 from click import ClickException
@@ -286,7 +287,7 @@ def wait_for_task_to_stop(cluster, task, timeout, region):
     ecs_client = _get_ecs_client(region)
     waiter = ecs_client.get_waiter('tasks_stopped')
 
-    LOGGER.info('Waiting for task {} to stop.'.format(task))
+    LOGGER.info('Waiting for task \'{}\' to stop.'.format(task))
 
     try:
         waiter.wait(
@@ -300,7 +301,7 @@ def wait_for_task_to_stop(cluster, task, timeout, region):
     except (ClientError, WaiterError) as ex:
         raise ClickException(ex)
 
-    LOGGER.info('Task stopped.')
+    LOGGER.info('Task \'{}\' stopped.'.format(task))
 
 
 def wait_for_tasks_to_stop(cluster, tasks, timeout, region):
@@ -447,6 +448,30 @@ def get_tasks_for_service(cluster, service, region):
     resp = ecs_client.list_tasks(cluster=cluster, serviceName=service)
     tasks_arns = resp['taskArns']
     return tasks_arns
+
+
+def t_stop_services_and_wait_for_tasks_to_stop(cluster, services, timeout, region):
+    ecs_client = _get_ecs_client(region)
+
+    tasks = []
+
+    for service in services:
+        service_tasks = get_tasks_for_service(cluster=cluster, service=service, region=region)
+        if not service_tasks:
+            LOGGER.info('No active tasks found in service \'{}\''.format(service))
+            continue
+        tasks += service_tasks
+        stop_service(cluster=cluster, service=service, region=region)
+
+    threads = []
+
+    for task in tasks:
+        thread = threading.Thread(target=wait_for_task_to_stop, args=(cluster, task, timeout, region))
+        threads.append(thread)
+        thread.start()
+
+    for thread in threads:
+        thread.join()
 
 
 def stop_service_and_wait_for_tasks_to_stop(cluster, service, timeout, region):
