@@ -14,7 +14,7 @@ from developers_chamber.ecs_utils import get_task_definition_for_service as get_
 from developers_chamber.ecs_utils import stop_service_and_wait_for_tasks_to_stop as \
     stop_service_and_wait_for_tasks_to_stop_func
 from developers_chamber.ecs_utils import migrate_service as migrate_service_func
-from developers_chamber.ecs_utils import t_stop_services_and_wait_for_tasks_to_stop as t_stop_services_and_wait_for_tasks_to_stop_func
+from developers_chamber.ecs_utils import stop_services_and_wait_for_tasks_to_stop as stop_services_and_wait_for_tasks_to_stop_func
 from developers_chamber.scripts import cli
 
 
@@ -146,4 +146,4 @@ def stop_service_and_wait_for_tasks_to_stop(cluster, service, timeout, region):
 def stop_services_and_wait_for_tasks_to_stop(cluster, services, timeout, region):
     """ Stop services and wait for the tasks to stop """
     services = services.split(',')
-    t_stop_services_and_wait_for_tasks_to_stop_func(cluster, services, timeout, region)
+    stop_services_and_wait_for_tasks_to_stop_func(cluster, services, timeout, region)

@@ -1,10 +1,10 @@
 import logging
+from multiprocessing.pool import ThreadPool
+
 import boto3
-import threading
 from botocore.client import Config
 from botocore.exceptions import ClientError, WaiterError
 from click import ClickException
-
 
 LOGGER = logging.getLogger()
 
@@ -287,7 +287,7 @@ def wait_for_task_to_stop(cluster, task, timeout, region):
     ecs_client = _get_ecs_client(region)
     waiter = ecs_client.get_waiter('tasks_stopped')
 
-    LOGGER.info('Waiting for task \'{}\' to stop.'.format(task))
+    LOGGER.info("Waiting for task '{}' to stop.".format(task))
 
     try:
         waiter.wait(
@@ -301,7 +301,7 @@ def wait_for_task_to_stop(cluster, task, timeout, region):
     except (ClientError, WaiterError) as ex:
         raise ClickException(ex)
 
-    LOGGER.info('Task \'{}\' stopped.'.format(task))
+    LOGGER.info("Task '{}' stopped.".format(task))
 
 
 def wait_for_tasks_to_stop(cluster, tasks, timeout, region):
@@ -450,28 +450,28 @@ def get_tasks_for_service(cluster, service, region):
     return tasks_arns
 
 
-def t_stop_services_and_wait_for_tasks_to_stop(cluster, services, timeout, region):
+def stop_services_and_wait_for_tasks_to_stop(cluster, services, timeout, region):
     ecs_client = _get_ecs_client(region)
 
-    tasks = []
+    THREAD_MAX = 32
+    number_of_services = len(services)
+
+    all_running_service_tasks = []
 
     for service in services:
-        service_tasks = get_tasks_for_service(cluster=cluster, service=service, region=region)
-        if not service_tasks:
-            LOGGER.info('No active tasks found in service \'{}\''.format(service))
-            continue
-        tasks += service_tasks
-        stop_service(cluster=cluster, service=service, region=region)
+        running_service_tasks = get_tasks_for_service(cluster=cluster, service=service, region=region)
 
-    threads = []
+        if running_service_tasks:
+            all_running_service_tasks += running_service_tasks
+            stop_service(cluster=cluster, service=service, region=region)
+        else:
+            LOGGER.info("No active tasks found in service '{}'".format(service))
 
-    for task in tasks:
-        thread = threading.Thread(target=wait_for_task_to_stop, args=(cluster, task, timeout, region))
-        threads.append(thread)
-        thread.start()
-
-    for thread in threads:
-        thread.join()
+    if all_running_service_tasks:
+        pool = ThreadPool(number_of_services if number_of_services < THREAD_MAX else THREAD_MAX)
+        pool.starmap(wait_for_task_to_stop, ((cluster, task, timeout, region) for task in all_running_service_tasks))
+        pool.close()
+        pool.join()
 
 
 def stop_service_and_wait_for_tasks_to_stop(cluster, service, timeout, region):
