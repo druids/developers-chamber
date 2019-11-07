@@ -56,7 +56,7 @@ def compose_build(project_name, compose_files, containers=None, containers_dir_t
             call_command([
                 'docker', 'run', '-v', '{}:/copy_tmp'.format(Path.cwd() / host_dir),
                 '{}_{}'.format(project_name, container_name),
-                "cp -r {}/* /copy_tmp/".format(container_dir)
+                "cp -rT {}/ /copy_tmp/".format(container_dir)
             ])
 
 
