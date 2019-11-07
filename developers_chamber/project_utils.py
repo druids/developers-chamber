@@ -54,7 +54,7 @@ def compose_build(project_name, compose_files, containers=None, containers_dir_t
     for container_name, container_dir, host_dir in containers_dir_to_copy:
         if not containers or container_name in containers:
             call_command([
-                'docker', 'run', '-v', '{}:/copy_tmp'.format(Path.cwd() / host_dir),
+                'docker', 'run', '-v', '{}:/copy_tmp'.format(Path.cwd() / host_dir), '-u', str(os.getuid()),
                 '{}_{}'.format(project_name, container_name),
                 "cp -rT {}/ /copy_tmp/".format(container_dir)
             ])

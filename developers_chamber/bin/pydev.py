@@ -7,6 +7,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+import coloredlogs
+
 # Load configuration
 for config_path in (Path.home(), Path.cwd()):
     if (config_path / '.pydev').exists() and (config_path / '.pydev').is_dir():
@@ -20,6 +22,7 @@ from developers_chamber.scripts.docker import *
 from developers_chamber.scripts.ecs import *
 from developers_chamber.scripts.git import *
 from developers_chamber.scripts.project import *
+from developers_chamber.scripts.qa import *
 from developers_chamber.scripts.version import *
 
 
@@ -30,28 +33,7 @@ for base_path in (Path.home(), Path.cwd()):
         import scripts
 
 
-LOGGING = {
-    'version': 1,
-    'formatters': {
-        'standard': {
-            'format': '%(asctime)s [%(levelname)s]: %(message)s',
-        },
-    },
-    'handlers': {
-        'default': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'standard',
-        },
-    },
-    'loggers': {
-        '': {
-            'handlers': ('default',),
-            'level': 'INFO',
-        },
-    },
-}
-logging.config.dictConfig(LOGGING)
-
+coloredlogs.install(milliseconds=True)
 
 if __name__ == '__main__':
     cli()
