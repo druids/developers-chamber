@@ -26,8 +26,7 @@ class MigrationFilenamesQACheck(QACheck):
     name = 'Check migration filenames'
 
     def _is_migration_file_with_wrong_name(self, path):
-        match = re.search(r'migrations\/([^\/]+)\.py$', path)
-        return bool(match and not re.search(r'^[0-9]{4}_migration$', match.group(1)))
+        return self._is_migration_file(path) and not re.search(r'/([0-9]{4}_migration|__init__)\.py$', path)
 
     def _run_check(self):
         wrong_name_files = []
@@ -70,7 +69,8 @@ class ImportOrderQACheck(QACheck):
         return bool(re.search(r'\.py$', path))
 
     def _run_check(self):
-        changed_files = [diff.b_path for diff in self._get_diffs() if self._is_python_file(diff.b_path)]
+        changed_files = [diff.b_path for diff in self._get_diffs() if self._is_python_file(diff.b_path)
+                         and not self._is_migration_file(diff.b_path)]
         if changed_files:
             self._run_command('isort {}'.format(' '.join(changed_files)))
         else:
