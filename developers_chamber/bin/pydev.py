@@ -24,6 +24,7 @@ from developers_chamber.scripts.git import *
 from developers_chamber.scripts.project import *
 from developers_chamber.scripts.qa import *
 from developers_chamber.scripts.version import *
+from developers_chamber.scripts.sh import *
 
 
 # Import external scripts
