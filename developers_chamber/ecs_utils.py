@@ -94,23 +94,24 @@ def register_new_task_definition(task_definition, image, region):
 def get_task_definition_for_service(cluster, service, region):
     ecs_client = _get_ecs_client(region)
 
-    services = ecs_client.describe_services(
-        cluster=cluster,
-        services=[service],
-    )
+    try:
+        services = ecs_client.describe_services(
+            cluster=cluster,
+            services=[service],
+        )
+    except ecs_client.exceptions.ClusterNotFoundException:
+        raise ClickException("Cluster not found: '{}'".format(cluster))
+    except ClientError as ex:
+        raise ClickException(ex)
 
     number_of_services = len(services['services'])
 
     if number_of_services > 1:
         raise ClickException(
-            'More than one service with the same name found: {}'.format(
-                len(services['services']),
-            )
+            'More than one service with the same name found: {}'.format(len(services['services']))
         )
     elif number_of_services == 0:
-        raise ClickException(
-            'No services with the name \'{}\' found.'.format(service)
-        )
+        raise ClickException("Service not found: '{}'".format(service))
 
     return services['services'][0]['taskDefinition']
 
@@ -121,9 +122,13 @@ def update_service_to_latest_task_definition(cluster, service, region):
     old_task_definition = get_task_definition_for_service(cluster=cluster, service=service, region=region)
     LOGGER.info('Current task definition ARN: {}'.format(old_task_definition))
 
-    new_task_definition = ecs_client.describe_task_definition(
-        taskDefinition=old_task_definition[:old_task_definition.rfind(':')]
-    )
+    try:
+        new_task_definition = ecs_client.describe_task_definition(
+            taskDefinition=old_task_definition[:old_task_definition.rfind(':')]
+        )
+    except ClientError as ex:
+        raise ClickException(ex)
+
     new_task_definition_arn = new_task_definition['taskDefinition']['taskDefinitionArn']
     LOGGER.info('New task definition ARN: {}'.format(new_task_definition_arn))
 
@@ -145,6 +150,10 @@ def update_service_to_new_task_definition(cluster, service, task_definition, reg
             taskDefinition=task_definition,
             forceNewDeployment=True,
         )
+    except ecs_client.exceptions.ClusterNotFoundException:
+        raise ClickException("Cluster not found: '{}'".format(cluster))
+    except ecs_client.exceptions.ServiceNotFoundException:
+        raise ClickException("Service not found: '{}'".format(cluster))
     except ClientError as ex:
         raise ClickException(ex)
 
@@ -181,6 +190,10 @@ def start_service(cluster, service, count, region):
             service=service,
             desiredCount=count,
         )
+    except ecs_client.exceptions.ClusterNotFoundException:
+        raise ClickException("Cluster not found: '{}'".format(cluster))
+    except ecs_client.exceptions.ServiceNotFoundException:
+        raise ClickException("Service not found: '{}'".format(cluster))
     except ClientError as ex:
         raise ClickException(ex)
 
@@ -191,7 +204,7 @@ def start_services(cluster, count, region):
     services = get_services_arns(cluster=cluster, region=region)
 
     if count is not None and count < 1:
-        raise ClickException('Count must be greater than zero or \'None\' to be determined from autoscaling targets.')
+        raise ClickException("Count must be greater than zero or 'None' to be determined from autoscaling targets.")
 
     for service in services:
         count_per_service = count
@@ -211,6 +224,10 @@ def start_services(cluster, count, region):
                 service=service,
                 desiredCount=count_per_service,
             )
+        except ecs_client.exceptions.ClusterNotFoundException:
+            raise ClickException("Cluster not found: '{}'".format(cluster))
+        except ecs_client.exceptions.ServiceNotFoundException:
+            raise ClickException("Service not found: '{}'".format(cluster))
         except ClientError as ex:
             raise ClickException(ex)
 
@@ -246,6 +263,10 @@ def stop_services(cluster, region):
                 service=service,
                 desiredCount=0,
             )
+        except ecs_client.exceptions.ClusterNotFoundException:
+            raise ClickException("Cluster not found: '{}'".format(cluster))
+        except ecs_client.exceptions.ServiceNotFoundException:
+            raise ClickException("Service not found: '{}'".format(cluster))
         except ClientError as ex:
             raise ClickException(ex)
 
@@ -260,6 +281,8 @@ def run_task(cluster, task_definition, command, name, region):
                 taskDefinition=task_definition,
                 count=1,
             )
+        except ecs_client.exceptions.ClusterNotFoundException:
+            raise ClickException("Cluster not found: '{}'".format(cluster))
         except ClientError as ex:
             raise ClickException(ex)
     else:
@@ -277,6 +300,8 @@ def run_task(cluster, task_definition, command, name, region):
                 },
                 count=1,
             )
+        except ecs_client.exceptions.ClusterNotFoundException:
+            raise ClickException("Cluster not found: '{}'".format(cluster))
         except ClientError as ex:
             raise ClickException(ex)
 
@@ -298,6 +323,8 @@ def wait_for_task_to_stop(cluster, task, timeout, region):
                 'MaxAttempts': timeout,
             },
         )
+    except ecs_client.exceptions.ClusterNotFoundException:
+        raise ClickException("Cluster not found: '{}'".format(cluster))
     except (ClientError, WaiterError) as ex:
         raise ClickException(ex)
 
@@ -319,6 +346,8 @@ def wait_for_tasks_to_stop(cluster, tasks, timeout, region):
                 'MaxAttempts': timeout,
             },
         )
+    except ecs_client.exceptions.ClusterNotFoundException:
+        raise ClickException("Cluster not found: '{}'".format(cluster))
     except (ClientError, WaiterError) as ex:
         raise ClickException(ex)
 
@@ -333,6 +362,8 @@ def wait_for_task_to_start(cluster, task, region):
 
     try:
         waiter.wait(cluster=cluster, tasks=[task])
+    except ecs_client.exceptions.ClusterNotFoundException:
+        raise ClickException("Cluster not found: '{}'".format(cluster))
     except (ClientError, WaiterError) as ex:
         raise ClickException(ex)
 
@@ -345,6 +376,8 @@ def wait_for_tasks_to_start(cluster, tasks, region):
 
     try:
         waiter.wait(cluster=cluster, tasks=tasks)
+    except ecs_client.exceptions.ClusterNotFoundException:
+        raise ClickException("Cluster not found: '{}'".format(cluster))
     except (ClientError, WaiterError) as ex:
         raise ClickException(ex)
 
@@ -381,16 +414,23 @@ def migrate_service(cluster, service, command, success_string, timeout, region):
 
 def run_task_and_wait_for_success(cluster, task_definition, command, name, success_string, timeout, region):
     ecs_client = _get_ecs_client(region)
-    task = run_task(
-        cluster=cluster,
-        task_definition=task_definition,
-        command=command,
-        name=name,
-        region=region,
-    )
+
+    try:
+        task = run_task(
+            cluster=cluster,
+            task_definition=task_definition,
+            command=command,
+            name=name,
+            region=region,
+        )
+    except ecs_client.exceptions.ClusterNotFoundException:
+        raise ClickException("Cluster not found: '{}'".format(cluster))
+    except ClientError as ex:
+        raise ClickException(ex)
+
     task_id = task.split('/')[1]
 
-    LOGGER.info('Running task: \'{}\''.format(task))
+    LOGGER.info("Running task: '{}'".format(task))
 
     wait_for_task_to_stop(cluster=cluster, task=task, timeout=timeout, region=region)
 
@@ -399,17 +439,17 @@ def run_task_and_wait_for_success(cluster, task_definition, command, name, succe
     UNDEFINED = 'UNDEFINED'
 
     task_stop_code = response['tasks'][0].get('stopCode', UNDEFINED)
-    LOGGER.info('Task stop code: \'{}\''.format(task_stop_code))
+    LOGGER.info("Task stop code: '{}'".format(task_stop_code))
 
     if task_stop_code != 'EssentialContainerExited':
         contianer_stop_reason = response['tasks'][0]['containers'][0].get('reason', UNDEFINED)
-        LOGGER.info('Container stop reason: \'{}\''.format(contianer_stop_reason))
+        LOGGER.info("Container stop reason: '{}'".format(contianer_stop_reason))
 
         if contianer_stop_reason != UNDEFINED:
             raise ClickException(contianer_stop_reason)
 
         task_stop_reason = response['tasks'][0].get('stoppedReason', UNDEFINED)
-        LOGGER.info('Task stop reason: \'{}\''.format(task_stop_reason))
+        LOGGER.info("Task stop reason: '{}'".format(task_stop_reason))
 
         if task_stop_reason != UNDEFINED:
             raise ClickException(task_stop_reason)
@@ -421,14 +461,14 @@ def run_task_and_wait_for_success(cluster, task_definition, command, name, succe
         LOGGER.info('[task/{}] {}'.format(task_id, event['message'].rstrip()))
 
     exit_code = response['tasks'][0]['containers'][0].get('exitCode', UNDEFINED)
-    LOGGER.info('Container exit code: \'{}\''.format(exit_code))
+    LOGGER.info("Container exit code: '{}'".format(exit_code))
 
     if exit_code == UNDEFINED:
-        raise ClickException('Container exit code: \'{}\''.format(exit_code))
+        raise ClickException("Container exit code: '{}'".format(exit_code))
 
     if str(exit_code) != success_string:
         raise ClickException(
-            "Container exit code is not equal to success_string: \'{}\' (expected: \'{}\')".format(
+            "Container exit code is not equal to success_string: '{}' (expected: '{}')".format(
                 exit_code,
                 success_string,
             )
@@ -438,14 +478,30 @@ def run_task_and_wait_for_success(cluster, task_definition, command, name, succe
 
 def get_services_arns(cluster, region):
     ecs_client = _get_ecs_client(region)
-    resp = ecs_client.list_services(cluster=cluster)
+
+    try:
+        resp = ecs_client.list_services(cluster=cluster)
+    except ecs_client.exceptions.ClusterNotFoundException:
+        raise ClickException("Cluster not found: '{}'".format(cluster))
+    except ClientError as ex:
+        raise ClickException(ex)
+
     services_arns = resp['serviceArns']
     return services_arns
 
 
 def get_tasks_for_service(cluster, service, region):
     ecs_client = _get_ecs_client(region)
-    resp = ecs_client.list_tasks(cluster=cluster, serviceName=service)
+
+    try:
+        resp = ecs_client.list_tasks(cluster=cluster, serviceName=service)
+    except ecs_client.exceptions.ClusterNotFoundException:
+        raise ClickException("Cluster not found: '{}'".format(cluster))
+    except ecs_client.exceptions.ServiceNotFoundException:
+        raise ClickException("Service not found: '{}'".format(service))
+    except ClientError as ex:
+        raise ClickException(ex)
+
     tasks_arns = resp['taskArns']
     return tasks_arns
 
@@ -482,7 +538,7 @@ def stop_service_and_wait_for_tasks_to_stop(cluster, service, timeout, region):
     stop_service(cluster=cluster, service=service, region=region)
 
     if not tasks:
-        LOGGER.info('No active tasks found in service \'{}\''.format(service))
+        LOGGER.info("No active tasks found in service '{}'".format(service))
         return
 
     wait_for_tasks_to_stop(cluster=cluster, tasks=tasks, timeout=timeout, region=region)
@@ -513,7 +569,7 @@ def get_min_capacity_for_service(cluster, service, region):
 
     if len(targets) < 1:
         raise ClickException(
-            'No scalable targets found for cluster \'{}\' and service name \'{}\''.format(
+            "No scalable targets found for cluster '{}' and service name '{}'".format(
                 cluster,
                 service,
             )

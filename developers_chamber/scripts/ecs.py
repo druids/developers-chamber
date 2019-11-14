@@ -78,7 +78,7 @@ def start_service(cluster, service, count, region):
 @ecs.command()
 @click.option('--cluster', '-c', help='ECS cluster name', type=str, default=default_cluster, required=True)
 @click.option('--task-definition', '-t', help='ECS task definition name', type=str, required=True)
-@click.option('--command', '-m', help='command to run', type=str, required=True)
+@click.option('--command', '-m', help='command to run', type=str, default=None)
 @click.option('--name', '-n', help='ECS task name', type=str, required=True)
 @click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
 def run_task(cluster, task_definition, command, name, region):
@@ -92,10 +92,11 @@ def run_task(cluster, task_definition, command, name, region):
 @click.option('--command', '-m', help='command to run', type=str, default=None)
 @click.option('--name', '-n', help='ECS task name', type=str, required=True)
 @click.option('--success-string', help='String that is considered a success', type=str, default='0', required=True)
+@click.option('--timeout', '-o', help='Seconds to wait before exiting with fail state', type=int, default=600)
 @click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
-def run_task_and_wait_for_success(cluster, task_definition, command, name, success_string, region):
+def run_task_and_wait_for_success(cluster, task_definition, command, name, success_string, timeout, region):
     """Run a single task in AWS ECS and wait for it to stop with success."""
-    run_task_and_wait_for_success_func(cluster, task_definition, command, name, success_string, region)
+    run_task_and_wait_for_success_func(cluster, task_definition, command, name, success_string, timeout, region)
 
 
 @ecs.command()
