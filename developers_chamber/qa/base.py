@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import subprocess
 import sys
 
@@ -19,15 +20,10 @@ class QAError(Exception):
         self.output = output.strip()
 
 
-class QACheck:
+class RepoMixin:
     """
-    Base class for a quality assurance check.
-
-    Arguments:
-        name: Name of the check.
+    Mixin that provides functions for work with Git repository.
     """
-    name = None
-
     def _get_repo(self):
         """
         Returns the repo object.
@@ -54,6 +50,28 @@ class QACheck:
         Returns unstaged files in the repo.
         """
         return self._get_repo().index.diff(None, create_patch=True)
+
+    def _get_staged(self):
+        """
+        Returns staged files in the repo.
+        """
+        return self._get_repo().index.diff('HEAD')
+
+    def _is_repo_clean(self):
+        """
+        Returns true, if repo is clean (no staged, unstaged or untracked files).
+        """
+        return not (self._get_staged() or self._get_unstaged() or self._get_repo().untracked_files)
+
+
+class QACheck(RepoMixin):
+    """
+    Base class for a quality assurance check.
+
+    Arguments:
+        name: Name of the check.
+    """
+    name = None
 
     def _get_command_from_config(self, command_config):
         """
@@ -85,6 +103,9 @@ class QACheck:
         """
         self._get_repo().git.stash('save')
 
+    def _is_migration_file(self, path):
+        return bool(re.search(r'migrations\/([^\/]+)\.py$', path))
+
     def run(self):
         """
         Runs the check and cleanup methods.
@@ -95,7 +116,7 @@ class QACheck:
             self._cleanup()
 
 
-class QACheckRunner:
+class QACheckRunner(RepoMixin):
     """
     Runs multiple checks and evaluates the results while printing a nice output.
     """
@@ -137,6 +158,11 @@ class QACheckRunner:
             LOGGER.info(result)
 
     def run(self):
+        if not self._is_repo_clean():
+            raise ClickException(
+                'QA check requires repository to be clean, please remove any staged, unstaged or untracked files.'
+            )
+
         self._run_checks()
         self._print_results()
         if not self.success:
