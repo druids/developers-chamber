@@ -5,17 +5,11 @@ from developers_chamber.scripts import cli
 from developers_chamber.utils import call_command
 
 
-@cli.command(
-    context_settings=dict(
-        ignore_unknown_options=True,
-        allow_extra_args=True
-    )
-)
+@cli.command()
 @click.argument('command')
-@click.pass_context
-def sh(ctx, command):
+def sh(command):
     """
     Runs SH command.
     """
 
-    call_command(' '.join([command] + ctx.args))
+    call_command(command)
