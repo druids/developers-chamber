@@ -69,7 +69,7 @@ class ImportOrderQACheck(QACheck):
         return bool(re.search(r'\.py$', path))
 
     def _run_check(self):
-        changed_files = [diff.b_path for diff in self._get_diffs() if self._is_python_file(diff.b_path)
+        changed_files = [diff.b_path for diff in self._get_diffs() if diff.b_path and self._is_python_file(diff.b_path)
                          and not self._is_migration_file(diff.b_path)]
         if changed_files:
             self._run_command('isort {}'.format(' '.join(changed_files)))
