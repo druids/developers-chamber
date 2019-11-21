@@ -13,12 +13,17 @@ from developers_chamber.ecs_utils import \
 from developers_chamber.ecs_utils import \
     run_service_task as run_service_task_func
 from developers_chamber.ecs_utils import run_task as run_task_func
-from developers_chamber.ecs_utils import \
-    run_task_and_wait_for_success as run_task_and_wait_for_success_func
-from developers_chamber.ecs_utils import start_service as start_service_func
 from developers_chamber.ecs_utils import stop_service as stop_service_func
-from developers_chamber.ecs_utils import \
-    stop_service_and_wait_for_tasks_to_stop as \
+from developers_chamber.ecs_utils import start_cluster_services as start_cluster_services_func
+from developers_chamber.ecs_utils import start_service as start_service_func
+from developers_chamber.ecs_utils import start_services as start_services_func
+from developers_chamber.ecs_utils import register_new_task_definition as register_new_task_definition_func
+from developers_chamber.ecs_utils import update_service_to_latest_task_definition as \
+    update_service_to_latest_task_definition_func
+from developers_chamber.ecs_utils import run_task_and_wait_for_success as run_task_and_wait_for_success_func
+from developers_chamber.ecs_utils import get_tasks_for_service as get_tasks_for_service_func
+from developers_chamber.ecs_utils import get_task_definition_for_service as get_task_definition_for_service_func
+from developers_chamber.ecs_utils import stop_service_and_wait_for_tasks_to_stop as \
     stop_service_and_wait_for_tasks_to_stop_func
 from developers_chamber.ecs_utils import \
     stop_services_and_wait_for_tasks_to_stop as \
@@ -83,6 +88,26 @@ def stop_service(cluster, service, region):
 def start_service(cluster, service, count, region):
     """Start an AWS ECS service by updating its desiredCount to 0."""
     start_service_func(cluster, service, count, region)
+
+
+@ecs.command()
+@click.option('--cluster', '-c', help='ECS cluster name', type=str, default=default_cluster, required=True)
+@click.option('--count', '-o', help='Desired count for service', type=int)
+@click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
+def start_cluster_services(cluster, count, region):
+    """Start an AWS ECS service by updating its desiredCount to 0."""
+    start_cluster_services_func(cluster, count, region)
+
+
+@ecs.command()
+@click.option('--cluster', '-c', help='ECS cluster name', type=str, default=default_cluster, required=True)
+@click.option('--services', '-s', help='ECS services names divided by comma', type=str, required=True)
+@click.option('--count', '-o', help='Desired count for service', type=int)
+@click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
+def start_services(cluster, services, count, region):
+    """Start an AWS ECS service by updating its desiredCount to 0."""
+    services = services.split(',')
+    start_services_func(cluster, services, count, region)
 
 
 @ecs.command()

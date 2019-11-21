@@ -91,8 +91,8 @@ def register_new_task_definition(task_definition, image, region):
     return new_task_definition_arn
 
 
-def get_task_definition_for_service(cluster, service, region):
-    ecs_client = _get_ecs_client(region)
+def get_task_definition_for_service(cluster, service, region, ecs_client=None):
+    ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
 
     try:
         services = ecs_client.describe_services(
@@ -153,7 +153,7 @@ def update_service_to_new_task_definition(cluster, service, task_definition, reg
     except ecs_client.exceptions.ClusterNotFoundException:
         raise ClickException("Cluster not found: '{}'".format(cluster))
     except ecs_client.exceptions.ServiceNotFoundException:
-        raise ClickException("Service not found: '{}'".format(cluster))
+        raise ClickException("Service not found: '{}'".format(service))
     except ClientError as ex:
         raise ClickException(ex)
 
@@ -193,29 +193,27 @@ def start_service(cluster, service, count, region):
     except ecs_client.exceptions.ClusterNotFoundException:
         raise ClickException("Cluster not found: '{}'".format(cluster))
     except ecs_client.exceptions.ServiceNotFoundException:
-        raise ClickException("Service not found: '{}'".format(cluster))
+        raise ClickException("Service not found: '{}'".format(service))
     except ClientError as ex:
         raise ClickException(ex)
 
 
-def start_services(cluster, count, region):
+def start_services(cluster, services, count, region):
     ecs_client = _get_ecs_client(region)
-
-    services = get_services_arns(cluster=cluster, region=region)
 
     if count is not None and count < 1:
         raise ClickException("Count must be greater than zero or 'None' to be determined from autoscaling targets.")
 
     for service in services:
-        count_per_service = count
-        service_name = service.split('/')[1]
-        if count_per_service is None:
+        if count is None:
             try:
-                count_per_service = get_min_capacity_for_service(cluster=cluster, service=service_name, region=region)
+                count_per_service = get_min_capacity_for_service(cluster=cluster, service=service, region=region)
             except ClickException as ex:
                 raise ClickException(
                     'Set explicit count or set up autoscaling with minimum capacity.\n{}'.format(ex)
                 )
+        else:
+            count_per_service = count
 
         LOGGER.info('Starting service: {}'.format(service))
         try:
@@ -227,9 +225,27 @@ def start_services(cluster, count, region):
         except ecs_client.exceptions.ClusterNotFoundException:
             raise ClickException("Cluster not found: '{}'".format(cluster))
         except ecs_client.exceptions.ServiceNotFoundException:
-            raise ClickException("Service not found: '{}'".format(cluster))
+            raise ClickException("Service not found: '{}'".format(service))
         except ClientError as ex:
             raise ClickException(ex)
+
+
+def is_service_type(service, cluster, type, region, ecs_client=None):
+    ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
+    return ecs_client.describe_services(services=[service], cluster=cluster)['services'][0]['schedulingStrategy'] == type
+
+
+def is_service_type_daemon(service, cluster, region, ecs_client=None):
+    return is_service_type(service=service, cluster=cluster, type="DAEMON", region=region, ecs_client=ecs_client)
+
+
+def start_cluster_services(cluster, count, region):
+    ecs_client = _get_ecs_client(region)
+    services = get_services_arns(cluster=cluster, region=region)
+    services = [service for service in services if not is_service_type_daemon(
+        service=service, cluster=cluster, region=region, ecs_client=ecs_client)]
+
+    start_services(cluster=cluster, services=services, count=count, region=region)
 
 
 def stop_service(cluster, service, region):
@@ -266,7 +282,7 @@ def stop_services(cluster, region):
         except ecs_client.exceptions.ClusterNotFoundException:
             raise ClickException("Cluster not found: '{}'".format(cluster))
         except ecs_client.exceptions.ServiceNotFoundException:
-            raise ClickException("Service not found: '{}'".format(cluster))
+            raise ClickException("Service not found: '{}'".format(service))
         except ClientError as ex:
             raise ClickException(ex)
 
@@ -559,12 +575,18 @@ def start_service_and_wait_for_tasks_to_start(cluster, service, count, region):
 def get_min_capacity_for_service(cluster, service, region):
     as_client = _get_autoscaling_client(region)
 
-    response = as_client.describe_scalable_targets(
-        ServiceNamespace='ecs',
-        ResourceIds=[
-            'service/{}/{}'.format(cluster, service),
-        ],
-    )
+    try:
+        response = as_client.describe_scalable_targets(
+            ServiceNamespace='ecs',
+            ResourceIds=[
+                'service/{}/{}'.format(cluster, service),
+            ],
+        )
+    except ecs_client.exceptions.ServiceNotFoundException:
+        raise ClickException("Service not found: '{}'".format(service))
+    except ClientError as ex:
+        raise ClickException(ex)
+
     targets = response['ScalableTargets']
 
     if len(targets) < 1:
