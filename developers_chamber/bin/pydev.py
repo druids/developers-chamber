@@ -9,6 +9,10 @@ from dotenv import load_dotenv
 
 import coloredlogs
 
+import click_completion
+
+click_completion.init()
+
 # Load configuration
 for config_path in (Path.home(), Path.cwd()):
     if (config_path / '.pydev').exists() and (config_path / '.pydev').is_dir():
@@ -36,5 +40,18 @@ for base_path in (Path.home(), Path.cwd()):
 
 coloredlogs.install(milliseconds=True)
 
-if __name__ == '__main__':
+
+@cli.command()
+@click.option('--append/--overwrite', help="Append the completion code to the file", default=None)
+@click.option('-i', '--case-insensitive/--no-case-insensitive', help="Case insensitive completion")
+@click.argument('shell', required=False, type=click_completion.DocumentedChoice(click_completion.core.shells))
+@click.argument('path', required=False)
+def init_completition(append, case_insensitive, shell, path):
+    """Install the pydev completion"""
+    extra_env = {'_PYDEV_CASE_INSENSITIVE_COMPLETE': 'ON'} if case_insensitive else {}
+    shell, path = click_completion.core.install(shell=shell, path=path, append=append, extra_env=extra_env)
+    click.echo('{} completion installed in  {}'.format(shell, path))
+
+
+if __name__ == "__main__":
     cli()

@@ -1,10 +1,10 @@
 Developers-chamber
 ==================
 
-A small plugin which takes a configuration (like Bower or npm) and it provides data via context processors.
+Library of helpers for python development.
 
-Usage
------
+Instalation
+-----------
 
 ### Register plugin in requirements.txt and in you Django configuration
 
@@ -12,42 +12,52 @@ Usage
 pip install developers-chamber
 ```
 
-and
+Completion
+----------
 
-```python
-TEMPLATE_CONTEXT_PROCESSORS = (
-    'developers_chamber.django.context_processors.get_project_info',
-)
-
-PIP_CONFIG = 'version.json'
-```
-
-### Create a pip.json (the name depends on you, but must be same in Django configuration)
-
-```json
-{
-    "name": "short project name",
-    "version": "0.1.0",
-    "verbose": "verbose project name"
-}
-```
-
-### Templates
-
-All values from `version.json` are available in a template via the context processor. Every key is capitalized and prefixed by PROJECT_, e.g. version becomes PROJECT_VERSION.
-
-### Helpers
-
-There are several helpers for development and releasing, you can use it as scripts:
-
-* release-bitbucket - support creating bitbucket pull-requests
-* release-git - helpers for creating release/deployment branches
-* release-version - helpers for changing project version
-
-more informations you will obtain with `--help`:
+You can install bash completition with command
 
 ```bash
-release-bitbucket --help
-release-git --help
-release-version --help
+pydev init-completition
 ```
+
+Commands
+--------
+
+For list of all commands you can run command:
+
+```bash
+pydev --help
+```
+
+### Bitbucket
+
+Group of commands which contains helpers to create or update pull requests.
+
+### Docker
+
+List of helpers for docker and docker-compose.
+
+### Git
+
+Commands simplifying working with git and help with releasing.
+
+### QA
+
+Quality assurance commands.
+
+### Version
+
+Project versioning.
+
+### Sh
+
+Shell or bash scripts.
+
+### ecs
+
+AWS ESC commands.
+
+### Project
+
+Group of commands which joins previous commands for simplifier development.

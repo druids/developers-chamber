@@ -52,7 +52,7 @@ class MissingTranslationsQACheck(QACheck):
 
         translation_files = []
         for diff in self._get_unstaged():
-            if self._is_translation_file(diff.b_path) and re.findall(r'(\+|-)(msgstr|msgid)', diff.diff.decode()):
+            if self._is_translation_file(diff.b_path):
                 translation_files.append(diff.b_path)
 
         if translation_files:
