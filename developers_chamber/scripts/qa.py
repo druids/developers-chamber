@@ -1,7 +1,8 @@
 from developers_chamber.qa.base import QACheck, QACheckRunner
-from developers_chamber.qa.checks import (
-    ImportOrderQACheck, MigrationFilenamesQACheck, MissingMigrationsQACheck, MissingTranslationsQACheck
-)
+from developers_chamber.qa.checks import (ImportOrderQACheck,
+                                          MigrationFilenamesQACheck,
+                                          MissingMigrationsQACheck,
+                                          MissingTranslationsQACheck)
 from developers_chamber.scripts import cli
 
 

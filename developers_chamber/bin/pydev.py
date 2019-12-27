@@ -1,15 +1,23 @@
 #!/usr/bin/env python
-import sys
-
 import logging.config
-
+import sys
 from pathlib import Path
 
+import click_completion
+import coloredlogs
 from dotenv import load_dotenv
 
-import coloredlogs
-
-import click_completion
+from developers_chamber.scripts import cli
+from developers_chamber.scripts.bitbucket import *
+from developers_chamber.scripts.docker import *
+from developers_chamber.scripts.ecs import *
+from developers_chamber.scripts.git import *
+from developers_chamber.scripts.jira import *
+from developers_chamber.scripts.project import *
+from developers_chamber.scripts.qa import *
+from developers_chamber.scripts.sh import *
+from developers_chamber.scripts.toggle import *
+from developers_chamber.scripts.version import *
 
 click_completion.init()
 
@@ -20,15 +28,6 @@ for config_path in (Path.home(), Path.cwd()):
             if file.is_file() and file.suffix == '.conf':
                 load_dotenv(dotenv_path=str(file))
 
-from developers_chamber.scripts import cli
-from developers_chamber.scripts.bitbucket import *
-from developers_chamber.scripts.docker import *
-from developers_chamber.scripts.ecs import *
-from developers_chamber.scripts.git import *
-from developers_chamber.scripts.project import *
-from developers_chamber.scripts.qa import *
-from developers_chamber.scripts.version import *
-from developers_chamber.scripts.sh import *
 
 
 # Import external scripts
@@ -46,7 +45,7 @@ coloredlogs.install(milliseconds=True)
 @click.option('-i', '--case-insensitive/--no-case-insensitive', help="Case insensitive completion")
 @click.argument('shell', required=False, type=click_completion.DocumentedChoice(click_completion.core.shells))
 @click.argument('path', required=False)
-def init_completition(append, case_insensitive, shell, path):
+def init_completion(append, case_insensitive, shell, path):
     """Install the pydev completion"""
     extra_env = {'_PYDEV_CASE_INSENSITIVE_COMPLETE': 'ON'} if case_insensitive else {}
     shell, path = click_completion.core.install(shell=shell, path=path, append=append, extra_env=extra_env)

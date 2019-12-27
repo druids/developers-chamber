@@ -1,22 +1,32 @@
 import os
+
 import click
 
-from developers_chamber.ecs_utils import deploy_new_task_definition as deploy_new_task_definition_func
+from developers_chamber.ecs_utils import \
+    deploy_new_task_definition as deploy_new_task_definition_func
+from developers_chamber.ecs_utils import \
+    get_task_definition_for_service as get_task_definition_for_service_func
+from developers_chamber.ecs_utils import \
+    get_tasks_for_service as get_tasks_for_service_func
+from developers_chamber.ecs_utils import \
+    register_new_task_definition as register_new_task_definition_func
+from developers_chamber.ecs_utils import \
+    run_service_task as run_service_task_func
 from developers_chamber.ecs_utils import run_task as run_task_func
-from developers_chamber.ecs_utils import stop_service as stop_service_func
+from developers_chamber.ecs_utils import \
+    run_task_and_wait_for_success as run_task_and_wait_for_success_func
 from developers_chamber.ecs_utils import start_service as start_service_func
-from developers_chamber.ecs_utils import register_new_task_definition as register_new_task_definition_func
-from developers_chamber.ecs_utils import update_service_to_latest_task_definition as \
-    update_service_to_latest_task_definition_func
-from developers_chamber.ecs_utils import run_task_and_wait_for_success as run_task_and_wait_for_success_func
-from developers_chamber.ecs_utils import get_tasks_for_service as get_tasks_for_service_func
-from developers_chamber.ecs_utils import get_task_definition_for_service as get_task_definition_for_service_func
-from developers_chamber.ecs_utils import stop_service_and_wait_for_tasks_to_stop as \
+from developers_chamber.ecs_utils import stop_service as stop_service_func
+from developers_chamber.ecs_utils import \
+    stop_service_and_wait_for_tasks_to_stop as \
     stop_service_and_wait_for_tasks_to_stop_func
-from developers_chamber.ecs_utils import migrate_service as migrate_service_func
-from developers_chamber.ecs_utils import stop_services_and_wait_for_tasks_to_stop as stop_services_and_wait_for_tasks_to_stop_func
+from developers_chamber.ecs_utils import \
+    stop_services_and_wait_for_tasks_to_stop as \
+    stop_services_and_wait_for_tasks_to_stop_func
+from developers_chamber.ecs_utils import \
+    update_service_to_latest_task_definition as \
+    update_service_to_latest_task_definition_func
 from developers_chamber.scripts import cli
-
 
 default_region = os.environ.get('AWS_REGION')
 default_cluster = os.environ.get('AWS_ECS_CLUSTER')
@@ -106,9 +116,9 @@ def run_task_and_wait_for_success(cluster, task_definition, command, name, succe
 @click.option('--success-string', help='String that is considered a success code', type=str, default='0', required=True)
 @click.option('--timeout', '-o', help='Seconds to wait before exiting with fail state', type=int, default=600)
 @click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
-def migrate_service(cluster, service, command, success_string, timeout, region):
+def run_service_task(cluster, service, command, success_string, timeout, region):
     """Run a single task based on service's task definition in AWS ECS and wait for it to stop with success."""
-    migrate_service_func(cluster, service, command, success_string, timeout, region)
+    run_service_task_func(cluster, service, command, success_string, timeout, region)
 
 
 @ecs.command()

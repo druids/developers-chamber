@@ -58,6 +58,14 @@ Shell or bash scripts.
 
 AWS ESC commands.
 
+### Jira
+
+Jira helpers.
+
+### Toggle
+
+Time tracking helpers.
+
 ### Project
 
 Group of commands which joins previous commands for simplifier development.

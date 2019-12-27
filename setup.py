@@ -22,6 +22,10 @@ setup(
         'isort~=4.3.21',
         'coloredlogs~=10.0',
         'click-completion~=0.5.2',
+        'jira~=2.0.0',
+        'unidecode~=1.1.1',
+        'TogglPy~=0.1.1',
+        'attrdict~=2.0.1',
     ],
     entry_points={'console_scripts': [
         'pydev=developers_chamber.bin.pydev:cli',

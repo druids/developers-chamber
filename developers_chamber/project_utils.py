@@ -1,15 +1,26 @@
 import logging
+import math
 import os
+import re
 import shutil
 import subprocess
+from datetime import timedelta
 from pathlib import Path
 
-from click import BadParameter, ClickException
+from click import BadParameter, ClickException, confirm
 from python_hosts.exception import UnableToWriteHosts
 from python_hosts.hosts import Hosts, HostsEntry
 
-from developers_chamber.utils import call_command, call_compose_command
-
+from developers_chamber.bitbucket_utils import \
+    create_pull_request as bitbucket_create_pull_request
+from developers_chamber.git_utils import get_current_branch_name
+from developers_chamber.jira_utils import (clean_issue_key, get_issue_fields,
+                                           log_issue_time)
+from developers_chamber.toggle_utils import (get_full_timer_report,
+                                             get_running_timer_data,
+                                             start_timer, stop_running_timer)
+from developers_chamber.utils import (call_command, call_compose_command,
+                                      pretty_time_delta)
 
 LOGGER = logging.getLogger()
 
@@ -111,3 +122,96 @@ def compose_install(project_name, compose_files, var_dirs=None, containers_dir_t
 
     for container_name, command in install_container_commands or ():
         compose_run(project_name, compose_files, [container_name], command)
+
+
+def start_task(jira_url, jira_username, jira_api_key, toggl_api_key, project_key, issue_key):
+    running_timer = get_running_timer_data(toggl_api_key)
+    if running_timer:
+        if confirm('Timer is already running do you want to log it?'):
+            stop_task(jira_url, jira_username, jira_api_key, toggl_api_key)
+
+    issue_key = clean_issue_key(issue_key, project_key)
+    issue_data = get_issue_fields(jira_url, jira_username, jira_api_key, issue_key, project_key)
+    toggl_description = '{} {}'.format(issue_key, issue_data.summary)
+    start_timer(toggl_api_key, toggl_description)
+    return 'Toggle was started with description "{}"'.format(toggl_description)
+
+
+def _get_timer_comment(timer):
+    return 'Toggl #{}'.format(timer.id)
+
+
+def stop_task(jira_url, jira_username, jira_api_key, toggl_api_key):
+    running_timer = get_running_timer_data(toggl_api_key)
+    if running_timer:
+        match = re.match('(?P<issue_key>.{3}-\d+).*', running_timer.description)
+        if match:
+            issue_key = match.group('issue_key')
+            get_issue_fields(jira_url, jira_username, jira_api_key, issue_key)
+            stopped_timer = stop_running_timer(toggl_api_key)
+            log_issue_time(
+                jira_url,
+                jira_username,
+                jira_api_key,
+                issue_key,
+                time_spend=timedelta(seconds=stopped_timer.duration),
+                comment=_get_timer_comment(stopped_timer),
+            )
+            return 'Timner was stopped and time was logged'
+        else:
+            ClickException('Invalid running task description')
+    else:
+        ClickException('No running task')
+
+
+def create_or_update_pull_request(jira_url, jira_username, jira_api_key, bitbucket_username, bitbucket_password,
+                                  bitbucket_destination_branch_name, bitbucket_repository_name):
+    issue_key = clean_issue_key()
+    issue_data = get_issue_fields(jira_url, jira_username, jira_api_key, issue_key)
+    return bitbucket_create_pull_request(
+        bitbucket_username, bitbucket_password, '{} {}'.format(issue_key, issue_data.summary), '',
+        get_current_branch_name(), bitbucket_destination_branch_name, bitbucket_repository_name
+    )
+
+
+def sync_timer_to_jira(jira_url, jira_username, jira_api_key, toggl_api_key, from_date, to_date):
+    def get_timer_worklog(timer, issue_data):
+        for worklog in issue_data.worklog.worklogs:
+            if hasattr(worklog, 'comment') and worklog.comment ==_get_timer_comment(timer):
+                return worklog
+        return None
+
+    timers = get_full_timer_report(toggl_api_key, from_date=from_date, to_date=to_date).data
+    for timer in timers:
+        match = re.match('(?P<issue_key>.{3}-\d+).*', timer.description)
+        if match:
+            issue_key = match.group('issue_key')
+            issue_data = get_issue_fields(jira_url, jira_username, jira_api_key, issue_key)
+            timer_worklog = get_timer_worklog(timer, issue_data)
+
+            timer_seconds = math.ceil(timer.dur / 1000 / 60) * 60  # Rounded on minutes
+            if timer_worklog and timer_worklog.timeSpentSeconds != timer_seconds:
+                timer_worklog.delete()
+                LOGGER.info('Updating issue "{}" worklog "{}"'.format(
+                    issue_key, pretty_time_delta(timer_seconds)
+                ))
+                log_issue_time(
+                    jira_url,
+                    jira_username,
+                    jira_api_key,
+                    issue_key,
+                    time_spend=timedelta(seconds=timer_seconds),
+                    comment=_get_timer_comment(timer),
+                )
+            elif not timer_worklog:
+                LOGGER.info('Adding issue "{}" worklog "{}"'.format(
+                    issue_key, pretty_time_delta(timer_seconds)
+                ))
+                log_issue_time(
+                    jira_url,
+                    jira_username,
+                    jira_api_key,
+                    issue_key,
+                    time_spend=timedelta(seconds=timer_seconds),
+                    comment=_get_timer_comment(timer),
+                )

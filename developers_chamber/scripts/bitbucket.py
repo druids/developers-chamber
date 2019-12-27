@@ -2,11 +2,10 @@ import os
 
 import click
 
-from developers_chamber.scripts import cli
+from developers_chamber.bitbucket_utils import \
+    create_merge_release_pull_request as create_merge_release_pull_request_func
 from developers_chamber.git_utils import get_current_branch_name
-from developers_chamber.bitbucket_utils import create_merge_release_pull_request as \
-    create_merge_release_pull_request_func
-
+from developers_chamber.scripts import cli
 
 default_username = os.environ.get('BITBUCKET_USERNAME')
 default_password = os.environ.get('BITBUCKET_PASSWORD')
