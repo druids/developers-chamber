@@ -21,6 +21,7 @@ setup(
         'python-hosts==0.4.6',
         'isort==4.3.21',
         'coloredlogs==10.0',
+        'click-completion==0.5.2',
     ],
     entry_points={'console_scripts': [
         'pydev=developers_chamber.bin.pydev:cli',
