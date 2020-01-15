@@ -1,8 +1,9 @@
-import re
-import os
 import json
-import click
+import os
+import re
 import shlex
+
+import click
 
 
 @click.group()

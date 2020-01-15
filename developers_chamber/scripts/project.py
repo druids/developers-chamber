@@ -1,14 +1,25 @@
 import os
+from datetime import date
 
 import click
 
-from developers_chamber.click.options import ContainerDirToCopyType, ContainerCommandType
+from developers_chamber.bitbucket_utils import get_commit_builds
+from developers_chamber.click.options import (ContainerCommandType,
+                                              ContainerDirToCopyType)
+from developers_chamber.git_utils import create_branch as create_branch_func
+from developers_chamber.git_utils import (get_commit_hash,
+                                          get_current_branch_name)
+from developers_chamber.jira_utils import get_branch_name
+from developers_chamber.project_utils import (compose_build, compose_exec,
+                                              compose_install,
+                                              compose_kill_all, compose_run,
+                                              compose_stop, compose_up)
+from developers_chamber.project_utils import \
+    create_or_update_pull_request as create_or_update_pull_request_func
+from developers_chamber.project_utils import (docker_clean, set_hosts,
+                                              start_task, stop_task,
+                                              sync_timer_to_jira)
 from developers_chamber.scripts import cli
-from developers_chamber.project_utils import (
-    set_hosts, compose_build, compose_run, compose_exec, compose_up, docker_clean, compose_install, compose_kill_all,
-    compose_stop
-)
-
 
 default_project_name = os.environ.get('PROJECT_DOCKER_COMPOSE_PROJECT_NAME')
 default_compose_files = (
@@ -36,6 +47,16 @@ default_containers_dir_to_copy = (
     if os.environ.get('PROJECT_DOCKER_COMPOSE_CONTAINERS_DIR_TO_COPY') else None
 )
 default_containers_install_command = os.environ.get('PROJECT_DOCKER_COMPOSE_CONTAINERS_INSTALL_COMMAND', '').split(',')
+jira_url = os.environ.get('JIRA_URL')
+jira_username = os.environ.get('JIRA_USERNAME')
+jira_api_key = os.environ.get('JIRA_API_KEY')
+toggl_api_key = os.environ.get('TOGGL_API_KEY')
+project_key = os.environ.get('JIRA_PROJECT_KEY')
+source_branch_name = os.environ.get('PROJECT_SOURCE_BRANCH_NAME', 'next')
+bitbucket_username = os.environ.get('BITBUCKET_USERNAME')
+bitbucket_password = os.environ.get('BITBUCKET_PASSWORD')
+bitbucket_destination_branch_name = os.environ.get('BITBUCKET_BRANCH_NAME', 'next')
+bitbucket_repository_name = os.environ.get('BITBUCKET_REPOSITORY')
 
 
 @cli.group()
@@ -174,3 +195,118 @@ def clean(hard):
     Clean docker images and its volumes
     """
     docker_clean(hard)
+
+
+@project.group()
+def task():
+    """Task commands"""
+
+
+@task.command()
+@click.option('--jira-url',  help='Jira URL', type=str, required=True, default=jira_url)
+@click.option('--jira-username',  help='Jira username', type=str, required=True, default=jira_username)
+@click.option('--jira-api-key',  help='Jira API key/password', type=str, required=True, default=jira_api_key)
+@click.option('--toggl-api-key', help='toggle API key', type=str, required=True, default=toggl_api_key)
+@click.option('--project-key',  help='Jira project key', type=str, required=False, default=project_key)
+@click.option('--issue-key', '-i',  help='key of the task', type=str)
+def start(jira_url, jira_username, jira_api_key, toggl_api_key, project_key, issue_key):
+    """
+    Gets information from Jira about issue and start Toggle timer.
+    """
+    click.echo(start_task(jira_url, jira_username, jira_api_key, toggl_api_key, project_key, issue_key))
+
+
+@task.command()
+@click.option('--jira-url', help='Jira URL', type=str, required=True, default=jira_url)
+@click.option('--jira-username', help='Jira username', type=str, required=True, default=jira_username)
+@click.option('--jira-api-key', help='Jira API key/password', type=str, required=True, default=jira_api_key)
+@click.option('--toggl-api-key', help='toggle API key', type=str, required=True, default=toggl_api_key)
+def stop(jira_url, jira_username, jira_api_key, toggl_api_key):
+    """
+    Stops Toggle timer and logs time to the Jira issue.
+    """
+    click.echo(stop_task(jira_url, jira_username, jira_api_key, toggl_api_key))
+
+
+@task.command()
+@click.option('--jira-url',  help='Jira URL', type=str, required=True, default=jira_url)
+@click.option('--jira-username', help='Jira username', type=str, required=True, default=jira_username)
+@click.option('--jira-api-key', help='Jira API key/password', type=str, required=True, default=jira_api_key)
+@click.option('--project-key',  help='Jira project key', type=str, required=False, default=project_key)
+@click.option('--source_branch_name', '-s', help='source branch name', type=str, default=source_branch_name)
+@click.option('--issue-key', '-i',  help='key of the task', type=str, required=True)
+def create_branch_from_issue(jira_url, jira_username, jira_api_key, project_key, source_branch_name, issue_key):
+    """
+    Creates new git branch from source branch with name generated from Jira issue.
+    """
+    click.echo('Branch "{}" was created'.format(
+        create_branch_func(
+            source_branch_name, get_branch_name(jira_url, jira_username, jira_api_key, issue_key, project_key)
+        )
+    ))
+
+
+@task.command()
+@click.option('--jira-url', '-u',  help='Jira URL', type=str, required=True, default=jira_url)
+@click.option('--jira-username', '-a',  help='Jira username', type=str, required=True, default=jira_username)
+@click.option('--jira-api-key', '-p',  help='Jira API key/password', type=str, required=True, default=jira_api_key)
+@click.option('--bitbucket-username', help='username', type=str, required=True, default=bitbucket_username)
+@click.option('--bitbucket-password', help='password', type=str, required=True,
+              default=bitbucket_password)
+@click.option('--bitbucket-destination-branch-name', help='destination bitbucket branch name', type=str, required=True,
+              default=bitbucket_destination_branch_name)
+@click.option('--bitbucket-repository-name', '-r', help='bitbucket repository name', type=str, required=True,
+              default=bitbucket_repository_name)
+def create_or_update_pull_request(jira_url, jira_username, jira_api_key, bitbucket_username, bitbucket_password,
+                                  bitbucket_destination_branch_name, bitbucket_repository_name):
+    """
+    Creates Bitbucket pull request named according to Jira issue.
+    """
+    click.echo('Pull request "{}" was created or updated'.format(
+        create_or_update_pull_request_func(
+            jira_url, jira_username, jira_api_key, bitbucket_username, bitbucket_password,
+            bitbucket_destination_branch_name, bitbucket_repository_name
+        )
+    ))
+
+
+@task.command()
+@click.option('--jira-url', help='Jira URL', type=str, required=True, default=jira_url)
+@click.option('--jira-username', help='Jira username', type=str, required=True, default=jira_username)
+@click.option('--jira-api-key', help='Jira API key/password', type=str, required=True, default=jira_api_key)
+@click.option('--toggl-api-key', help='toggle API key', type=str, required=True, default=toggl_api_key)
+@click.option('--from-date', '-f',  help='report from', type=click.DateTime(formats=["%Y-%m-%d"]),
+              default=str(date.today()))
+@click.option('--to-date', '-t',  help='report to', type=click.DateTime(formats=["%Y-%m-%d"]),
+              default=str(date.today()))
+def sync_timer_log_to_issues(jira_url, jira_username, jira_api_key, toggl_api_key, from_date, to_date):
+    """
+    Synchronizes logged time in timer with issues worklog.
+    """
+    sync_timer_to_jira(jira_url, jira_username, jira_api_key, toggl_api_key, from_date.date(), to_date.date())
+    click.echo('Issue times were synchronized with the timer')
+
+
+@task.command()
+@click.option('--bitbucket-username', help='username', type=str, required=True, default=bitbucket_username)
+@click.option('--bitbucket-password', help='password', type=str, required=True,
+              default=bitbucket_password)
+@click.option('--bitbucket-repository-name', '-r', help='bitbucket repository name', type=str, required=True,
+              default=bitbucket_repository_name)
+@click.option('--branch-name', help='git branch name', type=str, required=False)
+def print_last_commit_build(bitbucket_username, bitbucket_password,
+                            bitbucket_repository_name, branch_name):
+    """
+    Print last commit build of selected branch.
+    """
+    branch_name = branch_name or get_current_branch_name()
+    commit_builds = get_commit_builds(
+        bitbucket_username, bitbucket_password, bitbucket_repository_name, get_commit_hash(branch_name)
+    )
+    if commit_builds:
+        for build_data in commit_builds:
+            click.echo(build_data['name'])
+            click.echo('  Description: {}'.format(build_data['description']))
+            click.echo('  URL: {}\n'.format(build_data['url']))
+    else:
+        click.echo('Builds weren\'t found')

@@ -1,21 +1,18 @@
-import os
-import git
 import re
 
+import git
+from click import BadParameter, UsageError
 from git import GitCommandError
 
-from click import BadParameter, UsageError
-
-from .version_utils import bump_version
 from .types import ReleaseType
-
+from .version_utils import bump_version
 
 DEPLOYMENT_COMMIT_PATTERN = r'^Deployment of "(?P<branch_name>.+)"$'
 RELEASE_BRANCH_PATTERN = r'^(?P<release_type>(release|patch))-(?P<version>[0-9]+\.[0-9]+\.[0-9]+)$'
 
 
 def create_release_branch(version, release_type, remote_name=None, branch_name=None):
-    repo = git.Repo(os.getcwd())
+    repo = git.Repo('.')
     g = repo.git
 
     if branch_name:
@@ -33,8 +30,19 @@ def create_release_branch(version, release_type, remote_name=None, branch_name=N
     return release_branch_name
 
 
-def create_deployment_branch(environment, remote_name=None, branch_name=None):
-    repo = git.Repo(os.getcwd())
+def create_branch(source_branch_name, new_branch_name):
+    try:
+        repo = git.Repo('.')
+        g = repo.git
+
+        g.checkout(source_branch_name, b=new_branch_name)
+        return new_branch_name
+    except GitCommandError:
+        raise UsageError('Branch "{}" already exist'.format(new_branch_name))
+
+
+def create_deployment_branch(environment, remote_name=None):
+    repo = git.Repo('.')
     g = repo.git
     source_branch_name = str(repo.head.reference)
     deployment_branch_name = 'deploy-{}'.format(environment)
@@ -56,7 +64,7 @@ def create_deployment_branch(environment, remote_name=None, branch_name=None):
 
 
 def checkout_to_release_branch(remote_name=None):
-    repo = git.Repo(os.getcwd())
+    repo = git.Repo('.')
     g = repo.git
     match = re.match(DEPLOYMENT_COMMIT_PATTERN, repo.head.commit.message)
     if not match:
@@ -70,7 +78,7 @@ def checkout_to_release_branch(remote_name=None):
 
 
 def bump_version_from_release_branch(files=['version.json']):
-    repo = git.Repo(os.getcwd())
+    repo = git.Repo('.')
     g = repo.git
 
     match = re.match(RELEASE_BRANCH_PATTERN, str(repo.head.reference))
@@ -81,7 +89,7 @@ def bump_version_from_release_branch(files=['version.json']):
 
 
 def commit_version(version, files=['version.json'], remote_name=None):
-    repo = git.Repo(os.getcwd())
+    repo = git.Repo('.')
     g = repo.git
 
     try:
@@ -101,7 +109,7 @@ def commit_version(version, files=['version.json'], remote_name=None):
 
 
 def merge_release_branch(to_branch_name=None, remote_name=None):
-    repo = git.Repo(os.getcwd())
+    repo = git.Repo('.')
     g = repo.git
     source_branch_name = str(repo.head.reference)
 
@@ -110,7 +118,7 @@ def merge_release_branch(to_branch_name=None, remote_name=None):
         g.pull(remote_name, to_branch_name)
 
     # GitPython does not support merge --no-ff or what?
-    git_cmd = git.cmd.Git(os.getcwd())
+    git_cmd = git.cmd.Git('.')
     no_ff_commit = 'Merge branch "{}"'.format(source_branch_name)
     git_cmd.execute(('git', 'merge', '--no-ff', '-m', no_ff_commit, str(source_branch_name)))
 
@@ -121,5 +129,22 @@ def merge_release_branch(to_branch_name=None, remote_name=None):
 
 
 def get_current_branch_name():
-    repo = git.Repo(os.getcwd())
+    repo = git.Repo('.')
     return str(repo.head.reference)
+
+
+def get_commit_hash(branch_name):
+    try:
+        repo = git.Repo('.')
+        return repo.heads[branch_name].object.hexsha
+    except IndexError:
+        raise UsageError('Invalid branch name: {}'.format(branch_name))
+
+
+def get_current_issue_key():
+    branch_name = get_current_branch_name()
+    match = re.match('(?P<issue_key>.{3}-\d+).*', branch_name)
+    if match:
+        return match.group('issue_key')
+    else:
+        return None

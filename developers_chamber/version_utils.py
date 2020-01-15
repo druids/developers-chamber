@@ -6,7 +6,6 @@ from click import BadParameter
 
 from .types import ReleaseType
 
-
 VERSION_PATTERN = r'(?P<major>[0-9]+)\.(?P<minor>[0-9]+)(\.(?P<patch>[0-9]+))?(-(?P<build>\w+))?'
 
 

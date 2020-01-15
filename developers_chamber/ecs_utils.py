@@ -382,7 +382,7 @@ def wait_for_tasks_to_start(cluster, tasks, region):
         raise ClickException(ex)
 
 
-def migrate_service(cluster, service, command, success_string, timeout, region):
+def run_service_task(cluster, service, command, success_string, timeout, region):
     ecs_client = _get_ecs_client(region)
 
     task_definition = get_task_definition_for_service(cluster=cluster, service=service, region=region)
@@ -507,7 +507,7 @@ def get_tasks_for_service(cluster, service, region):
 
 
 def stop_services_and_wait_for_tasks_to_stop(cluster, services, timeout, region):
-    ecs_client = _get_ecs_client(region)
+    _get_ecs_client(region)
 
     THREAD_MAX = 32
     number_of_services = len(services)
@@ -531,7 +531,7 @@ def stop_services_and_wait_for_tasks_to_stop(cluster, services, timeout, region)
 
 
 def stop_service_and_wait_for_tasks_to_stop(cluster, service, timeout, region):
-    ecs_client = _get_ecs_client(region)
+    _get_ecs_client(region)
 
     tasks = get_tasks_for_service(cluster=cluster, service=service, region=region)
 
@@ -548,7 +548,7 @@ def start_service_and_wait_for_tasks_to_start(cluster, service, count, region):
     """ This function is currently not working as the tasks are not started
     immediately after the update of desired count
     """
-    ecs_client = _get_ecs_client(region)
+    _get_ecs_client(region)
 
     start_service(cluster=cluster, service=service, count=count, region=region)
 
