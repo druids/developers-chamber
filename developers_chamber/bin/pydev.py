@@ -1,11 +1,20 @@
 #!/usr/bin/env python
 import logging.config
 import sys
+import os
 from pathlib import Path
 
 import click_completion
 import coloredlogs
 from dotenv import load_dotenv
+
+
+for config_path in (Path.home(), Path.cwd()):
+    if (config_path / '.pydev').exists() and (config_path / '.pydev').is_dir():
+        for file in (config_path / '.pydev').iterdir():
+            if file.is_file() and file.suffix == '.conf':
+                load_dotenv(dotenv_path=str(file))
+
 
 from developers_chamber.scripts import cli
 from developers_chamber.scripts.bitbucket import *
@@ -19,15 +28,8 @@ from developers_chamber.scripts.sh import *
 from developers_chamber.scripts.toggle import *
 from developers_chamber.scripts.version import *
 
+
 click_completion.init()
-
-# Load configuration
-for config_path in (Path.home(), Path.cwd()):
-    if (config_path / '.pydev').exists() and (config_path / '.pydev').is_dir():
-        for file in (config_path / '.pydev').iterdir():
-            if file.is_file() and file.suffix == '.conf':
-                load_dotenv(dotenv_path=str(file))
-
 
 
 # Import external scripts
