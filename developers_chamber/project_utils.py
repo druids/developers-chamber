@@ -36,7 +36,10 @@ def _call_compose_command(project_name, compose_files, command, containers=None,
     compose_command += [
         '-f{}'.format(f) for f in compose_files
     ]
-    compose_command.append(command)
+    if isinstance(command, str):
+        compose_command.append(command)
+    else:
+        compose_command += list(command)
     compose_command += list(containers) if containers else []
     if extra_command:
         compose_command.append(extra_command)
@@ -62,7 +65,7 @@ def compose_build(project_name, compose_files, containers=None, containers_dir_t
 
 def compose_run(project_name, compose_files, containers, command):
     for container in containers:
-        _call_compose_command(project_name, compose_files, 'run', [container], command)
+        _call_compose_command(project_name, compose_files, ['run', '--use-aliases'], [container], command)
 
 
 def compose_exec(project_name, compose_files, containers, command):
