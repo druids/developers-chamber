@@ -50,8 +50,12 @@ default_containers_install_command = os.environ.get('PROJECT_DOCKER_COMPOSE_CONT
 jira_url = os.environ.get('JIRA_URL')
 jira_username = os.environ.get('JIRA_USERNAME')
 jira_api_key = os.environ.get('JIRA_API_KEY')
+jira_project_key = os.environ.get('JIRA_PROJECT_KEY')
+
 toggl_api_key = os.environ.get('TOGGL_API_KEY')
-project_key = os.environ.get('JIRA_PROJECT_KEY')
+toggl_project_id = os.environ.get('TOGGL_PROJECT_ID')
+toggl_workspace_id = os.environ.get('TOGGL_WORKSPACE_ID')
+
 source_branch_name = os.environ.get('PROJECT_SOURCE_BRANCH_NAME', 'next')
 bitbucket_username = os.environ.get('BITBUCKET_USERNAME')
 bitbucket_password = os.environ.get('BITBUCKET_PASSWORD')
@@ -206,14 +210,19 @@ def task():
 @click.option('--jira-url',  help='Jira URL', type=str, required=True, default=jira_url)
 @click.option('--jira-username',  help='Jira username', type=str, required=True, default=jira_username)
 @click.option('--jira-api-key',  help='Jira API key/password', type=str, required=True, default=jira_api_key)
+@click.option('--jira_project-key',  help='Jira project key', type=str, required=False, default=jira_project_key)
 @click.option('--toggl-api-key', help='toggle API key', type=str, required=True, default=toggl_api_key)
-@click.option('--project-key',  help='Jira project key', type=str, required=False, default=project_key)
+@click.option('--toggl-workspace-id', '-w',  help='toggl workspace ID', type=str, required=False,
+              default=toggl_workspace_id)
+@click.option('--toggl-project-id', '-p',  help='toggl project ID', type=str, required=False, default=toggl_project_id)
 @click.option('--issue-key', '-i',  help='key of the task', type=str)
-def start(jira_url, jira_username, jira_api_key, toggl_api_key, project_key, issue_key):
+def start(jira_url, jira_username, jira_api_key, jira_project_key, toggl_api_key, toggl_workspace_id, toggl_project_id,
+          issue_key):
     """
     Gets information from Jira about issue and start Toggle timer.
     """
-    click.echo(start_task(jira_url, jira_username, jira_api_key, toggl_api_key, project_key, issue_key))
+    click.echo(start_task(jira_url, jira_username, jira_api_key, jira_project_key, toggl_api_key, toggl_workspace_id,
+                          toggl_project_id, issue_key))
 
 
 @task.command()
@@ -232,7 +241,7 @@ def stop(jira_url, jira_username, jira_api_key, toggl_api_key):
 @click.option('--jira-url',  help='Jira URL', type=str, required=True, default=jira_url)
 @click.option('--jira-username', help='Jira username', type=str, required=True, default=jira_username)
 @click.option('--jira-api-key', help='Jira API key/password', type=str, required=True, default=jira_api_key)
-@click.option('--project-key',  help='Jira project key', type=str, required=False, default=project_key)
+@click.option('--jira-project-key',  help='Jira project key', type=str, required=False, default=jira_project_key)
 @click.option('--source_branch_name', '-s', help='source branch name', type=str, default=source_branch_name)
 @click.option('--issue-key', '-i',  help='key of the task', type=str, required=True)
 def create_branch_from_issue(jira_url, jira_username, jira_api_key, project_key, source_branch_name, issue_key):
@@ -275,15 +284,20 @@ def create_or_update_pull_request(jira_url, jira_username, jira_api_key, bitbuck
 @click.option('--jira-username', help='Jira username', type=str, required=True, default=jira_username)
 @click.option('--jira-api-key', help='Jira API key/password', type=str, required=True, default=jira_api_key)
 @click.option('--toggl-api-key', help='toggle API key', type=str, required=True, default=toggl_api_key)
+@click.option('--toggl-workspace-id', '-w',  help='toggl workspace ID', type=str, required=False,
+              default=toggl_workspace_id)
+@click.option('--toggl-project-id', '-p',  help='toggl project ID', type=str, required=False, default=toggl_project_id)
 @click.option('--from-date', '-f',  help='report from', type=click.DateTime(formats=["%Y-%m-%d"]),
               default=str(date.today()))
 @click.option('--to-date', '-t',  help='report to', type=click.DateTime(formats=["%Y-%m-%d"]),
               default=str(date.today()))
-def sync_timer_log_to_issues(jira_url, jira_username, jira_api_key, toggl_api_key, from_date, to_date):
+def sync_timer_log_to_issues(jira_url, jira_username, jira_api_key, toggl_api_key, toggl_workspace_id,
+                             toggl_project_id, from_date, to_date):
     """
     Synchronizes logged time in timer with issues worklog.
     """
-    sync_timer_to_jira(jira_url, jira_username, jira_api_key, toggl_api_key, from_date.date(), to_date.date())
+    sync_timer_to_jira(jira_url, jira_username, jira_api_key, toggl_api_key, toggl_workspace_id, toggl_project_id,
+                       from_date.date(), to_date.date())
     click.echo('Issue times were synchronized with the timer')
 
 
