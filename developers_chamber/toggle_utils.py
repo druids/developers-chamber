@@ -5,12 +5,13 @@ from urllib.error import HTTPError
 
 import click
 from attrdict import AttrDict
-from toggl.TogglPy import Toggl
+from toggl.TogglPy import Toggl, Endpoints
 
 
 def _get_toggl_client(api_key):
     client = Toggl()
     client.setAPIKey(api_key)
+
     try:
         client.getWorkspaces()
     except HTTPError:
@@ -18,9 +19,44 @@ def _get_toggl_client(api_key):
     return client
 
 
-def start_timer(api_key, description):
+def _get_workspace(client, workspace_id, project_id):
+    if project_id:
+        try:
+            project_workspace_id = client.getProject(project_id)['data']['wid']
+            if workspace_id and workspace_id != project_workspace_id:
+                raise click.BadParameter('Project ID is not part of workspace')
+            return project_workspace_id
+        except HTTPError:
+            raise click.BadParameter('Project ID is invalid')
+    elif workspace_id:
+        if client.getWorkspace(id=workspace_id):
+            return workspace_id
+        else:
+            raise click.BadParameter('Workspace ID is invalid')
+    else:
+        return client.getWorkspaces()[0]['id']
+
+
+def check_workspace_and_project(api_key, workspace_id, project_id):
     client = _get_toggl_client(api_key)
-    return AttrDict(client.startTimeEntry(description)['data'])
+    _get_workspace(client, workspace_id, project_id)
+
+
+def start_timer(api_key, description, workspace_id=None, project_id=None):
+    client = _get_toggl_client(api_key)
+    workspace_id = _get_workspace(client, workspace_id, project_id)
+
+    data = {
+        'time_entry': {
+            'created_with': client.user_agent,
+            'description': description
+        }
+    }
+    if project_id:
+        data['time_entry']['pid'] = project_id
+    if workspace_id:
+        data['time_entry']['wid'] = workspace_id
+    return AttrDict(client.decodeJSON(client.postRequest(Endpoints.START_TIME, parameters=data))['data'])
 
 
 def stop_running_timer(api_key):
@@ -38,32 +74,38 @@ def get_running_timer_data(api_key):
     return AttrDict(current_timer['data']) if current_timer['data'] else None
 
 
-def _prepare_report_data(client, description=None, from_date=None, to_date=None):
+def _prepare_report_data(client, workspace_id=None, project_id=None, description=None, from_date=None, to_date=None):
     from_date = from_date or date.today()
     to_date = to_date or date.today()
 
     if to_date - from_date > timedelta(days=366):
         raise click.BadParameter('Invalid filter parameters. You can generate reports with max 1 year timedelta')
 
+    workspace_id = _get_workspace(client, workspace_id, project_id)
+
     data = {
-        'workspace_id': client.getWorkspaces()[0]['id'],
+        'workspace_id': workspace_id,
         'since': str(from_date),
         'until': str(to_date),
+        'pid': project_id
     }
+    if project_id:
+        data['project_ids'] = project_id
+
     if description:
         data['description'] = description
     return data
 
 
-def get_timer_report(api_key, description=None, from_date=None, to_date=None):
+def get_timer_report(api_key, workspace_id=None, project_id=None, description=None, from_date=None, to_date=None):
     client = _get_toggl_client(api_key)
-    data = _prepare_report_data(client, description, from_date, to_date)
+    data = _prepare_report_data(client, workspace_id, project_id, description, from_date, to_date)
     return AttrDict(client.getDetailedReport(data))
 
 
-def get_full_timer_report(api_key, description=None, from_date=None, to_date=None):
+def get_full_timer_report(api_key, workspace_id=None, project_id=None, description=None, from_date=None, to_date=None):
     client = _get_toggl_client(api_key)
-    data = _prepare_report_data(client, description, from_date, to_date)
+    data = _prepare_report_data(client, workspace_id, project_id, description, from_date, to_date)
 
     pages_index = 1
     data['page'] = pages_index

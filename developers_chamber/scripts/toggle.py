@@ -11,6 +11,8 @@ from developers_chamber.toggle_utils import (get_full_timer_report,
 from developers_chamber.utils import pretty_time_delta
 
 api_key = os.environ.get('TOGGL_API_KEY')
+project_id = os.environ.get('TOGGL_PROJECT_ID')
+workspace_id = os.environ.get('TOGGL_WORKSPACE_ID')
 
 
 @cli.group()
@@ -22,12 +24,14 @@ def toggl():
 
 @toggl.command()
 @click.option('--description', '-d',  help='task description', type=str, required=True)
+@click.option('--workspace-id', '-w',  help='toggl workspace ID', type=str, required=False, default=workspace_id)
+@click.option('--project-id', '-p',  help='toggl project ID', type=str, required=False, default=project_id)
 @click.option('--api-key', '-k',  help='toggle API key', type=str, required=True, default=api_key)
-def start(description, api_key):
+def start(description, workspace_id, project_id, api_key):
     """
     Start toggl timer.
     """
-    running_timer = start_timer(api_key, description)
+    running_timer = start_timer(api_key, description, workspace_id, project_id)
     click.echo('Timer with description "{}" was started'.format(running_timer.description))
 
 
@@ -61,33 +65,39 @@ def print_toggl(api_key):
 
 
 @toggl.command()
+@click.option('--workspace-id', '-w',  help='toggl workspace ID', type=str, required=False, default=workspace_id)
+@click.option('--project-id', '-p',  help='toggl project ID', type=str, required=False, default=project_id)
 @click.option('--description', '-d',  help='task description', type=str)
 @click.option('--from-date', '-f',  help='report from', type=click.DateTime(formats=["%Y-%m-%d"]),
               default=str(date.today()))
 @click.option('--to-date', '-t',  help='report to', type=click.DateTime(formats=["%Y-%m-%d"]),
               default=str(date.today()))
 @click.option('--api-key', '-k',  help='toggle API key', type=str, required=True, default=api_key)
-def print_report(description, from_date, to_date, api_key):
+def print_report(workspace_id, project_id, description, from_date, to_date, api_key):
     """
     Print report.
     """
-    report_data = get_timer_report(api_key, description, from_date.date(), to_date.date())
+    report_data = get_timer_report(api_key, workspace_id, project_id, description, from_date.date(), to_date.date())
     click.echo('    {:<15}\t{}'.format('total time:', pretty_time_delta(report_data.total_grand or 0 / 1000)))
     click.echo('    {:<15}\t{}'.format('timers count:', report_data.total_count))
 
 
 @toggl.command()
+@click.option('--workspace-id', '-w',  help='toggl workspace ID', type=str, required=False, default=workspace_id)
+@click.option('--project-id', '-p',  help='toggl project ID', type=str, required=False, default=project_id)
 @click.option('--description', '-d',  help='task description', type=str)
 @click.option('--from-date', '-f',  help='report from', type=click.DateTime(formats=["%Y-%m-%d"]),
               default=str(date.today()))
 @click.option('--to-date', '-t',  help='report to', type=click.DateTime(formats=["%Y-%m-%d"]),
               default=str(date.today()))
 @click.option('--api-key', '-k',  help='toggle API key', type=str, required=True, default=api_key)
-def print_report_tasks(description, from_date, to_date, api_key):
+def print_report_tasks(workspace_id, project_id, description, from_date, to_date, api_key):
     """
     Print timer details.
     """
-    report_data = get_full_timer_report(api_key, description, from_date.date(), to_date.date())
+    report_data = get_full_timer_report(
+        api_key, workspace_id, project_id, description, from_date.date(), to_date.date()
+    )
 
     click.echo('{:<15} | {}'.format('Time', 'Description'))
     click.echo(16 * '-' + '+' + 16 * '-')
