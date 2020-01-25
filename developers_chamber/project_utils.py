@@ -5,7 +5,8 @@ import re
 import shutil
 import subprocess
 from datetime import timedelta
-from pathlib import Path
+from pathlib import Path, PurePath
+import platform
 
 from click import BadParameter, ClickException, confirm
 from python_hosts.exception import UnableToWriteHosts
@@ -107,6 +108,28 @@ def docker_clean(hard=False):
             call_command('docker volume rm $(docker volume ls -q)')
 
 
+def _unmount_and_rm_directory(directory):
+    if platform.system() == 'Darwin':
+        call_command(
+            'mount -t osxfuse | grep "{}" | awk -F " " \'{{print "umount " $3}}\'| bash'.format(directory),
+            quiet=True
+        )
+    elif platform.system() == 'Linux':
+        call_command(
+            'mount -l -t fuse | grep "{}" | awk -F " " \'{{print "fusermount -u " $3}}\'| bash'.format(directory),
+            quiet=True
+        )
+    shutil.rmtree(directory, ignore_errors=True)
+
+
+def bind_library(library_source_dir, library_destination_dir):
+    source_path_directory = Path(library_source_dir).resolve()
+    destination_path_directory = Path(library_destination_dir).resolve() / source_path_directory.name
+    _unmount_and_rm_directory(destination_path_directory)
+    os.makedirs(destination_path_directory)
+    call_command('bindfs --delete-deny {} {}'.format(source_path_directory, destination_path_directory), quiet=True)
+
+
 def compose_install(project_name, compose_files, var_dirs=None, containers_dir_to_copy=None,
                     install_container_commands=None):
     var_dirs = [
@@ -114,7 +137,7 @@ def compose_install(project_name, compose_files, var_dirs=None, containers_dir_t
     ]
 
     for var_dir in var_dirs:
-        shutil.rmtree(var_dir, ignore_errors=True)
+        _unmount_and_rm_directory(var_dir)
 
     for var_dir in var_dirs:
         os.makedirs(var_dir)
