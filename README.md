@@ -12,13 +12,31 @@ Instalation
 pip install developers-chamber
 ```
 
+## System libraries
+
+### Docker
+
+Docker and docker-compose is required for most of `pydev project` commands.
+
+
+### Bindfs
+
+Pydev command `pydev project bind-library` uses system library to mount directory with library to docker shared volume. 
+
+Instalation command for linux/macOS:
+```bash
+apt-get install bindfs
+yum install bindfs
+brew install bindfs
+```
+
 Completion
 ----------
 
-You can install bash completition with command
+You can install bash completion with command
 
 ```bash
-pydev init-completition
+pydev init-completion
 ```
 
 Commands

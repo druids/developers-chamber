@@ -27,6 +27,9 @@ def create_release_branch(version, release_type, remote_name=None, branch_name=N
     else:
         raise BadParameter('build is not allowed for release')
     g.checkout(branch_name or 'HEAD', b=release_branch_name)
+
+    if remote_name:
+        g.push(remote_name, release_branch_name, force=True)
     return release_branch_name
 
 

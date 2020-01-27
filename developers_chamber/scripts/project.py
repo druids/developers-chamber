@@ -14,6 +14,8 @@ from developers_chamber.project_utils import (compose_build, compose_exec,
                                               compose_install,
                                               compose_kill_all, compose_run,
                                               compose_stop, compose_up)
+from developers_chamber.project_utils import bind_library as bind_library_func
+
 from developers_chamber.project_utils import \
     create_or_update_pull_request as create_or_update_pull_request_func
 from developers_chamber.project_utils import (docker_clean, set_hosts,
@@ -47,6 +49,8 @@ default_containers_dir_to_copy = (
     if os.environ.get('PROJECT_DOCKER_COMPOSE_CONTAINERS_DIR_TO_COPY') else None
 )
 default_containers_install_command = os.environ.get('PROJECT_DOCKER_COMPOSE_CONTAINERS_INSTALL_COMMAND', '').split(',')
+default_library_dir = os.environ.get('PROJECT_LIBRARY_DIR')
+
 jira_url = os.environ.get('JIRA_URL')
 jira_username = os.environ.get('JIRA_USERNAME')
 jira_api_key = os.environ.get('JIRA_API_KEY')
@@ -182,6 +186,19 @@ def install(project_name, compose_file, var_dir, container_dir_to_copy, install_
     Builds, (re)creates, starts, and attaches to containers for a service.
     """
     compose_install(project_name, compose_file, var_dir, container_dir_to_copy, install_container_command)
+
+
+
+@project.command()
+@click.option('--library-source-dir', '-s', help='Library source directory', type=str, required=True)
+@click.option('--library-destination-dir', '-d', help='Library destination directory', type=str, required=True,
+              default=default_library_dir)
+def bind_library(library_source_dir, library_destination_dir):
+    """
+    Bind external python library.
+    """
+    bind_library_func(library_source_dir, library_destination_dir)
+
 
 
 @project.command()
