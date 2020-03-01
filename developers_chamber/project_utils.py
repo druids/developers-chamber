@@ -27,6 +27,9 @@ from developers_chamber.utils import (call_command, call_compose_command,
 LOGGER = logging.getLogger()
 
 
+ISSUE_KEY_PATTERN = re.compile('(?P<issue_key>[A-Z][A-Z]+-\d+).*')
+
+
 def get_command_output(command):
     try:
         LOGGER.info(command if isinstance(command, str) else ' '.join(command))
@@ -171,7 +174,7 @@ def _get_timer_comment(timer):
 def stop_task(jira_url, jira_username, jira_api_key, toggl_api_key):
     running_timer = get_running_timer_data(toggl_api_key)
     if running_timer:
-        match = re.match('(?P<issue_key>.{3}-\d+).*', running_timer.description)
+        match = ISSUE_KEY_PATTERN.match(running_timer.description)
         if match:
             issue_key = match.group('issue_key')
             get_issue_fields(jira_url, jira_username, jira_api_key, issue_key)
@@ -212,7 +215,7 @@ def sync_timer_to_jira(jira_url, jira_username, jira_api_key, toggl_api_key, tog
     timers = get_full_timer_report(toggl_api_key, workspace_id=toggl_workspace_id, project_id=toggl_project_id,
                                    from_date=from_date, to_date=to_date).data
     for timer in timers:
-        match = re.match('(?P<issue_key>.{3}-\d+).*', timer.description)
+        match = ISSUE_KEY_PATTERN.match(timer.description)
         if match:
             issue_key = match.group('issue_key')
             issue_data = get_issue_fields(jira_url, jira_username, jira_api_key, issue_key)
