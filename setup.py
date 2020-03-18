@@ -13,7 +13,7 @@ setup(
     include_package_data=True,
     packages=find_packages(),
     install_requires=[
-        'gitpython==2.1.12',
+        'gitpython==3.1.0',
         'click==7.0',
         'requests==2.22.0',
         'python-dotenv==0.10.3',
