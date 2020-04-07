@@ -600,3 +600,39 @@ def get_min_capacity_for_service(cluster, service, region, as_client=None):
         )
 
     return int(targets[0].get('MinCapacity'))
+
+
+def redeploy_service(cluster, service, region, ecs_client=None):
+    ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
+
+    LOGGER.info('Redeploying service: {}'.format(service))
+
+    try:
+        response = ecs_client.update_service(
+            cluster=cluster,
+            service=service,
+            forceNewDeployment=True,
+        )
+    except ecs_client.exceptions.ClusterNotFoundException:
+        raise ClickException("Cluster not found: '{}'".format(cluster))
+    except ecs_client.exceptions.ServiceNotFoundException:
+        raise ClickException("Service not found: '{}'".format(service))
+    except ClientError as ex:
+        raise ClickException(ex)
+
+
+def redeploy_services(cluster, services, region, ecs_client=None):
+    ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
+
+    for service in services:
+        redeploy_service(cluster=cluster, service=service, region=region, ecs_client=ecs_client)
+
+
+def redeploy_cluster_services(cluster, region, ecs_client=None):
+    ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
+
+    services = get_services_names(cluster=cluster, region=region, ecs_client=ecs_client)
+    non_daemon_services = [service for service in services if not is_service_type_daemon(
+        service=service, cluster=cluster, region=region, ecs_client=ecs_client)]
+
+    redeploy_services(cluster=cluster, services=non_daemon_services, region=region, ecs_client=ecs_client)
