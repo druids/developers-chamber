@@ -5,9 +5,15 @@ import click
 from developers_chamber.ecs_utils import \
     deploy_new_task_definition as deploy_new_task_definition_func
 from developers_chamber.ecs_utils import \
+    get_services_names as get_services_names_func
+from developers_chamber.ecs_utils import \
     get_task_definition_for_service as get_task_definition_for_service_func
 from developers_chamber.ecs_utils import \
     get_tasks_for_service as get_tasks_for_service_func
+from developers_chamber.ecs_utils import \
+    redeploy_services as redeploy_services_func
+from developers_chamber.ecs_utils import \
+    redeploy_cluster_services as redeploy_cluster_services_func
 from developers_chamber.ecs_utils import \
     register_new_task_definition as register_new_task_definition_func
 from developers_chamber.ecs_utils import \
@@ -183,3 +189,30 @@ def stop_services_and_wait_for_tasks_to_stop(cluster, services, timeout, region)
     """ Stop services and wait for the tasks to stop """
     services = services.split(',')
     stop_services_and_wait_for_tasks_to_stop_func(cluster, services, timeout, region)
+
+
+@ecs.command()
+@click.option('--cluster', '-c', help='ECS cluster name', type=str, default=default_cluster, required=True)
+@click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
+def get_services_names(cluster, region):
+    """ Get names of the cluster services """
+    for service_name in get_services_names_func(cluster, region):
+        click.echo(service_name)
+
+
+@ecs.command()
+@click.option('--cluster', '-c', help='ECS cluster name', type=str, default=default_cluster, required=True)
+@click.option('--services', '-s', help='ECS services names divided by comma', type=str, required=True)
+@click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
+def redeploy_services(cluster, services, region):
+    """ Redeploy services by forcing new service deployment. """
+    services = services.split(',')
+    redeploy_services_func(cluster, services, region)
+
+
+@ecs.command()
+@click.option('--cluster', '-c', help='ECS cluster name', type=str, default=default_cluster, required=True)
+@click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
+def redeploy_cluster_services(cluster, region):
+    """ Redeploy all cluster services by forcing new service deployment. """
+    redeploy_cluster_services_func(cluster, region)
