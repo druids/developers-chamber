@@ -45,8 +45,8 @@ def get_log_events(log_group, log_stream, region):
     return resp['events']
 
 
-def register_new_task_definition(task_definition, image, region):
-    ecs_client = _get_ecs_client(region)
+def register_new_task_definition(task_definition, image, region, ecs_client=None):
+    ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
 
     try:
         old_task_definition = ecs_client.describe_task_definition(
@@ -116,10 +116,11 @@ def get_task_definition_for_service(cluster, service, region, ecs_client=None):
     return services['services'][0]['taskDefinition']
 
 
-def update_service_to_latest_task_definition(cluster, service, region):
-    ecs_client = _get_ecs_client(region)
+def update_service_to_latest_task_definition(cluster, service, region, ecs_client=None):
+    ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
 
-    old_task_definition = get_task_definition_for_service(cluster=cluster, service=service, region=region)
+    old_task_definition = get_task_definition_for_service(
+        cluster=cluster, service=service, region=region, ecs_client=ecs_client)
     LOGGER.info('Current task definition ARN: {}'.format(old_task_definition))
 
     try:
@@ -137,18 +138,19 @@ def update_service_to_latest_task_definition(cluster, service, region):
         service=service,
         task_definition=new_task_definition_arn,
         region=region,
+        ecs_client=ecs_client,
     )
 
 
-def update_service_to_new_task_definition(cluster, service, task_definition, region):
-    ecs_client = _get_ecs_client(region)
+def update_service_to_new_task_definition(cluster, service, task_definition, region, force=True, ecs_client=None):
+    ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
 
     try:
         response = ecs_client.update_service(
             cluster=cluster,
             service=service,
             taskDefinition=task_definition,
-            forceNewDeployment=True,
+            forceNewDeployment=force,
         )
     except ecs_client.exceptions.ClusterNotFoundException:
         raise ClickException("Cluster not found: '{}'".format(cluster))
@@ -158,22 +160,26 @@ def update_service_to_new_task_definition(cluster, service, task_definition, reg
         raise ClickException(ex)
 
 
-def deploy_new_task_definition(cluster, service, task_definition, image, region):
-    ecs_client = _get_ecs_client(region)
+def deploy_new_task_definition(cluster, service, task_definition, image, region, ecs_client=None):
+    ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
 
-    new_task_definition = register_new_task_definition(task_definition=task_definition, image=image, region=region)
+    new_task_definition = register_new_task_definition(
+        task_definition=task_definition, image=image, region=region, ecs_client=ecs_client)
 
     update_service_to_new_task_definition(
         cluster=cluster,
         service=service,
         task_definition=new_task_definition,
         region=region,
+        ecs_client=ecs_client,
     )
 
 
-def start_service(cluster, service, count, region, ecs_client=None):
+def start_service(cluster, service, count, region, ecs_client=None, as_client=None):
     if count is not None and count < 1:
         raise ClickException("Count must be greater than zero or 'None' to be determined from autoscaling targets.")
+
+    ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
 
     if count is None:
         try:
@@ -182,8 +188,6 @@ def start_service(cluster, service, count, region, ecs_client=None):
             raise ClickException(
                 'Set explicit count or set up autoscaling with minimum capacity.\n{}'.format(ex)
             )
-
-    ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
 
     LOGGER.info('Starting service: {} [count={}]'.format(service, count))
 
@@ -220,11 +224,11 @@ def is_service_type_daemon(service, cluster, region, ecs_client=None):
 def start_cluster_services(cluster, count, region, ecs_client=None):
     ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
 
-    services = get_services_names(cluster=cluster, region=region)
+    services = get_services_names(cluster=cluster, region=region, ecs_client=ecs_client)
     non_daemon_services = [service for service in services if not is_service_type_daemon(
         service=service, cluster=cluster, region=region, ecs_client=ecs_client)]
 
-    start_services(cluster=cluster, services=non_daemon_services, count=count, region=region)
+    start_services(cluster=cluster, services=non_daemon_services, count=count, region=region, ecs_client=ecs_client)
 
 
 def stop_service(cluster, service, region, ecs_client=None):
@@ -246,7 +250,7 @@ def stop_cluster_services(cluster, region):
     ecs_client = _get_ecs_client(region)
 
     try:
-        cluster_services = get_services_arns(cluster=cluster, region=region)
+        cluster_services = get_services_arns(cluster=cluster, region=region, ecs_client=ecs_client)
     except ecs_client.exceptions.ClusterNotFoundException:
         raise ClickException("Cluster not found: '{}'".format(cluster))
     except ClientError as ex:
@@ -259,8 +263,8 @@ def stop_cluster_services(cluster, region):
         stop_service(cluster=cluster, service=service, region=region, ecs_client=ecs_client)
 
 
-def run_task(cluster, task_definition, command, name, region):
-    ecs_client = _get_ecs_client(region)
+def run_task(cluster, task_definition, command, name, region, ecs_client=None):
+    ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
 
     if command is None:
         try:
@@ -296,8 +300,8 @@ def run_task(cluster, task_definition, command, name, region):
     return resp['tasks'][0]['taskArn']
 
 
-def wait_for_task_to_stop(cluster, task, timeout, region):
-    ecs_client = _get_ecs_client(region)
+def wait_for_task_to_stop(cluster, task, timeout, region, ecs_client=None):
+    ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
     waiter = ecs_client.get_waiter('tasks_stopped')
 
     LOGGER.info("Waiting for task '{}' to stop.".format(task))
@@ -319,8 +323,8 @@ def wait_for_task_to_stop(cluster, task, timeout, region):
     LOGGER.info("Task '{}' stopped.".format(task))
 
 
-def wait_for_tasks_to_stop(cluster, tasks, timeout, region):
-    ecs_client = _get_ecs_client(region)
+def wait_for_tasks_to_stop(cluster, tasks, timeout, region, ecs_client=None):
+    ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
     waiter = ecs_client.get_waiter('tasks_stopped')
 
     LOGGER.info('Waiting for tasks {} to stop.'.format(tasks))
@@ -342,8 +346,8 @@ def wait_for_tasks_to_stop(cluster, tasks, timeout, region):
     LOGGER.info('All tasks stopped.')
 
 
-def wait_for_task_to_start(cluster, task, region):
-    ecs_client = _get_ecs_client(region)
+def wait_for_task_to_start(cluster, task, region, ecs_client=None):
+    ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
     waiter = ecs_client.get_waiter('tasks_running')
 
     LOGGER.info('Waiting for task {} to start.'.format(task))
@@ -356,8 +360,8 @@ def wait_for_task_to_start(cluster, task, region):
         raise ClickException(ex)
 
 
-def wait_for_tasks_to_start(cluster, tasks, region):
-    ecs_client = _get_ecs_client(region)
+def wait_for_tasks_to_start(cluster, tasks, region, ecs_client=None):
+    ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
     waiter = ecs_client.get_waiter('tasks_running')
 
     LOGGER.info('Waiting for tasks {} to start.'.format(tasks))
@@ -370,10 +374,11 @@ def wait_for_tasks_to_start(cluster, tasks, region):
         raise ClickException(ex)
 
 
-def run_service_task(cluster, service, command, success_string, timeout, region):
-    ecs_client = _get_ecs_client(region)
+def run_service_task(cluster, service, command, success_string, timeout, region, ecs_client=None):
+    ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
 
-    task_definition = get_task_definition_for_service(cluster=cluster, service=service, region=region)
+    task_definition = get_task_definition_for_service(
+        cluster=cluster, service=service, region=region, ecs_client=ecs_client)
 
     latest_task_definition = task_definition[:task_definition.rfind(':')]
     latest_task_definition_name = latest_task_definition[latest_task_definition.rfind('/') + 1:]
@@ -397,11 +402,12 @@ def run_service_task(cluster, service, command, success_string, timeout, region)
         success_string=success_string,
         timeout=timeout,
         region=region,
+        ecs_client=ecs_client,
     )
 
 
-def run_task_and_wait_for_success(cluster, task_definition, command, name, success_string, timeout, region):
-    ecs_client = _get_ecs_client(region)
+def run_task_and_wait_for_success(cluster, task_definition, command, name, success_string, timeout, region, ecs_client=None):
+    ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
 
     try:
         task = run_task(
@@ -410,6 +416,7 @@ def run_task_and_wait_for_success(cluster, task_definition, command, name, succe
             command=command,
             name=name,
             region=region,
+            ecs_client=ecs_client,
         )
     except ecs_client.exceptions.ClusterNotFoundException:
         raise ClickException("Cluster not found: '{}'".format(cluster))
@@ -420,7 +427,7 @@ def run_task_and_wait_for_success(cluster, task_definition, command, name, succe
 
     LOGGER.info("Running task: '{}'".format(task))
 
-    wait_for_task_to_stop(cluster=cluster, task=task, timeout=timeout, region=region)
+    wait_for_task_to_stop(cluster=cluster, task=task, timeout=timeout, region=region, ecs_client=ecs_client)
 
     response = ecs_client.describe_tasks(cluster=cluster, tasks=[task])
 
@@ -464,8 +471,8 @@ def run_task_and_wait_for_success(cluster, task_definition, command, name, succe
     LOGGER.info('Success')
 
 
-def get_services_arns(cluster, region):
-    ecs_client = _get_ecs_client(region)
+def get_services_arns(cluster, region, ecs_client=None):
+    ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
 
     try:
         resp = ecs_client.list_services(cluster=cluster, maxResults=100)
@@ -481,14 +488,16 @@ def get_services_arns(cluster, region):
     return services_arns
 
 
-def get_services_names(cluster, region):
-    services_arns = get_services_arns(cluster, region)
+def get_services_names(cluster, region, ecs_client=None):
+    ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
+
+    services_arns = get_services_arns(cluster, region, ecs_client=ecs_client)
     services_names = [service.split('/')[1] for service in services_arns]
     return services_names
 
 
-def get_tasks_for_service(cluster, service, region):
-    ecs_client = _get_ecs_client(region)
+def get_tasks_for_service(cluster, service, region, ecs_client=None):
+    ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
 
     try:
         resp = ecs_client.list_tasks(cluster=cluster, serviceName=service)
@@ -503,8 +512,8 @@ def get_tasks_for_service(cluster, service, region):
     return tasks_arns
 
 
-def stop_services_and_wait_for_tasks_to_stop(cluster, services, timeout, region):
-    _get_ecs_client(region)
+def stop_services_and_wait_for_tasks_to_stop(cluster, services, timeout, region, ecs_client=None):
+    ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
 
     THREAD_MAX = 32
     number_of_services = len(services)
@@ -512,49 +521,55 @@ def stop_services_and_wait_for_tasks_to_stop(cluster, services, timeout, region)
     all_running_service_tasks = []
 
     for service in services:
-        running_service_tasks = get_tasks_for_service(cluster=cluster, service=service, region=region)
+        running_service_tasks = get_tasks_for_service(
+            cluster=cluster,
+            service=service,
+            region=region,
+            ecs_client=ecs_client,
+        )
 
         if running_service_tasks:
             all_running_service_tasks += running_service_tasks
-            stop_service(cluster=cluster, service=service, region=region)
+            stop_service(cluster=cluster, service=service, region=region, ecs_client=ecs_client)
         else:
             LOGGER.info("No active tasks found in service '{}'".format(service))
 
     if all_running_service_tasks:
         pool = ThreadPool(number_of_services if number_of_services < THREAD_MAX else THREAD_MAX)
-        pool.starmap(wait_for_task_to_stop, ((cluster, task, timeout, region) for task in all_running_service_tasks))
+        pool.starmap(wait_for_task_to_stop, ((cluster, task, timeout, region, ecs_client)
+                                             for task in all_running_service_tasks))
         pool.close()
         pool.join()
 
 
-def stop_service_and_wait_for_tasks_to_stop(cluster, service, timeout, region):
-    _get_ecs_client(region)
+def stop_service_and_wait_for_tasks_to_stop(cluster, service, timeout, region, ecs_client=None):
+    ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
 
-    tasks = get_tasks_for_service(cluster=cluster, service=service, region=region)
+    tasks = get_tasks_for_service(cluster=cluster, service=service, region=region, ecs_client=ecs_client)
 
-    stop_service(cluster=cluster, service=service, region=region)
+    stop_service(cluster=cluster, service=service, region=region, ecs_client=ecs_client)
 
     if not tasks:
         LOGGER.info("No active tasks found in service '{}'".format(service))
         return
 
-    wait_for_tasks_to_stop(cluster=cluster, tasks=tasks, timeout=timeout, region=region)
+    wait_for_tasks_to_stop(cluster=cluster, tasks=tasks, timeout=timeout, region=region, ecs_client=ecs_client)
 
 
-def start_service_and_wait_for_tasks_to_start(cluster, service, count, region):
+def start_service_and_wait_for_tasks_to_start(cluster, service, count, region, ecs_client=None):
     """ This function is currently not working as the tasks are not started
     immediately after the update of desired count
     """
-    _get_ecs_client(region)
+    ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
 
-    start_service(cluster=cluster, service=service, count=count, region=region)
+    start_service(cluster=cluster, service=service, count=count, region=region, ecs_client=ecs_client)
 
-    tasks = get_tasks_for_service(cluster=cluster, service=service, region=region)
+    tasks = get_tasks_for_service(cluster=cluster, service=service, region=region, ecs_client=ecs_client)
     wait_for_tasks_to_start(cluster=cluster, tasks=tasks, region=region)
 
 
-def get_min_capacity_for_service(cluster, service, region):
-    as_client = _get_autoscaling_client(region)
+def get_min_capacity_for_service(cluster, service, region, as_client=None):
+    as_client = as_client if as_client else _get_autoscaling_client(region)
 
     try:
         response = as_client.describe_scalable_targets(
