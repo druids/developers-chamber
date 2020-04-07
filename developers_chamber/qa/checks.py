@@ -26,7 +26,7 @@ class MigrationFilenamesQACheck(QACheck):
     name = 'Check migration filenames'
 
     def _is_migration_file_with_wrong_name(self, path):
-        return self._is_migration_file(path) and not re.search(r'/([0-9]{4}_migration|__init__)\.py$', path)
+        return self._is_migration_file(path) and not re.search(r'/([0-9]{4}_migration|__init__)\.py$', str(path))
 
     def _run_check(self):
         wrong_name_files = []
@@ -45,7 +45,7 @@ class MissingTranslationsQACheck(QACheck):
     name = 'Check missing translations'
 
     def _is_translation_file(self, path):
-        return bool(re.search(r'django\.po$', path))
+        return bool(re.search(r'django\.po$', str(path)))
 
     def _run_check(self):
         self._run_command(self._get_command_from_config('QA_MAKE_MESSAGES_COMMAND'))
