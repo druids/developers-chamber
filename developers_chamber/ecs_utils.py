@@ -628,11 +628,29 @@ def redeploy_services(cluster, services, region, ecs_client=None):
         redeploy_service(cluster=cluster, service=service, region=region, ecs_client=ecs_client)
 
 
+def _get_non_daemon_services(cluster, region, ecs_client):
+    services = get_services_names(cluster=cluster, region=region, ecs_client=ecs_client)
+    return [
+        service for service in services
+        if not is_service_type_daemon(service=service, cluster=cluster, region=region, ecs_client=ecs_client)
+    ]
+
+
 def redeploy_cluster_services(cluster, region, ecs_client=None):
     ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
 
-    services = get_services_names(cluster=cluster, region=region, ecs_client=ecs_client)
-    non_daemon_services = [service for service in services if not is_service_type_daemon(
-        service=service, cluster=cluster, region=region, ecs_client=ecs_client)]
+    redeploy_services(cluster=cluster, services=_get_non_daemon_services(cluster, region, ecs_client), region=region,
+                      ecs_client=ecs_client)
 
-    redeploy_services(cluster=cluster, services=non_daemon_services, region=region, ecs_client=ecs_client)
+
+def wait_for_services_stable(cluster, region, ecs_client=None):
+    ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
+    waiter = ecs_client.get_waiter('services_stable')
+
+    non_daemon_services = _get_non_daemon_services(cluster, region, ecs_client)
+
+    try:
+        for i in range(0, len(non_daemon_services), 10):  # split into chunks by 10
+            waiter.wait(cluster=cluster, services=non_daemon_services[i:i + 10])
+    except WaiterError as ex:
+        raise ClickException(ex)

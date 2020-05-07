@@ -2,41 +2,27 @@ import os
 
 import click
 
-from developers_chamber.ecs_utils import \
-    deploy_new_task_definition as deploy_new_task_definition_func
-from developers_chamber.ecs_utils import \
-    get_services_names as get_services_names_func
-from developers_chamber.ecs_utils import \
-    get_task_definition_for_service as get_task_definition_for_service_func
-from developers_chamber.ecs_utils import \
-    get_tasks_for_service as get_tasks_for_service_func
-from developers_chamber.ecs_utils import \
-    redeploy_services as redeploy_services_func
-from developers_chamber.ecs_utils import \
-    redeploy_cluster_services as redeploy_cluster_services_func
-from developers_chamber.ecs_utils import \
-    register_new_task_definition as register_new_task_definition_func
-from developers_chamber.ecs_utils import \
-    run_service_task as run_service_task_func
+from developers_chamber.ecs_utils import deploy_new_task_definition as deploy_new_task_definition_func
+from developers_chamber.ecs_utils import get_services_names as get_services_names_func
+from developers_chamber.ecs_utils import get_task_definition_for_service as get_task_definition_for_service_func
+from developers_chamber.ecs_utils import get_tasks_for_service as get_tasks_for_service_func
+from developers_chamber.ecs_utils import redeploy_cluster_services as redeploy_cluster_services_func
+from developers_chamber.ecs_utils import redeploy_services as redeploy_services_func
+from developers_chamber.ecs_utils import register_new_task_definition as register_new_task_definition_func
+from developers_chamber.ecs_utils import run_service_task as run_service_task_func
 from developers_chamber.ecs_utils import run_task as run_task_func
-from developers_chamber.ecs_utils import stop_service as stop_service_func
+from developers_chamber.ecs_utils import run_task_and_wait_for_success as run_task_and_wait_for_success_func
 from developers_chamber.ecs_utils import start_cluster_services as start_cluster_services_func
 from developers_chamber.ecs_utils import start_service as start_service_func
 from developers_chamber.ecs_utils import start_services as start_services_func
-from developers_chamber.ecs_utils import register_new_task_definition as register_new_task_definition_func
-from developers_chamber.ecs_utils import update_service_to_latest_task_definition as \
-    update_service_to_latest_task_definition_func
-from developers_chamber.ecs_utils import run_task_and_wait_for_success as run_task_and_wait_for_success_func
-from developers_chamber.ecs_utils import get_tasks_for_service as get_tasks_for_service_func
-from developers_chamber.ecs_utils import get_task_definition_for_service as get_task_definition_for_service_func
-from developers_chamber.ecs_utils import stop_service_and_wait_for_tasks_to_stop as \
-    stop_service_and_wait_for_tasks_to_stop_func
+from developers_chamber.ecs_utils import stop_service as stop_service_func
 from developers_chamber.ecs_utils import \
-    stop_services_and_wait_for_tasks_to_stop as \
-    stop_services_and_wait_for_tasks_to_stop_func
+    stop_service_and_wait_for_tasks_to_stop as stop_service_and_wait_for_tasks_to_stop_func
 from developers_chamber.ecs_utils import \
-    update_service_to_latest_task_definition as \
-    update_service_to_latest_task_definition_func
+    stop_services_and_wait_for_tasks_to_stop as stop_services_and_wait_for_tasks_to_stop_func
+from developers_chamber.ecs_utils import \
+    update_service_to_latest_task_definition as update_service_to_latest_task_definition_func
+from developers_chamber.ecs_utils import wait_for_services_stable as wait_for_services_stable_func
 from developers_chamber.scripts import cli
 
 default_region = os.environ.get('AWS_REGION')
@@ -216,3 +202,11 @@ def redeploy_services(cluster, services, region):
 def redeploy_cluster_services(cluster, region):
     """ Redeploy all cluster services by forcing new service deployment. """
     redeploy_cluster_services_func(cluster, region)
+
+
+@ecs.command()
+@click.option('--cluster', '-c', help='ECS cluster name', type=str, default=default_cluster, required=True)
+@click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
+def wait_for_services_stable(cluster, region):
+    """Wait until all non-daemon services in cluster are stable."""
+    wait_for_services_stable_func(cluster, region)
