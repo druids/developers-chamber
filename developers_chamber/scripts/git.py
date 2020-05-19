@@ -57,13 +57,14 @@ def create_release_branch(release_type, file, remote_name, branch_name):
 @click.option('--environment', '-e', help='deployment environment', type=str, required=True)
 @click.option('--remote-name', '-r', help='remote repository name if you want to push the new branch', type=str,
               default=default_remote_name)
-def create_deployment_branch(environment, remote_name):
+@click.option('--hot', '-h', help='hot deployment', is_flag=True, default=False)
+def create_deployment_branch(environment, remote_name, hot):
     """
     Create deployment branch and new commit to trigger a deployment event.
     """
     click.echo(
         'New deployment branch "{}" was created'.format(
-            create_deployment_branch_func(environment, remote_name)
+            create_deployment_branch_func(environment, remote_name, hot)
         )
     )
 
