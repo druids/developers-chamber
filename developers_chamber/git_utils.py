@@ -44,11 +44,14 @@ def create_branch(source_branch_name, new_branch_name):
         raise UsageError('Branch "{}" already exist'.format(new_branch_name))
 
 
-def create_deployment_branch(environment, remote_name=None):
+def create_deployment_branch(environment, remote_name=None, is_hot=False):
     repo = git.Repo('.')
     g = repo.git
     source_branch_name = str(repo.head.reference)
     deployment_branch_name = 'deploy-{}'.format(environment)
+
+    if is_hot:
+        deployment_branch_name += '-hot'
 
     try:
         g.branch('-D', deployment_branch_name)
