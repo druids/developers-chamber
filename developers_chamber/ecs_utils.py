@@ -1,3 +1,4 @@
+import json
 import logging
 from multiprocessing.pool import ThreadPool
 
@@ -45,12 +46,16 @@ def get_log_events(log_group, log_stream, region):
     return resp['events']
 
 
-def register_new_task_definition(task_definition, image, region, ecs_client=None):
+def register_new_task_definition(task_definition_name, images, region, ecs_client=None):
+    try:
+        images_data = json.loads(images)
+    except json.JSONDecodeError as ex:
+        raise ClickException(ex)
     ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
 
     try:
         old_task_definition = ecs_client.describe_task_definition(
-            taskDefinition=task_definition,
+            taskDefinition=task_definition_name,
             include=[
                 'TAGS',
             ],
@@ -58,21 +63,25 @@ def register_new_task_definition(task_definition, image, region, ecs_client=None
     except ClientError as ex:
         raise ClickException(ex)
 
-    LOGGER.info('Image: {}'.format(image))
-    LOGGER.info('Old task definition ARN: {}'.format(
-        old_task_definition['taskDefinition']['taskDefinitionArn']),
-    )
+    LOGGER.info('Images: %s', images_data)
+    LOGGER.info('Old task definition ARN: %s', old_task_definition['taskDefinition']['taskDefinitionArn'])
 
     definition = old_task_definition['taskDefinition']
-    definition['containerDefinitions'][0]['image'] = image
+    for container_definition in definition['containerDefinitions']:
+        try:
+            container_definition['image'] = images_data[container_definition['name']]
+        except KeyError as ex:
+            raise ClickException(ex)
+
     new_task_definition = {
-        'family': definition['family'],
-        'taskRoleArn': definition['taskRoleArn'],
-        'executionRoleArn': definition['executionRoleArn'],
-        'networkMode': definition['networkMode'],
         'containerDefinitions': definition['containerDefinitions'],
+        'executionRoleArn': definition['executionRoleArn'],
+        'family': definition['family'],
+        'networkMode': definition['networkMode'],
         'requiresCompatibilities': definition['requiresCompatibilities'],
         'tags': old_task_definition['tags'],
+        'taskRoleArn': definition['taskRoleArn'],
+        'volumes': definition['volumes'],
     }
 
     if 'cpu' in definition:
@@ -86,7 +95,7 @@ def register_new_task_definition(task_definition, image, region, ecs_client=None
         raise ClickException(ex)
 
     new_task_definition_arn = response['taskDefinition']['taskDefinitionArn']
-    LOGGER.info('New task definition ARN: {}'.format(new_task_definition_arn))
+    LOGGER.info('New task definition ARN: %s', new_task_definition_arn)
 
     return new_task_definition_arn
 
@@ -160,11 +169,12 @@ def update_service_to_new_task_definition(cluster, service, task_definition, reg
         raise ClickException(ex)
 
 
-def deploy_new_task_definition(cluster, service, task_definition, image, region, ecs_client=None):
+def deploy_new_task_definition(cluster, service, task_definition, images, region, ecs_client=None):
     ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
 
     new_task_definition = register_new_task_definition(
-        task_definition=task_definition, image=image, region=region, ecs_client=ecs_client)
+        task_definition=task_definition, images=images, region=region, ecs_client=ecs_client,
+    )
 
     update_service_to_new_task_definition(
         cluster=cluster,

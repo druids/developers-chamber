@@ -38,20 +38,20 @@ def ecs():
 @click.option('--cluster', '-c', help='ECS cluster name', type=str, default=default_cluster, required=True)
 @click.option('--service', '-s', help='ECS service names', type=str, required=True)
 @click.option('--task-definition', '-t', help='ECS task definition name', type=str, required=True)
-@click.option('--image', '-i', help='docker image:tag to use', type=str, required=True)
+@click.option('--images', '-i', help='JSON containing containers and their images', type=str, required=True)
 @click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
-def deploy_new_task_definition(cluster, service, task_definition, image, region):
+def deploy_new_task_definition(cluster, service, task_definition, images, region):
     """Deploy new task definition in AWS ECS. This command also updates the service and forces new deployment."""
-    deploy_new_task_definition_func(cluster, service, task_definition, image, region)
+    deploy_new_task_definition_func(cluster, service, task_definition, images, region)
 
 
 @ecs.command()
 @click.option('--task-definition', '-t', help='ECS task definition name', type=str, required=True)
-@click.option('--image', '-i', help='docker image:tag to use', type=str, required=True)
+@click.option('--images', '-i', help='JSON containing containers and their images', type=str, required=True)
 @click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
-def register_new_task_definition(task_definition, image, region):
+def register_new_task_definition(task_definition, images, region):
     """Register new task definition in AWS ECS."""
-    click.echo(register_new_task_definition_func(task_definition, image, region))
+    click.echo(register_new_task_definition_func(task_definition, images, region))
 
 
 @ecs.command()
