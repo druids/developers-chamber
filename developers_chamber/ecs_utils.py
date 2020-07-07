@@ -71,7 +71,8 @@ def register_new_task_definition(task_definition_name, images, region, ecs_clien
         try:
             container_definition['image'] = images_data[container_definition['name']]
         except KeyError as ex:
-            raise ClickException(ex)
+            LOGGER.warning('Using previous image "%s" for container definition "%s"', container_definition['image'],
+                           container_definition['name'])
 
     new_task_definition = {
         'containerDefinitions': definition['containerDefinitions'],
