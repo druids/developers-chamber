@@ -385,8 +385,10 @@ def wait_for_tasks_to_start(cluster, tasks, region, ecs_client=None):
         raise ClickException(ex)
 
 
-def run_service_task(cluster, service, command, success_string, timeout, region, ecs_client=None):
+def run_service_task(cluster, service, command, success_string, timeout, region, container=None, ecs_client=None):
     ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
+
+    container = service if not container else container
 
     task_definition = get_task_definition_for_service(
         cluster=cluster, service=service, region=region, ecs_client=ecs_client)
@@ -397,13 +399,14 @@ def run_service_task(cluster, service, command, success_string, timeout, region,
     resp = ecs_client.describe_task_definition(taskDefinition=latest_task_definition)
     container_definitions = resp['taskDefinition']['containerDefinitions']
 
-    if len(container_definitions) != 1:
-        raise ClickException(
-            ('Exactly one container is allowed to be specified in service.\n'
-             'Number of containers specified: {}'.format(len(container_definitions)))
-        )
+    container_definition = [d for d in container_definitions if d["name"] == container]
 
-    container_name = container_definitions[0]['name']
+    if len(container_definition) != 1:
+        raise ClickException(
+            ('Container "{}" not found in task.\n'
+             'Containers available in task: {}'.format(container, [d["name"] for d in container_definitions])))
+
+    container_name = container_definition[0]['name']
 
     run_task_and_wait_for_success(
         cluster=cluster,
