@@ -17,7 +17,7 @@ setup(
         'gitpython==3.1.0',
         'click==7.0',
         'requests==2.23.0',
-        'python-dotenv==0.10.3',
+        'python-dotenv==0.14.0',
         'boto3==1.9.230',
         'python-hosts==0.4.6',
         'isort==4.3.21',
