@@ -99,3 +99,25 @@ class ImportOrderQACheck(QACheck):
         wrong_import_order_files = set(changed_files) & set([diff.b_path for diff in self._get_unstaged()])
         if wrong_import_order_files:
             raise QAError('Found unsorted import(s) in following file(s):', '\n'.join(wrong_import_order_files))
+
+
+class TestMethodNamesQACheck(QACheck):
+    """
+    Checks that test methods are named correctly.
+
+    `QA_DISALLOWED_TEST_METHOD_NAME_REGEXP` should define regexp to match disallowed test method name(s) in the diff.
+    The regexp should include one capturing group (preferably matching the entire test method name), that will be
+    printed out to identify the problematic test method.
+    """
+    name = 'Check test method names'
+
+    def _run_check(self):
+        disallowed_method_names = []
+        for diff_obj in self._get_diffs():
+            for line in diff_obj.diff.decode().split('\n'):
+                match = re.search(os.environ.get('QA_DISALLOWED_TEST_METHOD_REGEXP'), line)
+                if match:
+                    disallowed_method_names.append(match[1])
+
+        if disallowed_method_names:
+            raise QAError('Found disallowed test method name(s):', '\n'.join(disallowed_method_names))
