@@ -40,10 +40,10 @@ def get_log_events(log_group, log_stream, region):
             logStreamName=log_stream,
             limit=10000,
         )
-    except ClientError as ex:
-        raise ClickException(ex)
+        return resp['events']
 
-    return resp['events']
+    except ClientError as ex:
+        raise ClickException(str(ex))
 
 
 def register_new_task_definition(task_definition_name, images, region, ecs_client=None):
@@ -437,7 +437,7 @@ def run_task_and_wait_for_success(cluster, task_definition, command, name, succe
     except ClientError as ex:
         raise ClickException(ex)
 
-    task_id = task.split('/')[1]
+    task_id = task.split('/')[-1]
 
     LOGGER.info("Running task: '{}'".format(task))
 
@@ -465,9 +465,12 @@ def run_task_and_wait_for_success(cluster, task_definition, command, name, succe
 
         raise ClickException(response['tasks'][0])
 
-    for event in get_log_events(log_group=task_definition, log_stream='ecs/{}/{}'.format(name, task_id),
-                                region=region):
-        LOGGER.info('[task/{}] {}'.format(task_id, event['message'].rstrip()))
+    try:
+        for event in get_log_events(log_group=task_definition, log_stream='ecs/{}/{}'.format(name, task_id),
+                                    region=region):
+            LOGGER.info('[task/{}] {}'.format(task_id, event['message'].rstrip()))
+    except Exception as ex:
+        LOGGER.info(ex)
 
     exit_code = response['tasks'][0]['containers'][0].get('exitCode', UNDEFINED)
     LOGGER.info("Container exit code: '{}'".format(exit_code))
