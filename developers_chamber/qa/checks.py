@@ -1,5 +1,6 @@
 import os
 import re
+import time
 
 from .base import QACheck, QAError
 
@@ -48,15 +49,29 @@ class MissingTranslationsQACheck(QACheck):
         return bool(re.search(r'django\.po$', str(path)))
 
     def _run_check(self):
+        start_time = time.time()
         self._run_command(self._get_command_from_config('QA_MAKE_MESSAGES_COMMAND'))
 
-        translation_files = []
+        changed_translation_files = []
         for diff in self._get_unstaged():
             if self._is_translation_file(diff.b_path):
-                translation_files.append(diff.b_path)
+                changed_translation_files.append(diff.b_path)
 
-        if translation_files:
-            raise QAError('Found changes in following translation file(s):', '\n'.join(translation_files))
+        if changed_translation_files:
+            raise QAError('Found changes in following translation file(s):', '\n'.join(changed_translation_files))
+
+        # At this point, no changes were detected, which makes this check to pass.
+        # However we need to check, that at least modification time of any translation file changed,
+        # otherwise the result could be false positive.
+
+        for translation_file in self._run_command('find -type f -name "*.po"').split('\n'):
+            if os.path.getmtime(translation_file) > start_time:
+                return
+
+        raise QAError(
+            'No translation were touched, either QA_MAKE_MESSAGES_COMMAND is not working or changed files are not '
+            'visible (for example the command is run inside a Docker container without volume being exposed outside).'
+        )
 
 
 class ImportOrderQACheck(QACheck):
@@ -79,21 +94,3 @@ class ImportOrderQACheck(QACheck):
         wrong_import_order_files = set(changed_files) & set([diff.b_path for diff in self._get_unstaged()])
         if wrong_import_order_files:
             raise QAError('Found unsorted import(s) in following file(s):', '\n'.join(wrong_import_order_files))
-
-
-class TestMethodNamesQACheck(QACheck):
-    """
-    Checks that test methods are named correctly (i.e. does not begin with "test_should").
-    """
-    name = 'Check test method names'
-
-    def _run_check(self):
-        disallowed_method_names = []
-        for diff_obj in self._get_diffs():
-            for line in diff_obj.diff.decode().split('\n'):
-                match = re.search(r'^\+ +def (test_should_[^\(]+)\(', line)
-                if match:
-                    disallowed_method_names.append(match[1])
-
-        if disallowed_method_names:
-            raise QAError('Found disallowed test method name(s):', '\n'.join(disallowed_method_names))
