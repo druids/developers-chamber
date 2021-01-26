@@ -509,7 +509,7 @@ def get_services_names(cluster, region, ecs_client=None):
     ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
 
     services_arns = get_services_arns(cluster, region, ecs_client=ecs_client)
-    services_names = [service.split('/')[1] for service in services_arns]
+    services_names = [service.split('/')[-1] for service in services_arns]
     return services_names
 
 
