@@ -142,6 +142,27 @@ def run_service_task(cluster, service, command, success_string, timeout, region,
 @ecs.command()
 @click.option('--cluster', '-c', help='ECS cluster name', type=str, default=default_cluster, required=True)
 @click.option('--service', '-s', help='ECS service name', type=str, required=True)
+@click.option('--command', '-m', help='command to run', type=str, required=True)
+@click.option('--success-string', help='String that is considered a success code', type=str, default='0', required=True)
+@click.option('--timeout', '-o', help='Seconds to wait before exiting with fail state', type=int, default=600)
+@click.option('--container', '-f', help='Container name to run the command in', type=str, default=None)
+@click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
+@click.option('--subnet', help='subnet ID', type=str, required=True, multiple=True)
+@click.option('--security-group', help='security group ID', type=str, required=True, multiple=True)
+def run_service_task_fargate(cluster, service, command, success_string, timeout, region, container, subnet, security_group):
+    """Run a single task based on service's task definition in AWS ECS and wait for it to stop with success."""
+    run_service_task_func(cluster, service, command, success_string, timeout, region, container, networkConfiguration={
+        'awsvpcConfiguration': {
+            'subnets': [s for s in subnet],
+            'securityGroups': [s for s in security_group],
+            'assignPublicIp': 'DISABLED'
+        }
+    }, launchType='FARGATE')
+
+
+@ecs.command()
+@click.option('--cluster', '-c', help='ECS cluster name', type=str, default=default_cluster, required=True)
+@click.option('--service', '-s', help='ECS service name', type=str, required=True)
 @click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
 def get_tasks_for_service(cluster, service, region):
     """ Return list of tasks running under specified service """

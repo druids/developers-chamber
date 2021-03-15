@@ -274,39 +274,35 @@ def stop_cluster_services(cluster, region):
         stop_service(cluster=cluster, service=service, region=region, ecs_client=ecs_client)
 
 
-def run_task(cluster, task_definition, command, name, region, ecs_client=None):
+def run_task(cluster, task_definition, command, name, region, ecs_client=None, **kwargs):
     ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
 
-    if command is None:
-        try:
-            resp = ecs_client.run_task(
-                cluster=cluster,
-                taskDefinition=task_definition,
-                count=1,
-            )
-        except ecs_client.exceptions.ClusterNotFoundException:
-            raise ClickException("Cluster not found: '{}'".format(cluster))
-        except ClientError as ex:
-            raise ClickException(ex)
-    else:
-        try:
-            resp = ecs_client.run_task(
-                cluster=cluster,
-                taskDefinition=task_definition,
-                overrides={
-                    'containerOverrides': [
-                        {
-                            'name': name,
-                            'command': [command]
-                        },
-                    ],
+    args = {
+        'cluster': cluster,
+        'taskDefinition': task_definition,
+        'count': 1,
+    }
+
+    if command is not None:
+        args['overrides'] = {
+            'containerOverrides': [
+                {
+                    'name': name,
+                    'command': [command]
                 },
-                count=1,
-            )
-        except ecs_client.exceptions.ClusterNotFoundException:
-            raise ClickException("Cluster not found: '{}'".format(cluster))
-        except ClientError as ex:
-            raise ClickException(ex)
+            ],
+        }
+
+    for key, value in kwargs.items():
+        if value is not None:
+            args[key] = value
+
+    try:
+        resp = ecs_client.run_task(**args)
+    except ecs_client.exceptions.ClusterNotFoundException:
+        raise ClickException("Cluster not found: '{}'".format(cluster))
+    except ClientError as ex:
+        raise ClickException(ex)
 
     return resp['tasks'][0]['taskArn']
 
@@ -385,7 +381,7 @@ def wait_for_tasks_to_start(cluster, tasks, region, ecs_client=None):
         raise ClickException(ex)
 
 
-def run_service_task(cluster, service, command, success_string, timeout, region, container=None, ecs_client=None):
+def run_service_task(cluster, service, command, success_string, timeout, region, container=None, ecs_client=None, **kwargs):
     ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
 
     container = service if not container else container
@@ -417,10 +413,11 @@ def run_service_task(cluster, service, command, success_string, timeout, region,
         timeout=timeout,
         region=region,
         ecs_client=ecs_client,
+        **kwargs,
     )
 
 
-def run_task_and_wait_for_success(cluster, task_definition, command, name, success_string, timeout, region, ecs_client=None):
+def run_task_and_wait_for_success(cluster, task_definition, command, name, success_string, timeout, region, ecs_client=None, **kwargs):
     ecs_client = ecs_client if ecs_client else _get_ecs_client(region)
 
     try:
@@ -431,6 +428,7 @@ def run_task_and_wait_for_success(cluster, task_definition, command, name, succe
             name=name,
             region=region,
             ecs_client=ecs_client,
+            **kwargs,
         )
     except ecs_client.exceptions.ClusterNotFoundException:
         raise ClickException("Cluster not found: '{}'".format(cluster))
