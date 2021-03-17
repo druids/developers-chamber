@@ -294,8 +294,33 @@ def run_task(cluster, task_definition, command, name, region, ecs_client=None, *
         }
 
     for key, value in kwargs.items():
-        if value is not None:
+        if key != "environmentFiles" and value is not None:
             args[key] = value
+
+    if kwargs.get('environmentFiles') is not None:
+        if 'overrides' in args:
+            if 'containerOverrides' in args['overrides']:
+                args['overrides']['containerOverrides'][0]['environmentFiles'] = [
+                    {
+                        'type': 's3',
+                        'value': kwargs.get('environmentFiles')
+                    }
+                ]
+
+        else:
+            args['overrides'] = {
+                'containerOverrides': [
+                    {
+                        'name': name,
+                        'environmentFiles': [
+                            {
+                                'type': 's3',
+                                'value': kwargs.get('environmentFiles')
+                            }
+                        ]
+                    },
+                ],
+            }
 
     try:
         resp = ecs_client.run_task(**args)

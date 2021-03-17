@@ -149,7 +149,8 @@ def run_service_task(cluster, service, command, success_string, timeout, region,
 @click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
 @click.option('--subnet', help='subnet ID', type=str, required=True, multiple=True)
 @click.option('--security-group', help='security group ID', type=str, required=True, multiple=True)
-def run_service_task_fargate(cluster, service, command, success_string, timeout, region, container, subnet, security_group):
+@click.option('--environment-file', '-e', help='S3 arn with path to env file', type=str, required=False, default=None)
+def run_service_task_fargate(cluster, service, command, success_string, timeout, region, container, subnet, security_group, environment_file):
     """Run a single task based on service's task definition in AWS ECS and wait for it to stop with success."""
     run_service_task_func(cluster, service, command, success_string, timeout, region, container, networkConfiguration={
         'awsvpcConfiguration': {
@@ -157,7 +158,7 @@ def run_service_task_fargate(cluster, service, command, success_string, timeout,
             'securityGroups': [s for s in security_group],
             'assignPublicIp': 'DISABLED'
         }
-    }, launchType='FARGATE')
+    }, launchType='FARGATE', environmentFiles=environment_file)
 
 
 @ecs.command()
