@@ -1,4 +1,4 @@
-FROM docker:20.10
+FROM docker:20.10-dind
 
 ARG VERSION
 ENV DOCKER_TAG=${VERSION}
