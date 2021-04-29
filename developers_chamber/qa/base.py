@@ -34,7 +34,7 @@ class RepoMixin:
         """
         Returns default branch of the repo.
         """
-        return self._run_command("git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'")
+        return self._run_command("git remote show origin | grep 'HEAD branch' | cut -d ':' -f 2 | tr -d ' '")
 
     def _get_diffs(self):
         """
