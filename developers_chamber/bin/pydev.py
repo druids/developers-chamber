@@ -21,6 +21,7 @@ from developers_chamber.scripts.bitbucket import *
 from developers_chamber.scripts.docker import *
 from developers_chamber.scripts.ecs import *
 from developers_chamber.scripts.git import *
+from developers_chamber.scripts.gitlab import *
 from developers_chamber.scripts.jira import *
 from developers_chamber.scripts.project import *
 from developers_chamber.scripts.qa import *
