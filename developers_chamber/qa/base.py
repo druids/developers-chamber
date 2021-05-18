@@ -15,9 +15,9 @@ class QAError(Exception):
     """
     Generic QA exception that also carries command output.
     """
-    def __init__(self, msg, output):
+    def __init__(self, msg, output=None):
         super().__init__(msg)
-        self.output = output.strip()
+        self.output = output.strip() if output is not None else None
 
 
 class RepoMixin:
@@ -146,7 +146,10 @@ class QACheckRunner(RepoMixin):
             try:
                 check.run()
             except QAError as ex:
-                self.results.append(click.style('{}\n{}'.format(click.style(str(ex), fg='red'), ex.output)))
+                error_msg = click.style(str(ex), fg='red')
+                if ex.output is not None:
+                    error_msg = '\n'.join((error_msg, ex.output))
+                self.results.append(error_msg)
                 self.success = False
             else:
                 self.results.append(click.style(' OK ', bg='green'))

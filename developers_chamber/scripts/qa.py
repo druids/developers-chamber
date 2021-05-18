@@ -2,8 +2,7 @@ from developers_chamber.qa.base import QACheck, QACheckRunner
 from developers_chamber.qa.checks import (ImportOrderQACheck,
                                           MigrationFilenamesQACheck,
                                           MissingMigrationsQACheck,
-                                          MissingTranslationsQACheck,
-                                          TestMethodNamesQACheck)
+                                          MissingTranslationsQACheck)
 from developers_chamber.scripts import cli
 
 
@@ -23,7 +22,6 @@ def all():
         MigrationFilenamesQACheck(),
         MissingTranslationsQACheck(),
         ImportOrderQACheck(),
-        TestMethodNamesQACheck(),
     ).run()
 
 
@@ -57,11 +55,3 @@ def import_order():
     Runs import order QA check.
     """
     QACheckRunner(ImportOrderQACheck()).run()
-
-
-@qa.command()
-def test_method_names():
-    """
-    Runs test method names QA check.
-    """
-    QACheckRunner(TestMethodNamesQACheck()).run()
