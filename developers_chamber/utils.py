@@ -1,4 +1,5 @@
 import logging
+import re
 import subprocess
 import sys
 
@@ -40,3 +41,11 @@ def pretty_time_delta(seconds):
         return '{}m {}s'.format(minutes, seconds)
     else:
         return '{}s'.format(seconds)
+
+
+def remove_ansi(input):
+    """
+    Remove non-visible characters (like color sequences etc.).
+    """
+    ansi_escape = re.compile(r'(?:\x1B[@-_]|[\x80-\x9F])[0-?]*[ -/]*[@-~]')
+    return ansi_escape.sub('', input)

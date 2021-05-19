@@ -2,6 +2,8 @@ import os
 import re
 import time
 
+from developers_chamber.utils import remove_ansi
+
 from .base import QACheck, QAError
 
 
@@ -17,7 +19,10 @@ class MissingMigrationsQACheck(QACheck):
         )
         last_line = output.split('\n')[-1]
         if last_line != 'No changes detected':
-            raise QAError('Found missing migration(s)!', re.findall(r'\x1b.*?Migrations.+$', output, re.DOTALL)[0])
+            raise QAError(
+                'Found missing migration(s)!',
+                re.findall(r'Migrations.+$', remove_ansi(output), re.DOTALL)[0]
+            )
 
 
 class MigrationFilenamesQACheck(QACheck):
