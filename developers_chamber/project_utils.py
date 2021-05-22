@@ -47,7 +47,7 @@ def set_hosts(domains):
         raise ClickException('Unable to write to hosts file. Please call command with "sudo".')
 
 
-def _call_compose_command(project_name, compose_files, command, containers=None, extra_command=None):
+def _call_compose_command(project_name, compose_files, command, containers=None, extra_command=None, env=None):
     compose_command = ['docker-compose', '-p', project_name]
     compose_command += [
         '-f{}'.format(f) for f in compose_files
@@ -59,16 +59,14 @@ def _call_compose_command(project_name, compose_files, command, containers=None,
     compose_command += list(containers) if containers else []
     if extra_command:
         compose_command.append(extra_command)
-    call_compose_command(compose_command)
+    call_compose_command(compose_command, env=env)
 
 
-def compose_build(project_name, compose_files, containers=None, containers_dir_to_copy=None):
+def copy_containers_dirs(project_name, containers_dir_to_copy=None, containers=None):
     for container_name, _, host_dir in containers_dir_to_copy:
         if not containers or container_name in containers:
             shutil.rmtree(Path.cwd() / host_dir, ignore_errors=True)
             os.makedirs(Path.cwd() / host_dir)
-
-    _call_compose_command(project_name, compose_files, 'build', containers)
 
     for container_name, container_dir, host_dir in containers_dir_to_copy:
         if not containers or container_name in containers:
@@ -79,14 +77,20 @@ def compose_build(project_name, compose_files, containers=None, containers_dir_t
             ])
 
 
-def compose_run(project_name, compose_files, containers, command):
-    for container in containers:
-        _call_compose_command(project_name, compose_files, ['run', '--use-aliases'], [container], command)
+def compose_build(project_name, compose_files, containers=None, containers_dir_to_copy=None, env=None):
+    _call_compose_command(project_name, compose_files, 'build', containers, env)
+
+    copy_containers_dirs(project_name, containers_dir_to_copy, containers)
 
 
-def compose_exec(project_name, compose_files, containers, command):
+def compose_run(project_name, compose_files, containers, command, env=None):
     for container in containers:
-        _call_compose_command(project_name, compose_files, 'exec', [container], command)
+        _call_compose_command(project_name, compose_files, ['run', '--use-aliases'], [container], command, env)
+
+
+def compose_exec(project_name, compose_files, containers, command, env=None):
+    for container in containers:
+        _call_compose_command(project_name, compose_files, 'exec', [container], command, env)
 
 
 def compose_kill_all():
@@ -94,8 +98,8 @@ def compose_kill_all():
         call_command('docker kill $(docker ps -q)')
 
 
-def compose_up(project_name, compose_files, containers):
-    _call_compose_command(project_name, compose_files, 'up', containers)
+def compose_up(project_name, compose_files, containers, env=None):
+    _call_compose_command(project_name, compose_files, 'up', containers, env)
 
 
 def compose_stop(project_name, compose_files, containers):

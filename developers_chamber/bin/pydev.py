@@ -12,8 +12,8 @@ from dotenv import load_dotenv
 for config_path in (Path.home(), Path.cwd()):
     if (config_path / '.pydev').exists() and (config_path / '.pydev').is_dir():
         for file in (config_path / '.pydev').iterdir():
-            if file.is_file() and file.suffix == '.conf':
-                load_dotenv(dotenv_path=str(file))
+            if file.is_file() and file.suffix == '.conf' and not file.name.startswith('~'):
+                load_dotenv(dotenv_path=str(file), override=True)
 
 
 from developers_chamber.scripts import cli

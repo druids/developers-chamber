@@ -27,16 +27,22 @@ for k, v in json.loads(os.environ.get('ALIASES', '{}')).items():
         alias_value = v
 
         def call_command_alias(ctx):
-            command = alias_value
+            commands = alias_value
 
-            # Replace variable arguments
-            alias_args = []
-            for arg in ctx.args:
-                replaced_arg, command = find_and_replace_command_variable(arg, command)
-                if not replaced_arg:
-                    alias_args.append(arg)
+            if isinstance(commands, str):
+                commands = [commands]
 
-            cli.main(args=shlex.split(command) + alias_args)
+            for i, command in enumerate(commands):
+                # Replace variable arguments
+                alias_args = []
+                if i == 0:
+                    for arg in ctx.args:
+                        replaced_arg, command = find_and_replace_command_variable(arg, command)
+                        if not replaced_arg:
+                            alias_args.append(arg)
+
+                cli.main(args=shlex.split(command) + alias_args, standalone_mode=False)
+
         call_command_alias.__doc__ = 'Alias to "{}"'.format(v)
 
         return call_command_alias

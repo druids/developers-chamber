@@ -1,3 +1,4 @@
+import os
 import logging
 import subprocess
 import sys
@@ -7,19 +8,23 @@ from click import ClickException
 LOGGER = logging.getLogger()
 
 
-def call_command(command, quiet=False):
+def call_command(command, quiet=False, env=None):
+    env = {} if env is None else env
     try:
         if not quiet:
             LOGGER.info(command if isinstance(command, str) else ' '.join(command))
-        subprocess.check_call(command, stdout=sys.stdout, shell=isinstance(command, str))
+        subprocess.check_call(command, stdout=sys.stdout, shell=isinstance(command, str), env=dict(os.environ, **env))
     except subprocess.CalledProcessError:
         raise ClickException('Command returned error')
 
 
-def call_compose_command(command, quiet=False):
+def call_compose_command(command, quiet=False, env=None):
+    env = {} if env is None else env
     if not quiet:
         LOGGER.info(command if isinstance(command, str) else ' '.join(command))
-    compose_process = subprocess.Popen(command, stdout=sys.stdout, shell=isinstance(command, str))
+    compose_process = subprocess.Popen(
+        command, stdout=sys.stdout, shell=isinstance(command, str), env=dict(os.environ, **env)
+    )
     try:
         if compose_process.wait() != 0:
             raise ClickException('Command returned error')
