@@ -5,7 +5,8 @@ import click
 
 from developers_chamber.bitbucket_utils import get_commit_builds
 from developers_chamber.click.options import (ContainerCommandType,
-                                              ContainerDirToCopyType)
+                                              ContainerDirToCopyType,
+                                              ContainerEnvironment)
 from developers_chamber.git_utils import create_branch as create_branch_func
 from developers_chamber.git_utils import (get_commit_hash,
                                           get_current_branch_name)
@@ -13,7 +14,8 @@ from developers_chamber.jira_utils import get_branch_name
 from developers_chamber.project_utils import (compose_build, compose_exec,
                                               compose_install,
                                               compose_kill_all, compose_run,
-                                              compose_stop, compose_up)
+                                              compose_stop, compose_up,
+                                              copy_containers_dirs as copy_containers_dirs_func)
 from developers_chamber.project_utils import bind_library as bind_library_func
 
 from developers_chamber.project_utils import \
@@ -94,11 +96,12 @@ def set_domain(domain):
               help='Container dir which will be copied after build in format '
                    'DOCKER_CONTAINER_NAME:CONTAINER_DIRECTORY:HOST_DIRECTORY',
               type=ContainerDirToCopyType(), multiple=True, default=default_containers_dir_to_copy)
-def build(project_name, compose_file, container, container_dir_to_copy):
+@click.option('--env', 'env', help='Environment variables', type=ContainerEnvironment(), default=None)
+def build(project_name, compose_file, container, container_dir_to_copy, env):
     """
     Build docker container
     """
-    compose_build(project_name, compose_file, container, container_dir_to_copy)
+    compose_build(project_name, compose_file, container, container_dir_to_copy, env=env)
 
 
 @project.command(
@@ -113,12 +116,13 @@ def build(project_name, compose_file, container, container_dir_to_copy):
               default=default_compose_files)
 @click.option('--container', '-c', help='Container name', type=str, required=True, multiple=True,
               default=default_containers[:1] if default_containers else None)
+@click.option('--env', 'env', help='Environment variables', type=ContainerEnvironment(), default=None)
 @click.pass_context
-def run(ctx, project_name, compose_file, container, command):
+def run(ctx, project_name, compose_file, container, command, env):
     """
     Run one time command in docker container
     """
-    compose_run(project_name, compose_file, container, ' '.join([command] + ctx.args))
+    compose_run(project_name, compose_file, container, ' '.join([command] + ctx.args), env=env)
 
 
 @project.command(
@@ -134,12 +138,13 @@ def run(ctx, project_name, compose_file, container, command):
               default=default_compose_files)
 @click.option('--container', '-c', help='Container name', type=str, required=True, multiple=True,
               default=default_containers[:1] if default_containers else None)
+@click.option('--env', 'env', help='Environment variables', type=ContainerEnvironment(), default=None)
 @click.pass_context
-def exec_command(ctx, project_name, compose_file, container, command):
+def exec_command(ctx, project_name, compose_file, container, command, env):
     """
     Run command in docker service
     """
-    compose_exec(project_name, compose_file, container, ' '.join([command] + ctx.args))
+    compose_exec(project_name, compose_file, container, ' '.join([command] + ctx.args), env=env)
 
 
 @project.command()
@@ -149,11 +154,12 @@ def exec_command(ctx, project_name, compose_file, container, command):
 @click.option('--container', '-c', help='Container name', type=str, required=False, multiple=True,
               default=default_up_containers)
 @click.option('--all', '-a', 'all_containers', help='Run all container in compose file', default=False, is_flag=True)
-def up(project_name, compose_file, container, all_containers):
+@click.option('--env', 'env', help='Environment variables', type=ContainerEnvironment(), default=None)
+def up(project_name, compose_file, container, all_containers, env):
     """
     Builds, (re)creates, starts, and attaches to containers for a service.
     """
-    compose_up(project_name, compose_file, None if all_containers else container)
+    compose_up(project_name, compose_file, None if all_containers else container, env=env)
 
 
 @project.command()
@@ -187,6 +193,19 @@ def install(project_name, compose_file, var_dir, container_dir_to_copy, install_
     """
     compose_install(project_name, compose_file, var_dir, container_dir_to_copy, install_container_command)
 
+
+
+@project.command()
+@click.option('--project-name', '-p', help='Name of the project', type=str, required=True, default=default_project_name)
+@click.option('--container-dir-to-copy', '-d',
+              help='Container dir which will be copied after build in format '
+                   'DOCKER_CONTAINER_NAME:CONTAINER_DIRECTORY:HOST_DIRECTORY',
+              type=ContainerDirToCopyType(), required=False, multiple=True, default=default_containers_dir_to_copy)
+def copy_container_dirs(project_name, container_dir_to_copy):
+    """
+    Copy diractories from containers to the host.
+    """
+    copy_containers_dirs_func(project_name, container_dir_to_copy)
 
 
 @project.command()

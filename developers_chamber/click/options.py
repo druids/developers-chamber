@@ -57,3 +57,22 @@ class ContainerCommandType(click.ParamType):
                 param,
                 ctx,
             )
+
+
+class ContainerEnvironment(click.ParamType):
+
+    name = 'container_environment'
+
+    def convert(self, value, param, ctx):
+        try:
+            return {
+                variable.split('=')[0]: variable.split('=')[1] for variable in value.split(' ')
+            }
+        except ValueError:
+            self.fail(
+                'Invalid value "{}" format must be "NAME=VALUE [NAME2=VALUE2]"'.format(
+                    value
+                ),
+                param,
+                ctx,
+            )
