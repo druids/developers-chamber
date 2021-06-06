@@ -28,6 +28,7 @@ from developers_chamber.scripts.qa import *
 from developers_chamber.scripts.sh import *
 from developers_chamber.scripts.toggle import *
 from developers_chamber.scripts.version import *
+from developers_chamber.scripts.init_aliasses import *
 
 
 click_completion.init()
