@@ -80,9 +80,10 @@ class AliasCommand(click.Command):
             if i == 0:
                 alias_args = []
                 for arg in ctx.args:
-                    replaced_arg, command = find_and_replace_command_variable(arg, alias_str)
+                    replaced_arg, alias_str = find_and_replace_command_variable(arg, alias_str)
                     if not replaced_arg:
                         alias_args.append(arg)
+
             cli.main(args=shlex.split(alias_str) + alias_args, standalone_mode=False)
 
 
