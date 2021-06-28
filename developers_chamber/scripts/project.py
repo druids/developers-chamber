@@ -203,7 +203,7 @@ def install(project_name, compose_file, var_dir, container_dir_to_copy, install_
               type=ContainerDirToCopyType(), required=False, multiple=True, default=default_containers_dir_to_copy)
 def copy_container_dirs(project_name, container_dir_to_copy):
     """
-    Copy diractories from containers to the host.
+    Copy directories from containers to the host.
     """
     copy_containers_dirs_func(project_name, container_dir_to_copy)
 
