@@ -85,9 +85,6 @@ class ImportOrderQACheck(QACheck):
     """
     name = 'Check import order'
 
-    def _is_python_file(self, path):
-        return bool(re.search(r'\.py$', path))
-
     def _run_check(self):
         changed_files = [diff.b_path for diff in self._get_diffs() if diff.b_path and self._is_python_file(diff.b_path)
                          and not self._is_migration_file(diff.b_path)]
@@ -98,10 +95,41 @@ class ImportOrderQACheck(QACheck):
 
         wrong_import_order_files = set(changed_files) & set([diff.b_path for diff in self._get_unstaged()])
         if wrong_import_order_files:
-            raise QAError('Found unsorted import(s) in following file(s):', '\n'.join(wrong_import_order_files))
+            raise QAError(
+                'Found unsorted import(s) in following file(s):',
+                (
+                    '\n'.join(wrong_import_order_files) +
+                    '\n\n' +
+                    'To fix it run: "isort {}"'.format(' '.join(wrong_import_order_files))
+                )
+            )
 
 
-class TestMethodNamesQACheck(QACheck):
+class RegexPyQACheck(QACheck):
+    """
+    Helper for writing QAChecks which finds invalid regex patterns in python code.
+    """
+
+    pattern = None
+
+    def _run_check(self):
+        invalid_patterns = []
+        for diff_obj in self._get_diffs():
+            if self._is_python_file(diff_obj.b_path):
+                for line in diff_obj.diff.decode().split('\n'):
+                    if line.startswith('+'):
+                        match = re.search(self.pattern, line)
+                        if match:
+                            invalid_patterns.append((diff_obj.b_path, match[1]))
+
+        if invalid_patterns:
+            self._found_invalid_patterns(invalid_patterns)
+
+    def _found_invalid_patterns(self, invalid_patterns):
+        raise NotImplementedError
+
+
+class TestMethodNamesQACheck(RegexPyQACheck):
     """
     Checks that test methods are named correctly.
 
@@ -111,13 +139,25 @@ class TestMethodNamesQACheck(QACheck):
     """
     name = 'Check test method names'
 
-    def _run_check(self):
-        disallowed_method_names = []
-        for diff_obj in self._get_diffs():
-            for line in diff_obj.diff.decode().split('\n'):
-                match = re.search(os.environ.get('QA_DISALLOWED_TEST_METHOD_REGEXP'), line)
-                if match:
-                    disallowed_method_names.append(match[1])
+    pattern = os.environ.get('QA_DISALLOWED_TEST_METHOD_REGEXP')
 
-        if disallowed_method_names:
-            raise QAError('Found disallowed test method name(s):', '\n'.join(disallowed_method_names))
+    def _found_invalid_patterns(self, invalid_patterns):
+        raise QAError(
+            'Found disallowed test method name(s):',
+            '\n'.join(('{}: {}'.format(file, value) for file, value in invalid_patterns))
+        )
+
+
+class TestPrintStatementsQACheck(RegexPyQACheck):
+    """
+    Checks if changes will not contains print statements.
+    """
+    name = 'Checking for print statements'
+
+    pattern = r'.*(print *\([^\)]*\)).*'
+
+    def _found_invalid_patterns(self, invalid_patterns):
+        raise QAError(
+            'Found print statement(s):',
+            '\n'.join(('{}: {}'.format(file, value) for file, value in invalid_patterns))
+        )

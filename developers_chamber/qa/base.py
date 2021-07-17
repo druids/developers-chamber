@@ -103,6 +103,9 @@ class QACheck(RepoMixin):
         """
         self._get_repo().git.stash('save')
 
+    def _is_python_file(self, path):
+        return bool(re.search(r'\.py$', path))
+
     def _is_migration_file(self, path):
         return bool(re.search(r'migrations\/([^\/]+)\.py$', path))
 
