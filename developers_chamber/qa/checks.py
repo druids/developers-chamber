@@ -115,7 +115,7 @@ class RegexPyQACheck(QACheck):
     def _run_check(self):
         invalid_patterns = []
         for diff_obj in self._get_diffs():
-            if self._is_python_file(diff_obj.b_path):
+            if diff_obj.b_path and self._is_python_file(diff_obj.b_path):
                 for line in diff_obj.diff.decode().split('\n'):
                     if line.startswith('+'):
                         match = re.search(self.pattern, line)
