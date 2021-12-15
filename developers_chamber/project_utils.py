@@ -172,13 +172,13 @@ def start_task(jira_url, jira_username, jira_api_key, jira_project_key, toggl_ap
 
 
 def _get_timer_comment(timer):
-    return 'Toggl #{}'.format(timer.id)
+    return 'Toggl #{}'.format(timer['id'])
 
 
 def stop_task(jira_url, jira_username, jira_api_key, toggl_api_key):
     running_timer = get_running_timer_data(toggl_api_key)
     if running_timer:
-        match = ISSUE_KEY_PATTERN.match(running_timer.description)
+        match = ISSUE_KEY_PATTERN.match(running_timer['description'])
         if match:
             issue_key = match.group('issue_key')
             get_issue_fields(jira_url, jira_username, jira_api_key, issue_key)
@@ -188,7 +188,7 @@ def stop_task(jira_url, jira_username, jira_api_key, toggl_api_key):
                 jira_username,
                 jira_api_key,
                 issue_key,
-                time_spend=timedelta(seconds=stopped_timer.duration),
+                time_spend=timedelta(seconds=stopped_timer['duration']),
                 comment=_get_timer_comment(stopped_timer),
             )
             return 'Timner was stopped and time was logged'
@@ -217,15 +217,15 @@ def sync_timer_to_jira(jira_url, jira_username, jira_api_key, toggl_api_key, tog
         return None
 
     timers = get_full_timer_report(toggl_api_key, workspace_id=toggl_workspace_id, project_id=toggl_project_id,
-                                   from_date=from_date, to_date=to_date).data
+                                   from_date=from_date, to_date=to_date)['data']
     for timer in timers:
-        match = ISSUE_KEY_PATTERN.match(timer.description)
+        match = ISSUE_KEY_PATTERN.match(timer['description'])
         if match:
             issue_key = match.group('issue_key')
             issue_data = get_issue_fields(jira_url, jira_username, jira_api_key, issue_key)
             timer_worklog = get_timer_worklog(timer, issue_data)
 
-            timer_seconds = math.ceil(timer.dur / 1000 / 60) * 60  # Rounded on minutes
+            timer_seconds = math.ceil(timer['dur'] / 1000 / 60) * 60  # Rounded on minutes
             if timer_worklog and timer_worklog.timeSpentSeconds != timer_seconds:
                 timer_worklog.delete()
                 LOGGER.info('Updating issue "{}" worklog "{}"'.format(

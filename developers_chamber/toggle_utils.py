@@ -4,7 +4,6 @@ from datetime import date, timedelta
 from urllib.error import HTTPError
 
 import click
-from attrdict import AttrDict
 from toggl.TogglPy import Toggl, Endpoints
 
 
@@ -56,22 +55,23 @@ def start_timer(api_key, description, workspace_id=None, project_id=None):
         data['time_entry']['pid'] = project_id
     if workspace_id:
         data['time_entry']['wid'] = workspace_id
-    return AttrDict(client.decodeJSON(client.postRequest(Endpoints.START_TIME, parameters=data))['data'])
+    return client.decodeJSON(client.postRequest(Endpoints.START_TIME, parameters=data))['data']
 
 
 def stop_running_timer(api_key):
     client = _get_toggl_client(api_key)
     current_timer_data = get_running_timer_data(api_key)
     if current_timer_data:
-        return AttrDict(client.stopTimeEntry(current_timer_data.id)['data'])
+        return client.stopTimeEntry(current_timer_data['id'])['data']
     else:
         return None
 
 
 def get_running_timer_data(api_key):
+    breakpoint()
     client = _get_toggl_client(api_key)
     current_timer = client.currentRunningTimeEntry()
-    return AttrDict(current_timer['data']) if current_timer['data'] else None
+    return current_timer['data'] if current_timer['data'] else None
 
 
 def _prepare_report_data(client, workspace_id=None, project_id=None, description=None, from_date=None, to_date=None):
@@ -100,7 +100,7 @@ def _prepare_report_data(client, workspace_id=None, project_id=None, description
 def get_timer_report(api_key, workspace_id=None, project_id=None, description=None, from_date=None, to_date=None):
     client = _get_toggl_client(api_key)
     data = _prepare_report_data(client, workspace_id, project_id, description, from_date, to_date)
-    return AttrDict(client.getDetailedReport(data))
+    return client.getDetailedReport(data)
 
 
 def get_full_timer_report(api_key, workspace_id=None, project_id=None, description=None, from_date=None, to_date=None):
@@ -118,4 +118,4 @@ def get_full_timer_report(api_key, workspace_id=None, project_id=None, descripti
         time.sleep(1)  # There is rate limiting of 1 request per second (per IP per API token).
         data['page'] = pages_index
         report_data['data'].extend(client.getDetailedReport(data)['data'])
-    return AttrDict(report_data)
+    return report_data
