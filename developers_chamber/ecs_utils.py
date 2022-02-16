@@ -1,5 +1,6 @@
 import json
 import logging
+from datetime import datetime
 from multiprocessing.pool import ThreadPool
 
 import boto3
@@ -463,9 +464,7 @@ def run_task_and_wait_for_success(cluster, task_definition, command, name, succe
     task_id = task.split('/')[-1]
 
     LOGGER.info("Running task: '{}'".format(task))
-
     wait_for_task_to_stop(cluster=cluster, task=task, timeout=timeout, region=region, ecs_client=ecs_client)
-
     response = ecs_client.describe_tasks(cluster=cluster, tasks=[task])
 
     UNDEFINED = 'UNDEFINED'
@@ -473,8 +472,13 @@ def run_task_and_wait_for_success(cluster, task_definition, command, name, succe
     task_stop_code = response['tasks'][0].get('stopCode', UNDEFINED)
     LOGGER.info("Task stop code: '{}'".format(task_stop_code))
 
+    container_response = {}
+    for _container_response in response['tasks'][0]['containers']:
+        if _container_response['name'] == name:
+            container_response = _container_response
+
     if task_stop_code != 'EssentialContainerExited':
-        contianer_stop_reason = response['tasks'][0]['containers'][0].get('reason', UNDEFINED)
+        contianer_stop_reason = container_response.get('reason', UNDEFINED)
         LOGGER.info("Container stop reason: '{}'".format(contianer_stop_reason))
 
         if contianer_stop_reason != UNDEFINED:
@@ -482,20 +486,26 @@ def run_task_and_wait_for_success(cluster, task_definition, command, name, succe
 
         task_stop_reason = response['tasks'][0].get('stoppedReason', UNDEFINED)
         LOGGER.info("Task stop reason: '{}'".format(task_stop_reason))
-
         if task_stop_reason != UNDEFINED:
             raise ClickException(task_stop_reason)
 
         raise ClickException(response['tasks'][0])
 
     try:
+        LOGGER.info('Task output:')
         for event in get_log_events(log_group=task_definition, log_stream='ecs/{}/{}'.format(name, task_id),
                                     region=region):
-            LOGGER.info('[task/{}] {}'.format(task_id, event['message'].rstrip()))
+            LOGGER.info(
+                2 * ' ' + '[task/{} - {}] {}'.format(
+                    task_id,
+                    datetime.fromtimestamp(event['timestamp'] // 1000),
+                    event['message'].rstrip()
+                )
+            )
     except Exception as ex:
         LOGGER.info(ex)
 
-    exit_code = response['tasks'][0]['containers'][0].get('exitCode', UNDEFINED)
+    exit_code = container_response.get('exitCode', UNDEFINED)
     LOGGER.info("Container exit code: '{}'".format(exit_code))
 
     if exit_code == UNDEFINED:
