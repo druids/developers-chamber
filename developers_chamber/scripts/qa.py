@@ -4,7 +4,8 @@ from developers_chamber.qa.checks import (ImportOrderQACheck,
                                           MissingMigrationsQACheck,
                                           MissingTranslationsQACheck,
                                           TestMethodNamesQACheck,
-                                          TestPrintStatementsQACheck)
+                                          TestPrintStatementsQACheck,
+                                          UnusedImportsQACheck)
 from developers_chamber.scripts import cli
 
 
@@ -24,6 +25,7 @@ def all():
         MigrationFilenamesQACheck(),
         MissingTranslationsQACheck(),
         ImportOrderQACheck(),
+        UnusedImportsQACheck(),
         TestMethodNamesQACheck(),
         TestPrintStatementsQACheck(),
     ).run()
@@ -59,6 +61,14 @@ def import_order():
     Runs import order QA check.
     """
     QACheckRunner(ImportOrderQACheck()).run()
+
+
+@qa.command()
+def unused_imports():
+    """
+    Runs unused imports QA check.
+    """
+    QACheckRunner(UnusedImportsQACheck()).run()
 
 
 @qa.command()

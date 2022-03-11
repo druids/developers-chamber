@@ -27,6 +27,7 @@ setup(
         'unidecode==1.1.1',
         'TogglPy==0.1.2',
         'attrdict==2.0.1',
+        'flake8==4.0.1',
     ],
     entry_points={'console_scripts': [
         'pydev=developers_chamber.bin.pydev:cli',
