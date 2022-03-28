@@ -137,7 +137,7 @@ class RegexPyQACheck(QACheck):
             if diff_obj.b_path and self._is_python_file(diff_obj.b_path):
                 for line in diff_obj.diff.decode().split('\n'):
                     if line.startswith('+'):
-                        match = re.search(self.pattern, line)
+                        match = re.search(self.pattern, line[1:])
                         if match:
                             invalid_patterns.append((diff_obj.b_path, match[1]))
 
@@ -167,13 +167,13 @@ class TestMethodNamesQACheck(RegexPyQACheck):
         )
 
 
-class TestPrintStatementsQACheck(RegexPyQACheck):
+class PrintStatementsQACheck(RegexPyQACheck):
     """
-    Checks if changes will not contains print statements.
+    Checks if changes do not contain print statements.
     """
     name = 'Checking for print statements'
 
-    pattern = r'.*(print *\([^\)]*\)).*'
+    pattern = r'(?:^|[^a-zA-Z0-9_])(print *\([^\)]*\))'
 
     def _found_invalid_patterns(self, invalid_patterns):
         raise QAError(

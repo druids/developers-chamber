@@ -4,7 +4,7 @@ from developers_chamber.qa.checks import (ImportOrderQACheck,
                                           MissingMigrationsQACheck,
                                           MissingTranslationsQACheck,
                                           TestMethodNamesQACheck,
-                                          TestPrintStatementsQACheck,
+                                          PrintStatementsQACheck,
                                           UnusedImportsQACheck)
 from developers_chamber.scripts import cli
 
@@ -27,7 +27,7 @@ def all():
         ImportOrderQACheck(),
         UnusedImportsQACheck(),
         TestMethodNamesQACheck(),
-        TestPrintStatementsQACheck(),
+        PrintStatementsQACheck(),
     ).run()
 
 
@@ -80,8 +80,8 @@ def test_method_names():
 
 
 @qa.command()
-def test_print_statements():
+def print_statements():
     """
-    Runs test method names QA check.
+    Runs print statements names QA check.
     """
-    QACheckRunner(TestPrintStatementsQACheck()).run()
+    QACheckRunner(PrintStatementsQACheck()).run()
