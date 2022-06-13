@@ -32,7 +32,7 @@ def start(description, workspace_id, project_id, api_key):
     Start toggl timer.
     """
     running_timer = start_timer(api_key, description, workspace_id, project_id)
-    click.echo('Timer with description "{}" was started'.format(running_timer.description))
+    click.echo('Timer with description "{}" was started'.format(running_timer['description']))
 
 
 @toggl.command()
@@ -78,8 +78,8 @@ def print_report(workspace_id, project_id, description, from_date, to_date, api_
     Print report.
     """
     report_data = get_timer_report(api_key, workspace_id, project_id, description, from_date.date(), to_date.date())
-    click.echo('    {:<15}\t{}'.format('total time:', pretty_time_delta(report_data.total_grand or 0 / 1000)))
-    click.echo('    {:<15}\t{}'.format('timers count:', report_data.total_count))
+    click.echo('    {:<15}\t{}'.format('total time:', pretty_time_delta(report_data['total_grand'] or 0 / 1000)))
+    click.echo('    {:<15}\t{}'.format('timers count:', report_data['total_count']))
 
 
 @toggl.command()
@@ -101,5 +101,5 @@ def print_report_tasks(workspace_id, project_id, description, from_date, to_date
 
     click.echo('{:<15} | {}'.format('Time', 'Description'))
     click.echo(16 * '-' + '+' + 16 * '-')
-    for timer in report_data.data:
+    for timer in report_data['data']:
         click.echo('{:<15} | {}'.format(pretty_time_delta(timer.dur / 1000), timer.description))
