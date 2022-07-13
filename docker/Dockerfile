@@ -15,10 +15,10 @@ RUN apk update && \
 	openssh \
 	openssl-dev \
 	openssl-dev \
-	python3 \
-	python3-dev \
 	py3-cryptography \
-	py3-pip
+	py3-pip \
+	python3 \
+	python3-dev
 
 RUN pip install --upgrade \
 	pip \
