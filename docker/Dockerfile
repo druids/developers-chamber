@@ -6,6 +6,7 @@ ENV DOCKER_TAG=${VERSION}
 RUN apk update && \
 	apk add \
 	bash \
+	curl \
 	gcc \
 	gettext \
 	git \
