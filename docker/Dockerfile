@@ -13,8 +13,6 @@ RUN apk update && \
 	libc-dev \
 	libffi-dev \
 	make \
-	openssh \
-	openssl-dev \
 	openssl-dev \
 	py3-cryptography \
 	py3-pip \
