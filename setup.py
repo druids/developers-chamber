@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='developers-chamber',
-    version='0.0.63',
+    version='0.0.64',
     description='A small plugin which help with development, deployment, git',
     keywords='django, skripts, easy live, git, bitbucket, Jira',
     author='Druids team',
