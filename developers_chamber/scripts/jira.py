@@ -18,8 +18,8 @@ username = os.environ.get('JIRA_USERNAME')
 api_key = os.environ.get('JIRA_API_KEY')
 jql = os.environ.get(
     'JIRA_JQL',
-    'project = {project_key} and assignee = currentUser() and status not in ("Done", "Canceled", "Closed") and sprint != null'
-    ' order by created DESC'
+    'project = {project_key} and assignee = currentUser() and status not in ("Done", "Canceled", "Closed") and sprint !'
+    '= null order by created DESC'
 )
 project_key = os.environ.get('JIRA_PROJECT_KEY')
 

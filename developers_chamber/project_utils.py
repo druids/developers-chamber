@@ -27,7 +27,7 @@ from developers_chamber.utils import (call_command, call_compose_command,
 LOGGER = logging.getLogger()
 
 
-ISSUE_KEY_PATTERN = re.compile('(?P<issue_key>[A-Z][A-Z]+-\d+).*')
+ISSUE_KEY_PATTERN = re.compile(r'(?P<issue_key>[A-Z][A-Z]+-\d+).*')
 
 
 def get_command_output(command):
@@ -212,7 +212,7 @@ def sync_timer_to_jira(jira_url, jira_username, jira_api_key, toggl_api_key, tog
                        from_date, to_date):
     def get_timer_worklog(timer, issue_data):
         for worklog in issue_data.worklog.worklogs:
-            if hasattr(worklog, 'comment') and worklog.comment ==_get_timer_comment(timer):
+            if hasattr(worklog, 'comment') and worklog.comment == _get_timer_comment(timer):
                 return worklog
         return None
 

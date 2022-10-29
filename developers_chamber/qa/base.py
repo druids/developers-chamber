@@ -15,6 +15,7 @@ class QAError(Exception):
     """
     Generic QA exception that also carries command output.
     """
+
     def __init__(self, msg, output=None):
         super().__init__(msg)
         self.output = output.strip() if output is not None else None
@@ -24,6 +25,7 @@ class RepoMixin:
     """
     Mixin that provides functions for work with Git repository.
     """
+
     def _get_repo(self):
         """
         Returns the repo object.

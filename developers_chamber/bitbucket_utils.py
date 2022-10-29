@@ -42,6 +42,7 @@ def get_default_reviewers(username, password, repository_name):
         if reviewer_data['uuid'] != current_user_uuid
     ]
 
+
 def create_pull_request(username, password, title, description, source_branch_name, destination_branch_name,
                         repository_name):
     url = 'https://api.bitbucket.org/2.0/repositories/{repository}/pullrequests'.format(
