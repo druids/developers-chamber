@@ -71,7 +71,7 @@ def copy_containers_dirs(project_name, containers_dir_to_copy=None, containers=N
     for container_name, container_dir, host_dir in containers_dir_to_copy:
         if not containers or container_name in containers:
             call_command([
-                'docker', 'run', '-v', '{}:/copy_tmp'.format(Path.cwd() / host_dir), '-u', str(os.getuid()),
+                'docker', 'run', '--rm', '-v', '{}:/copy_tmp'.format(Path.cwd() / host_dir), '-u', str(os.getuid()),
                 '{}_{}'.format(project_name, container_name),
                 "cp -rT {}/ /copy_tmp/".format(container_dir)
             ])
