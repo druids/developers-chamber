@@ -58,7 +58,7 @@ class AliasCommand(click.Command):
             formatter.write_text('Alias to commands: ')
             with formatter.indentation():
                 for used_command_parts, remaining_command_parts, click_command, alias_str in self.aliases:
-                    formatter.write_text('* '+ ' '.join(used_command_parts))
+                    formatter.write_text('* ' + ' '.join(used_command_parts))
                     if remaining_command_parts:
                         with formatter.indentation(), formatter.indentation():
                             formatter.write_text(' '.join(remaining_command_parts))
@@ -73,7 +73,6 @@ class AliasCommand(click.Command):
                         click_command.format_help_text(ctx, formatter)
                         click_command.format_options(ctx, formatter)
                         formatter.write_paragraph()
-
 
     def invoke(self, ctx):
         for i, (used_command_parts, remaining_command_parts, click_command, alias_str) in enumerate(self.aliases):

@@ -15,6 +15,7 @@ def qa():
     Quality assurance commands.
     """
 
+
 @qa.command()
 def all():
     """

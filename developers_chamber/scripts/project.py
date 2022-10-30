@@ -194,7 +194,6 @@ def install(project_name, compose_file, var_dir, container_dir_to_copy, install_
     compose_install(project_name, compose_file, var_dir, container_dir_to_copy, install_container_command)
 
 
-
 @project.command()
 @click.option('--project-name', '-p', help='Name of the project', type=str, required=True, default=default_project_name)
 @click.option('--container-dir-to-copy', '-d',
@@ -217,7 +216,6 @@ def bind_library(library_source_dir, library_destination_dir):
     Bind external python library.
     """
     bind_library_func(library_source_dir, library_destination_dir)
-
 
 
 @project.command()

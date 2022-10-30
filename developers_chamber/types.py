@@ -47,7 +47,7 @@ class TimedeltaType(ParamType):
             if ch in ' \t':
                 # skip whitespace
                 continue
-            raise  self.fail('Invalid time delta: {}'.format(value))
+            raise self.fail('Invalid time delta: {}'.format(value))
         if result_value:
             seconds = unit * int(result_value)
         return datetime.timedelta(seconds=seconds)
