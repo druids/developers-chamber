@@ -69,7 +69,7 @@ class MissingTranslationsQACheck(QACheck):
         # However we need to check, that at least modification time of any translation file changed,
         # otherwise the result could be false positive.
 
-        for translation_file in self._run_command('find -type f -name "*.po"').split('\n'):
+        for translation_file in self._run_command('find ./ -type f -name "*.po"').split('\n'):
             if os.path.getmtime(translation_file) > start_time:
                 return
 
