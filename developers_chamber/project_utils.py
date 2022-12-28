@@ -48,7 +48,7 @@ def set_hosts(domains):
 
 
 def _call_compose_command(project_name, compose_files, command, containers=None, extra_command=None, env=None):
-    compose_command = ['docker-compose', '-p', project_name]
+    compose_command = ['docker', '--log-level=ERROR', 'compose', '-p', project_name]
     compose_command += [
         '-f{}'.format(f) for f in compose_files
     ]
@@ -72,7 +72,7 @@ def copy_containers_dirs(project_name, containers_dir_to_copy=None, containers=N
         if not containers or container_name in containers:
             call_command([
                 'docker', 'run', '--rm', '-v', '{}:/copy_tmp'.format(Path.cwd() / host_dir), '-u', str(os.getuid()),
-                '{}_{}'.format(project_name, container_name),
+                '{}-{}'.format(project_name, container_name),
                 "cp -rT {}/ /copy_tmp/".format(container_dir)
             ])
 
@@ -153,6 +153,8 @@ def compose_install(project_name, compose_files, var_dirs=None, containers_dir_t
 
     for container_name, command in install_container_commands or ():
         compose_run(project_name, compose_files, [container_name], command)
+
+    compose_stop(project_name, compose_files, None)
 
 
 def start_task(jira_url, jira_username, jira_api_key, jira_project_key, toggl_api_key, toggl_workspace_id,
