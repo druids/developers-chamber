@@ -15,7 +15,7 @@ DEFAULT_TOKEN = os.environ.get('GITLAB_TOKEN')
 
 @cli.group()
 def gitlab():
-    """GitLab commands"""
+    """Helpers for GitLab management"""
 
 
 @gitlab.command()
@@ -29,7 +29,9 @@ def gitlab():
 @click.option('--project', help='GitLab project name (defaults to env variable GITLAB_PROJECT)', type=str,
               required=True, default=DEFAULT_PROJECT)
 def create_release_merge_request(api_url, token, source_branch, target_branch, project):
-    """Create a new merge request in GitLab project after release"""
+    """
+    Create a new merge request in a GitLab project. It is often used after the project release.
+    """
     if not source_branch:
         source_branch = get_current_branch_name()
 

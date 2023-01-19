@@ -26,9 +26,7 @@ project_key = os.environ.get('JIRA_PROJECT_KEY')
 
 @cli.group()
 def jira():
-    """
-    Jira commands.
-    """
+    """Helpers for Jira management."""
 
 
 @jira.command()
@@ -52,7 +50,7 @@ def my_issues(url, username, api_key, project_key, jql):
 @click.option('--issue-key', '-i',  help='key of the task', type=str, required=True)
 def get_branch_name(url, username, api_key, project_key, issue_key):
     """
-    Returns branch name generated from issue key and summary.
+    Return branch name generated from issue key and summary.
     """
     click.echo(get_branch_name_func(url, username, api_key, issue_key, project_key))
 
@@ -65,7 +63,7 @@ def get_branch_name(url, username, api_key, project_key, issue_key):
 @click.option('--issue-key', '-i',  help='key of the task', type=str)
 def show_issue(url, username, api_key, project_key, issue_key):
     """
-    Opens issue in web browser.
+    Open an issue with the key in a web browser.
     """
     show_issue_func(url, username, api_key, issue_key, project_key)
 
@@ -80,7 +78,7 @@ def show_issue(url, username, api_key, project_key, issue_key):
 @click.option('--comment', '-c',  help='Time spend comment', type=str, required=False)
 def log_issue_time(url, username, api_key, project_key, issue_key, time_spend, comment):
     """
-    Log spend time to the issue.
+    Log a spend time to the issue in Jira.
     """
     log_issue_time_func(url, username, api_key, issue_key, time_spend, comment, project_key)
     click.echo('Time was logged')
@@ -94,7 +92,7 @@ def log_issue_time(url, username, api_key, project_key, issue_key, time_spend, c
 @click.option('--issue-key', '-i',  help='key of the task', type=str)
 def print_issue_worklog(url, username, api_key, project_key, issue_key):
     """
-    Print issue worklog.
+    Print an issue worklog from Jira.
     """
     click.echo('{:<15} | {}'.format('Time', 'Description'))
     click.echo(16 * '-' + '+' + 16 * '-')
@@ -110,7 +108,7 @@ def print_issue_worklog(url, username, api_key, project_key, issue_key):
 @click.option('--transition',  help='Jira transition name', type=str, required=True)
 def invoke_issues_transition(url, username, api_key, jql, transition):
     """
-    Applies transition on selected issues with JQL.
+    Apply transition on selected issues in Jira according to JQL.
     """
     issues = invoke_issues_transition_func(url, username, api_key, jql, transition)
     click.echo(

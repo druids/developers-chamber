@@ -15,7 +15,7 @@ default_repository_name = os.environ.get('BITBUCKET_REPOSITORY')
 
 @cli.group()
 def bitbucket():
-    """Bitbucket commands"""
+    """Bitbucket management commands"""
 
 
 @bitbucket.command()
@@ -29,7 +29,7 @@ def bitbucket():
               default=default_repository_name)
 def create_release_pull_request(username, password, source_branch_name, destination_branch_name, repository_name):
     """
-    Create new pull request to the bitbucket repository
+    Create a new pull request to the bitbucket repository.
     """
     if not source_branch_name:
         source_branch_name = get_current_branch_name()

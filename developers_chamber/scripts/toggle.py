@@ -17,9 +17,7 @@ workspace_id = os.environ.get('TOGGL_WORKSPACE_ID')
 
 @cli.group()
 def toggl():
-    """
-    Toggl commands.
-    """
+    """Helpers for time tracking with toggle service."""
 
 
 @toggl.command()
@@ -29,7 +27,7 @@ def toggl():
 @click.option('--api-key', '-k',  help='toggle API key', type=str, required=True, default=api_key)
 def start(description, workspace_id, project_id, api_key):
     """
-    Start toggl timer.
+    Start Toggl timer with description in workspace ID and project ID.
     """
     running_timer = start_timer(api_key, description, workspace_id, project_id)
     click.echo('Timer with description "{}" was started'.format(running_timer['description']))
@@ -39,7 +37,7 @@ def start(description, workspace_id, project_id, api_key):
 @click.option('--api-key', '-k',  help='toggle API key', type=str, required=True, default=api_key)
 def stop(api_key):
     """
-    Stop toggl timer.
+    Stops currently running Toggl timer.
     """
     stopped_timer = stop_running_timer(api_key)
     if stopped_timer:
@@ -54,7 +52,7 @@ def stop(api_key):
 @click.option('--api-key', '-k',  help='toggle API key', type=str, required=True, default=api_key)
 def print_toggl(api_key):
     """
-    Print currently running timer detail.
+    Print detail of the currently running Toggle timer.
     """
     running_timer = get_running_timer_data(api_key)
     if running_timer:
@@ -75,7 +73,8 @@ def print_toggl(api_key):
 @click.option('--api-key', '-k',  help='toggle API key', type=str, required=True, default=api_key)
 def print_report(workspace_id, project_id, description, from_date, to_date, api_key):
     """
-    Print report.
+    Print summary from the Toggle time tracker. Data can be filtered according to workspace, project, description
+    or by date and time
     """
     report_data = get_timer_report(api_key, workspace_id, project_id, description, from_date.date(), to_date.date())
     click.echo('    {:<15}\t{}'.format('total time:', pretty_time_delta(report_data['total_grand'] or 0 / 1000)))
@@ -93,7 +92,8 @@ def print_report(workspace_id, project_id, description, from_date, to_date, api_
 @click.option('--api-key', '-k',  help='toggle API key', type=str, required=True, default=api_key)
 def print_report_tasks(workspace_id, project_id, description, from_date, to_date, api_key):
     """
-    Print timer details.
+    Print tracked toggle tasks one by one in table. Data can be filtered according to workspace, project, description
+    or by date and time
     """
     report_data = get_full_timer_report(
         api_key, workspace_id, project_id, description, from_date.date(), to_date.date()

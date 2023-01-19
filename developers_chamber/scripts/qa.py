@@ -11,15 +11,13 @@ from developers_chamber.scripts import cli
 
 @cli.group()
 def qa():
-    """
-    Quality assurance commands.
-    """
+    """Helpers for python project quality assurance."""
 
 
 @qa.command()
 def all():
     """
-    Runs all defined QA checks.
+    Run all defined QA checks.
     """
     QACheckRunner(
         MissingMigrationsQACheck(),
@@ -35,7 +33,8 @@ def all():
 @qa.command()
 def missing_migrations():
     """
-    Runs missing migrations QA check.
+    Run a missing Django migrations QA check. It will try to generate a Django migrations
+    if there is one or more missing check is failed.
     """
     QACheckRunner(MissingMigrationsQACheck()).run()
 
@@ -43,7 +42,8 @@ def missing_migrations():
 @qa.command()
 def migration_filenames():
     """
-    Runs migration filenames QA check.
+    Run migration filenames QA check.
+    Migration name should be in format "[0-9]{4}_migration.py" (ex. 0001_migration.py)
     """
     QACheckRunner(MigrationFilenamesQACheck()).run()
 
@@ -51,7 +51,8 @@ def migration_filenames():
 @qa.command()
 def missing_translations():
     """
-    Runs missing translations QA check.
+    Run missing translations QA check. It will try to generate a Django makemessages
+    if there is one or more missing check is failed.
     """
     QACheckRunner(MissingTranslationsQACheck()).run()
 
@@ -59,7 +60,8 @@ def missing_translations():
 @qa.command()
 def import_order():
     """
-    Runs import order QA check.
+    Run import order QA check. It will check if all the new python code imports have the right order
+    defined with isort command.
     """
     QACheckRunner(ImportOrderQACheck()).run()
 
@@ -67,7 +69,7 @@ def import_order():
 @qa.command()
 def unused_imports():
     """
-    Runs unused imports QA check.
+    Run unused imports QA check. It will check if the new python code does not contain unused imports and prints it.
     """
     QACheckRunner(UnusedImportsQACheck()).run()
 
@@ -75,7 +77,8 @@ def unused_imports():
 @qa.command()
 def test_method_names():
     """
-    Runs test method names QA check.
+    Runs test method names QA check. It will check if the new test methods has the right name in format defined in
+    QA_DISALLOWED_TEST_METHOD_REGEXP setting.
     """
     QACheckRunner(TestMethodNamesQACheck()).run()
 
@@ -83,6 +86,6 @@ def test_method_names():
 @qa.command()
 def print_statements():
     """
-    Runs print statements names QA check.
+    Runs print statements names QA check. It will check if the new test methods do not have python print statements.
     """
     QACheckRunner(PrintStatementsQACheck()).run()

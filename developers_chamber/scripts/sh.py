@@ -8,7 +8,7 @@ from developers_chamber.utils import call_command
 @click.argument('command')
 def sh(command):
     """
-    Runs SH command.
+    Run shell command and print the result.
     """
 
     call_command(command)
