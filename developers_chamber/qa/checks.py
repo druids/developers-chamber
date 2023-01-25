@@ -132,17 +132,18 @@ class RegexPyQACheck(QACheck):
     pattern = None
 
     def _run_check(self):
-        invalid_patterns = []
-        for diff_obj in self._get_diffs():
-            if diff_obj.b_path and self._is_python_file(diff_obj.b_path):
-                for line in diff_obj.diff.decode().split('\n'):
-                    if line.startswith('+'):
-                        match = re.search(self.pattern, line[1:])
-                        if match:
-                            invalid_patterns.append((diff_obj.b_path, match[1]))
+        if self.pattern:
+            invalid_patterns = []
+            for diff_obj in self._get_diffs():
+                if diff_obj.b_path and self._is_python_file(diff_obj.b_path):
+                    for line in diff_obj.diff.decode().split('\n'):
+                        if line.startswith('+'):
+                            match = re.search(self.pattern, line[1:])
+                            if match:
+                                invalid_patterns.append((diff_obj.b_path, match[1]))
 
-        if invalid_patterns:
-            self._found_invalid_patterns(invalid_patterns)
+            if invalid_patterns:
+                self._found_invalid_patterns(invalid_patterns)
 
     def _found_invalid_patterns(self, invalid_patterns):
         raise NotImplementedError

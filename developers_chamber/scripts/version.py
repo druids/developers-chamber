@@ -8,12 +8,13 @@ from developers_chamber.version_utils import \
     bump_to_next_version as bump_to_next_version_func
 from developers_chamber.version_utils import get_next_version, get_version
 
+
 default_version_files = os.environ.get('VERSION_FILES', 'version.json').split(',')
 
 
 @cli.group()
 def version():
-    """Version file commands"""
+    """Helpers for automatic update version in the version file."""
 
 
 @version.command()
@@ -23,7 +24,21 @@ def version():
               multiple=True)
 def bump_to_next(release_type, build_hash, file):
     """
-    Bump JSON file (or files) version number
+    Bump version in the JSON file (or files) and print it.
+    Version is selected according to release type, build has and version file.
+
+    \b
+    * version file - contains current version in json format,
+                     example (version is "1.30.0"): {"version": "1.30.0"}
+    * release type - select one of the values
+        * build - first 5 characters from build hash is joined to the end of
+                  the current version
+                  example: "1.30.0-abcde" will be generated for a version 1.30.0
+                           and a build hash "abcdefghi"
+        * patch - current version is "1.30.0", next version will be "1.30.1"
+        * minor - current version is "1.30.1", next version will be "1.31.0"
+        * major - current version is "1.30.2", next version will be "2.0.0"
+    * build-hash - only required for release type "build"
     """
     click.echo(bump_to_next_version_func(release_type, build_hash, file))
 
@@ -34,6 +49,9 @@ def bump_to_next(release_type, build_hash, file):
 def print_version(file):
     """
     Return current project version according to version JSON file
+    \b
+    * version file - contains current version in json format,
+                     example (version is "1.30.0"): {"version": "1.30.0"}
     """
     click.echo(get_version(file))
 
@@ -46,5 +64,18 @@ def print_version(file):
 def print_next(release_type, build_hash, file):
     """
     Return next version according to input release type, build hash and version JSON file
+
+    \b
+    * version file - contains current version in json format,
+                     example (version is "1.30.0"): {"version": "1.30.0"}
+    * release type - select one of the values
+        * build - first 5 characters from build hash is joined to the end of
+                  the current version
+                  example: "1.30.0-abcde" will be generated for a version 1.30.0
+                           and a build hash "abcdefghi"
+        * patch - current version is "1.30.0", next version will be "1.30.1"
+        * minor - current version is "1.30.1", next version will be "1.31.0"
+        * major - current version is "1.30.2", next version will be "2.0.0"
+    * build-hash - only required for release type "build"
     """
     click.echo(get_next_version(release_type, build_hash, file))

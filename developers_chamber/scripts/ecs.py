@@ -31,7 +31,7 @@ default_cluster = os.environ.get('AWS_ECS_CLUSTER')
 
 @cli.group()
 def ecs():
-    """ECS commands"""
+    """Helpers for AWS ECS management."""
 
 
 @ecs.command()
@@ -41,7 +41,9 @@ def ecs():
 @click.option('--images', '-i', help='JSON containing containers and their images', type=str, required=True)
 @click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
 def deploy_new_task_definition(cluster, service, task_definition, images, region):
-    """Deploy new task definition in AWS ECS. This command also updates the service and forces new deployment."""
+    """
+    Deploy new task definition in AWS ECS. This command also updates the service and forces new deployment.
+    """
     deploy_new_task_definition_func(cluster, service, task_definition, images, region)
 
 
@@ -50,7 +52,9 @@ def deploy_new_task_definition(cluster, service, task_definition, images, region
 @click.option('--images', '-i', help='JSON containing containers and their images', type=str, required=True)
 @click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
 def register_new_task_definition(task_definition, images, region):
-    """Register new task definition in AWS ECS."""
+    """
+    Register new task definition in AWS ECS.
+    """
     click.echo(register_new_task_definition_func(task_definition, images, region))
 
 
@@ -59,7 +63,9 @@ def register_new_task_definition(task_definition, images, region):
 @click.option('--service', '-s', help='ECS service names', type=str, required=True)
 @click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
 def update_service_to_latest_task_definition(cluster, service, region):
-    """Update service with the latest available task_definition"""
+    """
+    Update service with the latest available task_definition.
+    """
     update_service_to_latest_task_definition_func(cluster, service, region)
 
 
@@ -68,7 +74,9 @@ def update_service_to_latest_task_definition(cluster, service, region):
 @click.option('--service', '-s', help='ECS service name', type=str, required=True)
 @click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
 def stop_service(cluster, service, region):
-    """Stop an AWS ECS service by updating its desiredCount to 0."""
+    """
+    Stop an AWS ECS service by updating its desiredCount to 0.
+    """
     stop_service_func(cluster, service, region)
 
 
@@ -78,7 +86,9 @@ def stop_service(cluster, service, region):
 @click.option('--count', '-o', help='Desired count for service', type=int)
 @click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
 def start_service(cluster, service, count, region):
-    """Start an AWS ECS service by updating its desiredCount to 0."""
+    """
+    Start an AWS ECS service by updating its desiredCount to 0.
+    """
     start_service_func(cluster, service, count, region)
 
 
@@ -87,7 +97,9 @@ def start_service(cluster, service, count, region):
 @click.option('--count', '-o', help='Desired count for service', type=int)
 @click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
 def start_cluster_services(cluster, count, region):
-    """Start an AWS ECS service by updating its desiredCount to 0."""
+    """
+    Start an AWS ECS service by updating its desiredCount to 0.
+    """
     start_cluster_services_func(cluster, count, region)
 
 
@@ -97,7 +109,9 @@ def start_cluster_services(cluster, count, region):
 @click.option('--count', '-o', help='Desired count for service', type=int)
 @click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
 def start_services(cluster, services, count, region):
-    """Start an AWS ECS service by updating its desiredCount to 0."""
+    """
+    Start an AWS ECS service by updating its desiredCount to 0.
+    """
     services = services.split(',')
     start_services_func(cluster, services, count, region)
 
@@ -109,7 +123,9 @@ def start_services(cluster, services, count, region):
 @click.option('--name', '-n', help='ECS task name', type=str, required=True)
 @click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
 def run_task(cluster, task_definition, command, name, region):
-    """Run a single task in AWS ECS."""
+    """
+    Run a single task in AWS ECS.
+    """
     run_task_func(cluster, task_definition, command, name, region)
 
 
@@ -122,7 +138,9 @@ def run_task(cluster, task_definition, command, name, region):
 @click.option('--timeout', '-o', help='Seconds to wait before exiting with fail state', type=int, default=600)
 @click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
 def run_task_and_wait_for_success(cluster, task_definition, command, name, success_string, timeout, region):
-    """Run a single task in AWS ECS and wait for it to stop with success."""
+    """
+    Run a single task in AWS ECS and wait for it to stop with success.
+    """
     run_task_and_wait_for_success_func(cluster, task_definition, command, name, success_string, timeout, region)
 
 
@@ -135,7 +153,9 @@ def run_task_and_wait_for_success(cluster, task_definition, command, name, succe
 @click.option('--container', '-f', help='Container name to run the command in', type=str, default=None)
 @click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
 def run_service_task(cluster, service, command, success_string, timeout, region, container):
-    """Run a single task based on service's task definition in AWS ECS and wait for it to stop with success."""
+    """
+    Run a single task based on service's task definition in AWS ECS and wait for it to stop with success.
+    """
     run_service_task_func(cluster, service, command, success_string, timeout, region, container)
 
 
@@ -151,7 +171,9 @@ def run_service_task(cluster, service, command, success_string, timeout, region,
 @click.option('--security-group', help='security group ID', type=str, required=True, multiple=True)
 @click.option('--environment-file', '-e', help='S3 arn with path to env file', type=str, required=False, default=None)
 def run_service_task_fargate(cluster, service, command, success_string, timeout, region, container, subnet, security_group, environment_file):
-    """Run a single task based on service's task definition in AWS ECS and wait for it to stop with success."""
+    """
+    Run a single task based on service's task definition in AWS ECS and wait for it to stop with success.
+    """
     run_service_task_func(cluster, service, command, success_string, timeout, region, container, networkConfiguration={
         'awsvpcConfiguration': {
             'subnets': [s for s in subnet],
@@ -166,7 +188,9 @@ def run_service_task_fargate(cluster, service, command, success_string, timeout,
 @click.option('--service', '-s', help='ECS service name', type=str, required=True)
 @click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
 def get_tasks_for_service(cluster, service, region):
-    """ Return list of tasks running under specified service """
+    """
+    Return list of tasks running under specified service.
+    """
     click.echo(get_tasks_for_service_func(cluster, service, region))
 
 
@@ -175,7 +199,9 @@ def get_tasks_for_service(cluster, service, region):
 @click.option('--service', '-s', help='ECS service name', type=str, required=True)
 @click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
 def get_task_definition_for_service(cluster, service, region):
-    """ Return task definition arn for specified service """
+    """
+    Return task definition arn for specified service.
+    """
     click.echo(get_task_definition_for_service_func(cluster, service, region))
 
 
@@ -185,7 +211,9 @@ def get_task_definition_for_service(cluster, service, region):
 @click.option('--timeout', '-o', help='Seconds to wait before exiting with fail state', type=int, default=600)
 @click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
 def stop_service_and_wait_for_tasks_to_stop(cluster, service, timeout, region):
-    """ Stop service and wait for the tasks to stop """
+    """
+    Stop service and wait for the tasks to stop.
+    """
     stop_service_and_wait_for_tasks_to_stop_func(cluster, service, timeout, region)
 
 
@@ -195,7 +223,9 @@ def stop_service_and_wait_for_tasks_to_stop(cluster, service, timeout, region):
 @click.option('--timeout', '-o', help='Seconds to wait before exiting with fail state', type=int, default=600)
 @click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
 def stop_services_and_wait_for_tasks_to_stop(cluster, services, timeout, region):
-    """ Stop services and wait for the tasks to stop """
+    """
+    Stop services and wait for the tasks to stop.
+    """
     services = services.split(',')
     stop_services_and_wait_for_tasks_to_stop_func(cluster, services, timeout, region)
 
@@ -204,7 +234,9 @@ def stop_services_and_wait_for_tasks_to_stop(cluster, services, timeout, region)
 @click.option('--cluster', '-c', help='ECS cluster name', type=str, default=default_cluster, required=True)
 @click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
 def get_services_names(cluster, region):
-    """ Get names of the cluster services """
+    """
+    Get names of the cluster services.
+    """
     for service_name in get_services_names_func(cluster, region):
         click.echo(service_name)
 
@@ -214,7 +246,9 @@ def get_services_names(cluster, region):
 @click.option('--services', '-s', help='ECS services names divided by comma', type=str, required=True)
 @click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
 def redeploy_services(cluster, services, region):
-    """ Redeploy services by forcing new service deployment. """
+    """
+    Redeploy services by forcing new service deployment.
+    """
     services = services.split(',')
     redeploy_services_func(cluster, services, region)
 
@@ -223,7 +257,9 @@ def redeploy_services(cluster, services, region):
 @click.option('--cluster', '-c', help='ECS cluster name', type=str, default=default_cluster, required=True)
 @click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
 def redeploy_cluster_services(cluster, region):
-    """ Redeploy all cluster services by forcing new service deployment. """
+    """
+    Redeploy all cluster services by forcing new service deployment.
+    """
     redeploy_cluster_services_func(cluster, region)
 
 
@@ -231,5 +267,7 @@ def redeploy_cluster_services(cluster, region):
 @click.option('--cluster', '-c', help='ECS cluster name', type=str, default=default_cluster, required=True)
 @click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
 def wait_for_services_stable(cluster, region):
-    """Wait until all non-daemon services in cluster are stable."""
+    """
+    Wait until all non-daemon services in cluster are stable.
+    """
     wait_for_services_stable_func(cluster, region)

@@ -27,7 +27,7 @@ default_branch_name = os.environ.get('GIT_BRANCH_NAME')
 
 @cli.group()
 def git():
-    """Git commands"""
+    """Helpers to run git commands"""
 
 
 @git.command()
@@ -40,7 +40,7 @@ def git():
               default=default_branch_name)
 def create_release_branch(release_type, file, remote_name, branch_name):
     """
-    Create release branch and push it to the remote repository if remote name is specified.
+    Create a release branch and push it to the remote repository if the remote name is specified.
     """
     if release_type == ReleaseType.build:
         raise click.BadParameter('build is not allowed for release')
@@ -60,7 +60,7 @@ def create_release_branch(release_type, file, remote_name, branch_name):
 @click.option('--hot', '-h', help='hot deployment', is_flag=True, default=False)
 def create_deployment_branch(environment, remote_name, hot):
     """
-    Create deployment branch and new commit to trigger a deployment event.
+    Create a deployment branch and new commit to trigger a deployment event.
     """
     click.echo(
         'New deployment branch "{}" was created'.format(
@@ -86,7 +86,7 @@ def checkout_to_release_branch():
               multiple=True)
 def bump_version_from_release_branch(file):
     """
-    Get version from release branch and bump version files.
+    Get version defined in the release branch and bump version files.
     """
     click.echo(
         'Version bumped to "{}"'.format(
@@ -123,7 +123,7 @@ def merge_release_branch(to_branch_name, remote_name):
 @git.command()
 def init_hooks():
     """
-    Initialize git hooks.
+    Initialize git hooks defined in the directory ./.pydev/git/hooks.
     """
     for config_path in (Path.home(), Path.cwd()):
         pydev_hooks_directory = config_path / '.pydev' / 'git' / 'hooks'

@@ -106,10 +106,10 @@ def compose_stop(project_name, compose_files, containers):
     _call_compose_command(project_name, compose_files, 'stop', containers)
 
 
-def docker_clean(hard=False):
+def docker_clean(all=False):
     call_command(['docker', 'image', 'prune', '-f'])
     call_command(['docker', 'container', 'prune', '-f'])
-    if hard:
+    if all:
         call_command(['docker', 'system', 'prune', '-af'])
         if get_command_output('docker volume ls -q'):
             call_command('docker volume rm $(docker volume ls -q)')
