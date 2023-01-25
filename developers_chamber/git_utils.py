@@ -50,6 +50,10 @@ def create_deployment_branch(environment, remote_name=None, is_hot=False):
     source_branch_name = str(repo.head.reference)
     deployment_branch_name = 'deploy-{}'.format(environment)
 
+    files_to_add = list(filter(None, (file for file in g.diff('--name-only', '--cached').split('\n'))))
+    if files_to_add:
+        g.stash('save')
+
     if is_hot:
         deployment_branch_name += '-hot'
 
@@ -66,6 +70,9 @@ def create_deployment_branch(environment, remote_name=None, is_hot=False):
         g.push(remote_name, deployment_branch_name, force=True)
 
     g.checkout(source_branch_name)
+    if files_to_add:
+        g.stash('apply')
+        g.add(files_to_add)
     return deployment_branch_name
 
 

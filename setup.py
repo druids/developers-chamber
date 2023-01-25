@@ -16,7 +16,7 @@ setup(
         'oauthlib==3.1.0',
         'gitpython==3.1.0',
         'click==7.0',
-        'requests==2.23.0',
+        'requests>=2.23.0',
         'python-dotenv==0.14.0',
         'boto3<2',
         'python-hosts==0.4.6',
