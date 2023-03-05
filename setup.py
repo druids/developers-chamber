@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 setup(
     name='developers-chamber',
@@ -20,7 +20,7 @@ setup(
         'python-dotenv==0.14.0',
         'boto3<2',
         'python-hosts==0.4.6',
-        'isort==4.3.21',
+        'isort==5.12.0',
         'coloredlogs==10.0',
         'click-completion==0.5.2',
         'jira==2.0.0',
@@ -31,5 +31,5 @@ setup(
     entry_points={'console_scripts': [
         'pydev=developers_chamber.bin.pydev:cli',
     ]},
-    zip_safe=False
+    zip_safe=False,
 )
