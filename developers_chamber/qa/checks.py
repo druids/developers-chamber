@@ -17,8 +17,7 @@ class MissingMigrationsQACheck(QACheck):
         output = self._run_command(
             '{}{}'.format(self._get_command_from_config('QA_MAKE_MIGRATIONS_COMMAND'), ' --dry-run')
         )
-        last_line = output.split('\n')[-1]
-        if last_line != 'No changes detected':
+        if not re.search('No changes detected', output):
             raise QAError(
                 'Found missing migration(s)!',
                 re.findall(r'Migrations.+$', remove_ansi(output), re.DOTALL)[0]
