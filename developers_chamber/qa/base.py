@@ -103,7 +103,7 @@ class QACheck(RepoMixin):
         """
         Cleans up the repo to be fresh for another check.
         """
-        self._get_repo().git.stash('save')
+        self._get_repo().git.reset('--hard', 'HEAD')
 
     def _is_python_file(self, path):
         return bool(re.search(r'\.py$', path))
