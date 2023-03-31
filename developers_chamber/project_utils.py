@@ -73,7 +73,7 @@ def copy_containers_dirs(project_name, containers_dir_to_copy=None, containers=N
             call_command([
                 'docker', 'run', '--rm', '-v', '{}:/copy_tmp'.format(Path.cwd() / host_dir), '-u', str(os.getuid()),
                 '{}-{}'.format(project_name, container_name),
-                "cp -rT {}/ /copy_tmp/".format(container_dir)
+                'cp', '-rT', f'{container_dir}/', '/copy_tmp/'
             ])
 
 
