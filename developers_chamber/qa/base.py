@@ -6,7 +6,8 @@ import sys
 
 import click
 from click import ClickException
-from git import Repo
+
+from developers_chamber.utils import MIGRATIONS_PATTERN, RepoMixin
 
 LOGGER = logging.getLogger()
 
@@ -19,51 +20,6 @@ class QAError(Exception):
     def __init__(self, msg, output=None):
         super().__init__(msg)
         self.output = output.strip() if output is not None else None
-
-
-class RepoMixin:
-    """
-    Mixin that provides functions for work with Git repository.
-    """
-
-    def _get_repo(self):
-        """
-        Returns the repo object.
-        """
-        return Repo('.')
-
-    def _get_default_branch(self):
-        """
-        Returns default branch of the repo.
-        """
-        return self._run_command("git remote show origin | grep 'HEAD branch' | cut -d ':' -f 2 | tr -d ' '")
-
-    def _get_diffs(self):
-        """
-        Returns Git diffs against default branch.
-        """
-        repo = self._get_repo()
-        target_branch = getattr(repo.remotes.origin.refs, self._get_default_branch())
-        target_commit = repo.merge_base(repo.active_branch, target_branch)[0]
-        return target_commit.diff(repo.active_branch.name, create_patch=True)
-
-    def _get_unstaged(self):
-        """
-        Returns unstaged files in the repo.
-        """
-        return self._get_repo().index.diff(None, create_patch=True)
-
-    def _get_staged(self):
-        """
-        Returns staged files in the repo.
-        """
-        return self._get_repo().index.diff('HEAD')
-
-    def _is_repo_clean(self):
-        """
-        Returns true, if repo is clean (no staged, unstaged or untracked files).
-        """
-        return not (self._get_staged() or self._get_unstaged() or self._get_repo().untracked_files)
 
 
 class QACheck(RepoMixin):
@@ -89,7 +45,7 @@ class QACheck(RepoMixin):
         Runs shell command and returns its output.
         """
         try:
-            return subprocess.check_output(command, shell=True).decode().strip()
+            return super()._run_command(command)
         except subprocess.CalledProcessError as ex:
             raise QAError(str(ex), ex.output.decode())
 
@@ -109,7 +65,7 @@ class QACheck(RepoMixin):
         return bool(re.search(r'\.py$', path))
 
     def _is_migration_file(self, path):
-        return bool(re.search(r'migrations\/([^\/]+)\.py$', path))
+        return bool(re.search(MIGRATIONS_PATTERN, path))
 
     def run(self):
         """
