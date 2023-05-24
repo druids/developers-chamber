@@ -330,3 +330,13 @@ Group of commands which joins previous commands for simplifier development.
 * `PROJECT_DOCKER_COMPOSE_CONTAINERS_INSTALL_COMMAND` - install that will be triggered after project build
 * `PROJECT_LIBRARY_DIR` - the project library directory path on the docker host
 * `PROJECT_SOURCE_BRANCH_NAME` - your project source branch name. By default value is set to `next`
+
+### Slack
+
+Anything what you need to send to Slack.
+
+#### Commands
+* `pydev slack upload-new-migrations` - send all new Django migration files between releases etc. to Slack
+
+#### Configuration
+* `SLACK_BOT_TOKEN` - Token to connect Slack. The [link](https://github.com/slackapi/python-slack-sdk/blob/main/tutorial/01-creating-the-slack-app.md) how to obtain the token.

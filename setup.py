@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='developers-chamber',
-    version='0.0.67',
+    version='0.0.68',
     description='A small plugin which help with development, deployment, git',
     keywords='django, skripts, easy live, git, bitbucket, Jira',
     author='Druids team',
@@ -27,6 +27,7 @@ setup(
         'unidecode==1.1.1',
         'TogglPy==0.1.2',
         'flake8==4.0.1',
+        'slack-sdk==3.21.3',
     ],
     entry_points={'console_scripts': [
         'pydev=developers_chamber.bin.pydev:cli',

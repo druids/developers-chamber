@@ -1,12 +1,14 @@
-import os
 import logging
+import os
 import re
 import subprocess
 import sys
 
 from click import ClickException
+from git import Repo
 
 LOGGER = logging.getLogger()
+MIGRATIONS_PATTERN = r'migrations\/([^\/]+)\.py$'
 
 
 def call_command(command, quiet=False, env=None):
@@ -54,3 +56,60 @@ def remove_ansi(input):
     """
     ansi_escape = re.compile(r'(?:\x1B[@-_]|[\x80-\x9F])[0-?]*[ -/]*[@-~]')
     return ansi_escape.sub('', input)
+
+
+class RepoMixin:
+    """
+    Mixin that provides functions for work with Git repository.
+    """
+
+    def _run_command(self, command):
+        """
+        Runs shell command and returns its output.
+        """
+        return subprocess.check_output(command, shell=True).decode().strip()
+
+    def _get_repo(self):
+        """
+        Returns the repo object.
+        """
+        return Repo('.')
+
+    def _get_active_branch_name(self):
+        """
+        Returns the repo active branch name
+        """
+        return self._get_repo().active_branch.name
+
+    def _get_default_branch(self):
+        """
+        Returns default branch of the repo.
+        """
+        return self._run_command("git remote show origin | grep 'HEAD branch' | cut -d ':' -f 2 | tr -d ' '")
+
+    def _get_diffs(self, target_branch=None):
+        """
+        Returns Git diffs against default branch.
+        """
+        repo = self._get_repo()
+        target_branch = target_branch or getattr(repo.remotes.origin.refs, self._get_default_branch())
+        target_commit = repo.merge_base(repo.active_branch, target_branch)[0]
+        return target_commit.diff(repo.active_branch.name, create_patch=True)
+
+    def _get_unstaged(self):
+        """
+        Returns unstaged files in the repo.
+        """
+        return self._get_repo().index.diff(None, create_patch=True)
+
+    def _get_staged(self):
+        """
+        Returns staged files in the repo.
+        """
+        return self._get_repo().index.diff('HEAD')
+
+    def _is_repo_clean(self):
+        """
+        Returns true, if repo is clean (no staged, unstaged or untracked files).
+        """
+        return not (self._get_staged() or self._get_unstaged() or self._get_repo().untracked_files)

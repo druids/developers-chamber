@@ -26,6 +26,7 @@ from developers_chamber.scripts.jira import *
 from developers_chamber.scripts.project import *
 from developers_chamber.scripts.qa import *
 from developers_chamber.scripts.sh import *
+from developers_chamber.scripts.slack import *
 from developers_chamber.scripts.toggle import *
 from developers_chamber.scripts.version import *
 from developers_chamber.scripts.init_aliasses import *
