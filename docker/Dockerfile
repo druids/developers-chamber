@@ -1,4 +1,4 @@
-FROM docker:20.10-dind
+FROM docker:23-dind
 
 ARG VERSION
 ENV DOCKER_TAG=${VERSION}
@@ -26,7 +26,6 @@ RUN pip install --upgrade \
 RUN pip install --upgrade \
 	awscli \
 	"datadog==0.35.0" \
-	"docker-compose==1.29.1" \
 	"pyjwt>=1.6.0" \
 	"https://github.com/druids/developers-chamber/tarball/${DOCKER_TAG}"
 
