@@ -1,13 +1,13 @@
 from setuptools import find_packages, setup
 
 setup(
-    name='developers-chamber',
-    version='0.0.70',
+    name='skip-developers-chamber',
+    version='0.0.70.1',
     description='A small plugin which help with development, deployment, git',
     keywords='django, skripts, easy live, git, bitbucket, Jira',
     author='Druids team',
     author_email='matllubos@gmail.com',
-    url='https://github.com/druids/django-project-info',
+    url='https://github.com/skip-pay/developers-chamber',
     license='MIT',
     package_dir={'developers_chamber': 'developers_chamber'},
     include_package_data=True,
