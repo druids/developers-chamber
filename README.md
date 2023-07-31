@@ -203,7 +203,6 @@ Helpers for python project quality assurance.
 * `pydev qa migration-filenames` - run migration filenames QA check. Migration name should be in format "[0-9]{4}_migration.py" (ex. 0001_migration.py)
 * `pydev qa missing-translations` - run missing translations QA check. It will try to generate a Django `makemessages` if there is one or more missing check is failed
 * `pydev qa import-order` - run import order QA check. It will check if all the new python code imports have the right order defined with isort command
-* `pydev qa unused-imports` - run unused imports QA check. It will check if the new python code does not contain unused imports
 * `pydev qa test-method-names` - runs test method names QA check. It will check if the new test methods has the right name in format defined in `QA_DISALLOWED_TEST_METHOD_REGEXP` setting
 
 #### Configuration

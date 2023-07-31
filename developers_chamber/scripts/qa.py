@@ -3,9 +3,7 @@ from developers_chamber.qa.checks import (ImportOrderQACheck,
                                           MigrationFilenamesQACheck,
                                           MissingMigrationsQACheck,
                                           MissingTranslationsQACheck,
-                                          TestMethodNamesQACheck,
-                                          PrintStatementsQACheck,
-                                          UnusedImportsQACheck)
+                                          TestMethodNamesQACheck)
 from developers_chamber.scripts import cli
 
 
@@ -24,9 +22,7 @@ def all():
         MigrationFilenamesQACheck(),
         MissingTranslationsQACheck(),
         ImportOrderQACheck(),
-        UnusedImportsQACheck(),
         TestMethodNamesQACheck(),
-        PrintStatementsQACheck(),
     ).run()
 
 
@@ -67,25 +63,9 @@ def import_order():
 
 
 @qa.command()
-def unused_imports():
-    """
-    Run unused imports QA check. It will check if the new python code does not contain unused imports and prints it.
-    """
-    QACheckRunner(UnusedImportsQACheck()).run()
-
-
-@qa.command()
 def test_method_names():
     """
     Runs test method names QA check. It will check if the new test methods has the right name in format defined in
     QA_DISALLOWED_TEST_METHOD_REGEXP setting.
     """
     QACheckRunner(TestMethodNamesQACheck()).run()
-
-
-@qa.command()
-def print_statements():
-    """
-    Runs print statements names QA check. It will check if the new test methods do not have python print statements.
-    """
-    QACheckRunner(PrintStatementsQACheck()).run()

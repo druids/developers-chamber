@@ -17,7 +17,6 @@ setup(
         'click>=7.0',
         'click-completion==0.5.2',
         'coloredlogs==10.0',
-        'flake8>=4.0.1',
         'gitpython==3.1.30',
         'isort>=5.12.0',
         'jira==2.0.0',
