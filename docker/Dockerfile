@@ -26,7 +26,6 @@ RUN pip install --upgrade \
 RUN pip install --upgrade \
 	awscli \
 	"datadog==0.35.0" \
-	"docker-compose==1.29.2" \
 	"pyjwt>=1.6.0" \
 	"https://github.com/skip-pay/developers-chamber/tarball/${DOCKER_TAG}"
 
