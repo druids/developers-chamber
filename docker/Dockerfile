@@ -28,6 +28,6 @@ RUN pip install --upgrade \
 	"datadog==0.35.0" \
 	"docker-compose==1.29.2" \
 	"pyjwt>=1.6.0" \
-	"https://github.com/druids/developers-chamber/tarball/${DOCKER_TAG}"
+	"https://github.com/skip-pay/developers-chamber/tarball/${DOCKER_TAG}"
 
 ENTRYPOINT ["bash", "-c"]
