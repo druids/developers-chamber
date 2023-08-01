@@ -104,25 +104,6 @@ class ImportOrderQACheck(QACheck):
             )
 
 
-class UnusedImportsQACheck(QACheck):
-    """
-    Checks that there are no unused imports among changed files.
-    """
-    name = 'Check unused imports'
-
-    def _run_check(self):
-        changed_files = [diff.b_path for diff in self._get_diffs()
-                         if diff.b_path and self._is_python_file(diff.b_path)]
-        if changed_files:
-            output = self._run_command(
-                'flake8 --count --exit-zero --select=F401'
-                ' --per-file-ignores="__init__.py:F401"'
-                ' {}'.format(' '.join(changed_files))
-            )
-            if output != '0':
-                raise QAError('Found unused import(s):', output)
-
-
 class RegexPyQACheck(QACheck):
     """
     Helper for writing QAChecks which finds invalid regex patterns in python code.
@@ -166,17 +147,3 @@ class TestMethodNamesQACheck(RegexPyQACheck):
             '\n'.join(('{}: {}'.format(file, value) for file, value in invalid_patterns))
         )
 
-
-class PrintStatementsQACheck(RegexPyQACheck):
-    """
-    Checks if changes do not contain print statements.
-    """
-    name = 'Checking for print statements'
-
-    pattern = r'(?:^|[^a-zA-Z0-9_])(print *\([^\)]*\))'
-
-    def _found_invalid_patterns(self, invalid_patterns):
-        raise QAError(
-            'Found print statement(s):',
-            '\n'.join(('{}: {}'.format(file, value) for file, value in invalid_patterns))
-        )
