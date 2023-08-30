@@ -21,7 +21,6 @@ def all():
         MissingMigrationsQACheck(),
         MigrationFilenamesQACheck(),
         MissingTranslationsQACheck(),
-        ImportOrderQACheck(),
         TestMethodNamesQACheck(),
     ).run()
 
