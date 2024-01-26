@@ -15,7 +15,7 @@ setup(
     install_requires=[
         'oauthlib==3.1.0',
         'gitpython==3.1.30',
-        'click==7.0',
+        'click>=8.1',
         'requests>=2.23.0',
         'python-dotenv==0.14.0',
         'boto3<2',
