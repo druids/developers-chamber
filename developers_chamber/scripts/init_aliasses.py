@@ -11,14 +11,16 @@ from gettext import gettext as _
 from developers_chamber.scripts import cli
 
 
-def find_and_replace_command_variable(arg, command):
+def find_and_replace_command_variable(arg, command, index):
     match = re.match(r'^--(?P<arg_name>[^=\ ]+)[\ =](?P<arg_value>.+)', arg)
     if match:
         arg_name, arg_value = match.groups()
-        if '${}'.format(arg_name) in command:
-            return True, command.replace('${}'.format(arg_name), arg_value)
-        elif '${}'.format(arg_name.replace('-', '_')) in command:
-            return True, command.replace('${}'.format(arg_name.replace('-', '_')), arg_value)
+        if f'${arg_name}' in command:
+            return True, command.replace(f'${arg_name}', arg_value)
+        elif f'${arg_name.replace("-", "_")}' in command:
+            return True, command.replace(f'${arg_name.replace("-", "_")}', arg_value)
+    if f'${index}' in command:
+        return True, command.replace(f'${index}', arg)
     return False, command
 
 
@@ -78,10 +80,15 @@ class AliasCommand(click.Command):
         for i, (used_command_parts, remaining_command_parts, click_command, alias_str) in enumerate(self.aliases):
             if i == 0:
                 alias_args = []
-                for arg in ctx.args:
-                    replaced_arg, alias_str = find_and_replace_command_variable(arg, alias_str)
+
+                for index, arg in enumerate(ctx.args, start=1):
+                    replaced_arg, alias_str = find_and_replace_command_variable(arg, alias_str, index)
                     if not replaced_arg:
                         alias_args.append(arg)
+
+                if '$@' in alias_str:
+                    alias_str = alias_str.replace('$@', ' '.join(ctx.args))
+                    alias_args = []
 
             cli.main(args=shlex.split(alias_str) + alias_args, standalone_mode=False)
 
