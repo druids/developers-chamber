@@ -1,12 +1,16 @@
 import json
 import logging
+import time
 from datetime import datetime
 from multiprocessing.pool import ThreadPool
 
 import boto3
 from botocore.client import Config
+from botocore.credentials import subprocess
 from botocore.exceptions import ClientError, WaiterError
 from click import ClickException
+
+from developers_chamber.utils import call_command
 
 LOGGER = logging.getLogger()
 
@@ -31,6 +35,11 @@ def _get_autoscaling_client(region):
         config=Config(region_name=region),
     )
 
+def _get_ssm_client(region):
+    return boto3.client(
+        'ssm',
+        config=Config(region_name=region),
+    )
 
 def get_log_events(log_group, log_stream, region):
     logs_client = _get_logs_client(region)
@@ -704,3 +713,44 @@ def wait_for_services_stable(cluster, region, ecs_client=None):
             waiter.wait(cluster=cluster, services=non_daemon_services[i:i + 10])
     except WaiterError as ex:
         raise ClickException(ex)
+
+
+def run_fargate_debug(cluster, region, task_definition, network_configuration_ssm_parameter, ecs_client=None, ssm_client=None):
+    ecs_client= ecs_client if ecs_client else _get_ecs_client(region)
+    ssm_client= ssm_client if ssm_client else _get_ssm_client(region)
+
+    # Get network configuration from SSM
+    try:
+        LOGGER.info('Getting network configuration from SSM parameter')
+        resp = ssm_client.get_parameter(Name=network_configuration_ssm_parameter, WithDecryption=True)
+    except ClientError as ex:
+        raise ClickException(f'{ex.response['Error']['Code']}: {ex.response['Error']['Message']}')
+    network_configuration = resp['Parameter']['Value']
+
+    try:
+        LOGGER.info('Running Fargate ECS task')
+        resp = ecs_client.run_task(
+            launchType='FARGATE',
+            enableExecuteCommand=True,
+            cluster=cluster,
+            taskDefinition=task_definition,
+            networkConfiguration=json.loads(network_configuration),
+            propagateTags='TASK_DEFINITION',
+        )
+    except ClientError as ex:
+        raise ClickException(f'{ex.response['Error']['Code']}: {ex.response['Error']['Message']}')
+    task_arn = resp['tasks'][0]['taskArn']
+    LOGGER.info('Task "%s" started', task_arn)
+
+    waiter = ecs_client.get_waiter('tasks_running')
+    LOGGER.info('Waiting for the task to become ready')
+    waiter.wait(cluster=cluster, tasks=[task_arn])
+    LOGGER.info('Task is ready!')
+
+    LOGGER.info('We have to sleep for a bit before the SSM agent becomes ready... sleeping for 15 seconds')
+    time.sleep(15)
+    LOGGER.info('I am awake!')
+
+    LOGGER.info('Running ECS Execute Command')
+    call_command(f'aws ecs execute-command --color on --cli-connect-timeout 15 --cli-read-timeout 15 --cluster {cluster} --interactive --command sh --task {task_arn}')
+    LOGGER.info('I solemnly swear that I am up to no good.')

@@ -9,6 +9,7 @@ from developers_chamber.ecs_utils import get_tasks_for_service as get_tasks_for_
 from developers_chamber.ecs_utils import redeploy_cluster_services as redeploy_cluster_services_func
 from developers_chamber.ecs_utils import redeploy_services as redeploy_services_func
 from developers_chamber.ecs_utils import register_new_task_definition as register_new_task_definition_func
+from developers_chamber.ecs_utils import run_fargate_debug as run_fargate_debug_func
 from developers_chamber.ecs_utils import run_service_task as run_service_task_func
 from developers_chamber.ecs_utils import run_task as run_task_func
 from developers_chamber.ecs_utils import run_task_and_wait_for_success as run_task_and_wait_for_success_func
@@ -271,3 +272,15 @@ def wait_for_services_stable(cluster, region):
     Wait until all non-daemon services in cluster are stable.
     """
     wait_for_services_stable_func(cluster, region)
+
+
+@ecs.command()
+@click.option('--cluster', '-c', help='ECS cluster name', type=str, default=default_cluster, required=True)
+@click.option('--region', '-r', help='AWS region', type=str, default=default_region, required=True)
+@click.option('--task-definition', '-t', help='Task definition name', type=str, required=True)
+@click.option('--network-configuration-ssm-parameter', '-n', help='Name of SSM parameter with network configuration for the task', type=str, required=True)
+def run_fargate_debug(cluster, region, task_definition, network_configuration_ssm_parameter):
+    """
+    Run a debug Fargate task (internal access to databases etc.)
+    """
+    run_fargate_debug_func(cluster, region, task_definition, network_configuration_ssm_parameter)
