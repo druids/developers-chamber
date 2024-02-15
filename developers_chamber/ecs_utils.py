@@ -724,7 +724,7 @@ def run_fargate_debug(cluster, region, task_definition, network_configuration_ss
         LOGGER.info('Getting network configuration from SSM parameter')
         resp = ssm_client.get_parameter(Name=network_configuration_ssm_parameter, WithDecryption=True)
     except ClientError as ex:
-        raise ClickException(f'{ex.response['Error']['Code']}: {ex.response['Error']['Message']}')
+        raise ClickException(f"{ex.response['Error']['Code']}: {ex.response['Error']['Message']}")
     network_configuration = resp['Parameter']['Value']
 
     try:
@@ -738,7 +738,7 @@ def run_fargate_debug(cluster, region, task_definition, network_configuration_ss
             propagateTags='TASK_DEFINITION',
         )
     except ClientError as ex:
-        raise ClickException(f'{ex.response['Error']['Code']}: {ex.response['Error']['Message']}')
+        raise ClickException(f"{ex.response['Error']['Code']}: {ex.response['Error']['Message']}")
     task_arn = resp['tasks'][0]['taskArn']
     LOGGER.info('Task "%s" started', task_arn)
 
