@@ -1,3 +1,4 @@
+import os
 import re
 
 import git
@@ -7,6 +8,7 @@ from git import GitCommandError
 from .types import ReleaseType
 from .version_utils import bump_version
 
+DEFAULT_TARGET_BRANCH = os.environ.get('GITLAB_TARGET_BRANCH', 'next')
 DEPLOYMENT_COMMIT_PATTERN = r'^Deployment of "(?P<branch_name>.+)"$'
 RELEASE_BRANCH_PATTERN = r'^(?P<release_type>(release|patch))-(?P<version>[0-9]+\.[0-9]+\.[0-9]+)$'
 
@@ -20,9 +22,14 @@ def create_release_branch(version, release_type, remote_name=None, branch_name=N
     if remote_name:
         g.pull(remote_name, branch_name)
 
+    current_branch = repo.active_branch.name
     if release_type in {ReleaseType.minor, ReleaseType.major}:
+        if current_branch != DEFAULT_TARGET_BRANCH:
+            raise UsageError(f'New release should be created from {DEFAULT_TARGET_BRANCH} branch')
         release_branch_name = 'release-{}'.format(version)
     elif release_type == ReleaseType.patch:
+        if not re.match(RELEASE_BRANCH_PATTERN, current_branch):
+            raise UsageError('New patch release should be created from either release or patch branch')
         release_branch_name = 'patch-{}'.format(version)
     else:
         raise BadParameter('build is not allowed for release')
