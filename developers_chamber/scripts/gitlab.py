@@ -28,7 +28,8 @@ def gitlab():
               default=DEFAULT_TARGET_BRANCH)
 @click.option('--project', help='GitLab project name (defaults to env variable GITLAB_PROJECT)', type=str,
               required=True, default=DEFAULT_PROJECT)
-def create_release_merge_request(api_url, token, source_branch, target_branch, project):
+@click.option('--assignee', help='Gitlab assignee ID for the merge reuqest', type=str)
+def create_release_merge_request(api_url, token, source_branch, target_branch, project, assignee):
     """
     Create a new merge request in a GitLab project. It is often used after the project release.
     """
@@ -43,6 +44,7 @@ def create_release_merge_request(api_url, token, source_branch, target_branch, p
         source_branch=source_branch,
         target_branch=target_branch,
         project=project,
+        assignee_id=assignee,
     )
 
     click.echo(f'Merge request was successfully created: {mr_url}')
