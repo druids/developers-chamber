@@ -100,11 +100,13 @@ def bump_version_from_release_branch(file):
               multiple=True)
 @click.option('--remote-name', '-r', help='remote repository name if you want to push the new branch', type=str,
               default=default_remote_name)
-def commit_version(file, remote_name):
+@click.option('--latest', '-l', help='tags commit as latest', is_flag=True,
+              default=default_remote_name)
+def commit_version(file, remote_name, latest):
     """
     Commit version files and add git tag to the commit.
     """
-    commit_version_func(get_version(file[0]), file, remote_name)
+    commit_version_func(get_version(file[0]), file, remote_name, latest)
     click.echo('Version commit change was successfully created')
 
 

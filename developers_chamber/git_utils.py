@@ -8,6 +8,7 @@ from git import GitCommandError
 from .types import ReleaseType
 from .version_utils import bump_version
 
+LATEST_TAG = "latest"
 DEFAULT_TARGET_BRANCH = os.environ.get('GITLAB_TARGET_BRANCH', 'next')
 DEPLOYMENT_COMMIT_PATTERN = r'^Deployment of "(?P<branch_name>.+)"$'
 RELEASE_BRANCH_PATTERN = r'^(?P<release_type>(release|patch))-(?P<version>[0-9]+\.[0-9]+\.[0-9]+)$'
@@ -108,7 +109,7 @@ def bump_version_from_release_branch(files=['version.json']):
     return match.group('version')
 
 
-def commit_version(version, files=['version.json'], remote_name=None):
+def commit_version(version, files=['version.json'], remote_name=None, tag_latest=False):
     repo = git.Repo('.')
     g = repo.git
 
@@ -123,9 +124,14 @@ def commit_version(version, files=['version.json'], remote_name=None):
     except GitCommandError as ex:
         raise UsageError('Tag {} already exists or another git error was raised: {}'.format(version, ex))
 
+    if tag_latest:
+        g.tag("-f", LATEST_TAG)
+
     if remote_name:
         g.push(remote_name, str(repo.head.reference))
         g.push(remote_name, str(version))
+        if tag_latest:
+            g.push(remote_name, LATEST_TAG, force=True)
 
 
 def merge_release_branch(to_branch_name=None, remote_name=None):
