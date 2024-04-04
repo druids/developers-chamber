@@ -46,9 +46,7 @@ def create_release_branch(release_type, file, remote_name, branch_name):
         raise click.BadParameter('build is not allowed for release')
     click.echo(
         'New release branch "{}" was created'.format(
-            create_release_branch_func(
-                get_next_version(release_type, None, file), release_type, remote_name, branch_name
-            )
+            create_release_branch_func(file, release_type, remote_name, branch_name)
         )
     )
 
