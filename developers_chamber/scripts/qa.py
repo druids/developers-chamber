@@ -3,8 +3,8 @@ from developers_chamber.qa.checks import (ImportOrderQACheck,
                                           MigrationFilenamesQACheck,
                                           MissingMigrationsQACheck,
                                           MissingTranslationsQACheck,
-                                          TestMethodNamesQACheck,
                                           PrintStatementsQACheck,
+                                          TestMethodNamesQACheck,
                                           UnusedImportsQACheck)
 from developers_chamber.scripts import cli
 

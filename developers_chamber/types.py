@@ -15,10 +15,10 @@ class EnumType(Choice):
 
 class ReleaseType(Enum):
 
-    major = 'major'
-    minor = 'minor'
-    patch = 'patch'
-    build = 'build'
+    major = "major"
+    minor = "minor"
+    patch = "patch"
+    build = "build"
 
     def __str__(self):
         return self.value
@@ -31,8 +31,8 @@ class TimedeltaType(ParamType):
 
     def convert(self, value, param, ctx):
         seconds = 0
-        default_unit = unit = self._units['h']  # default to hours
-        result_value = ''
+        default_unit = unit = self._units["h"]  # default to hours
+        result_value = ""
         for ch in list(str(value).strip()):
             if ch.isdigit():
                 result_value += ch
@@ -41,13 +41,13 @@ class TimedeltaType(ParamType):
                 unit = self._units[ch]
                 if result_value:
                     seconds += unit * int(result_value)
-                    result_value = ''
+                    result_value = ""
                     unit = default_unit
                 continue
-            if ch in ' \t':
+            if ch in " \t":
                 # skip whitespace
                 continue
-            raise self.fail('Invalid time delta: {}'.format(value))
+            raise self.fail("Invalid time delta: {}".format(value))
         if result_value:
             seconds = unit * int(result_value)
         return datetime.timedelta(seconds=seconds)
