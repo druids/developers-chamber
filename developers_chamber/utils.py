@@ -8,7 +8,7 @@ from click import ClickException
 from git import Repo
 
 LOGGER = logging.getLogger()
-MIGRATIONS_PATTERN = r'migrations\/([^\/]+)\.py$'
+MIGRATIONS_PATTERN = r'\d+_migration\.py$'
 
 
 def call_command(command, quiet=False, env=None):

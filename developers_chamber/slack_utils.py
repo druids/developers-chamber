@@ -13,9 +13,10 @@ class RecentMigrationsSlackUploader(RepoMixin):
         self.target_branch = target_branch
         self.migrations_pattern = r'{}'.format(migrations_pattern)
         self.active_branch = self._get_active_branch_name()
+        self.repo = self._get_repo()
 
     def _get_migration_files(self):
-        return [diff.b_path for diff in self._get_diffs(target_branch=self.target_branch)
+        return [diff.b_path for diff in self.repo.commit(self.target_branch).diff(self.active_branch, create_patch=True)
                 if diff.new_file and re.search(self.migrations_pattern, diff.b_path)]
 
     def send_message(self, msg):
