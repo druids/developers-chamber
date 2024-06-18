@@ -50,10 +50,15 @@ def create_release(version_file, release_type, remote_name=None, branch_name=Non
         release_branch_name = "release/v{}".format(f"{version.major}.{version.minor}")
     else:
         raise BadParameter("build is not allowed for release")
+
+    branch_names = [branch.name for branch in repo.branches]
+    if release_branch_name in branch_names:
+        g.branch("-D", release_branch_name)
+
     g.checkout(branch_name or "HEAD", b=release_branch_name)
     g.tag(str(version))
     if remote_name:
-        g.push(remote_name, release_branch_name, force=True)
+        g.push(remote_name, release_branch_name)
         g.push(remote_name, str(version))
     return release_branch_name
 
