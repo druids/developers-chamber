@@ -43,7 +43,7 @@ def create_release(version_file, release_type, remote_name=None, branch_name=Non
 
     g.add(version_file)
 
-    if remote_name:
+    if remote_name and branch_name:
         g.pull(remote_name, branch_name)
 
     if release_type in {ReleaseType.minor, ReleaseType.major, ReleaseType.patch}:
