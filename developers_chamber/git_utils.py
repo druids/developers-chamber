@@ -55,7 +55,13 @@ def create_release(version_file, release_type, remote_name=None, branch_name=Non
     if release_branch_name in branch_names:
         g.branch("-D", release_branch_name)
 
+    tags = [tag.name for tag in repo.tags]
+    if str(version) in tags:
+        g.tag("-d", str(version))
+
     g.checkout(branch_name or "HEAD", b=release_branch_name)
+    g.commit(message=f'Bump version to "{version}"')
+
     g.tag(str(version))
     if remote_name:
         g.push(remote_name, release_branch_name)
