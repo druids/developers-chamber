@@ -5,7 +5,6 @@ import subprocess
 import sys
 
 from click import ClickException
-from git import Repo
 
 LOGGER = logging.getLogger()
 MIGRATIONS_PATTERN = r"migrations\/([^\/]+)\.py$"
@@ -81,6 +80,8 @@ class RepoMixin:
         """
         Returns the repo object.
         """
+        from git import Repo
+
         return Repo(".")
 
     def _get_active_branch_name(self):
@@ -133,11 +134,13 @@ class RepoMixin:
 
 modules = {
     "git": ["git"],
-    "jira": ["jira", "unidecode"],
+    "jira": ["jira", "unidecode", "git"],
     "aws": ["boto3"],
-    "qa": ["isort", "flake8"],
+    "qa": ["isort", "flake8", "git"],
     "toggle": ["toggl"],
     "slack": ["slack_sdk"],
+    "bitbucket": ["git"],
+    "gitlab": ["git"],
 }
 
 INSTALLED_MODULES = []

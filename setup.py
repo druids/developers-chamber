@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="developers-chamber",
-    version="0.1.9",
+    version="0.1.10",
     description="A small plugin which help with development, deployment, git",
     keywords="django, skripts, easy live, git, bitbucket, Jira",
     author="Druids team",
@@ -29,10 +29,18 @@ setup(
             "boto3<2",
         ],
         "qa": [
+            "gitpython==3.1.30",
             "isort==5.12.0",
             "flake8>=7.0.0",
         ],
+        "bitbucket": [
+            "gitpython==3.1.30",
+        ],
+        "gitlab": [
+            "gitpython==3.1.30",
+        ],
         "jira": [
+            "gitpython==3.1.30",
             "jira==2.0.0",
             "unidecode==1.1.1",
         ],

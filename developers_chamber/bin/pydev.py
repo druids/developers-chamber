@@ -21,7 +21,9 @@ for config_path in (Path.home(), Path.cwd()):
 
 
 from developers_chamber.scripts import cli
-from developers_chamber.scripts.bitbucket import *
+
+if "bitbucket" in INSTALLED_MODULES:
+    from developers_chamber.scripts.bitbucket import *
 from developers_chamber.scripts.docker import *
 
 if "aws" in INSTALLED_MODULES:
@@ -30,7 +32,8 @@ if "aws" in INSTALLED_MODULES:
 if "git" in INSTALLED_MODULES:
     from developers_chamber.scripts.git import *
 
-from developers_chamber.scripts.gitlab import *
+if "gitlab" in INSTALLED_MODULES:
+    from developers_chamber.scripts.gitlab import *
 
 if "jira" in INSTALLED_MODULES:
     from developers_chamber.scripts.jira import *
