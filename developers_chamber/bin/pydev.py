@@ -7,6 +7,7 @@ from pathlib import Path
 import click_completion
 import coloredlogs
 from dotenv import load_dotenv
+from developers_chamber.utils import INSTALLED_MODULES
 
 for config_path in (Path.home(), Path.cwd()):
     if (config_path / ".pydev").exists() and (config_path / ".pydev").is_dir():
@@ -23,33 +24,28 @@ from developers_chamber.scripts import cli
 from developers_chamber.scripts.bitbucket import *
 from developers_chamber.scripts.docker import *
 
-try:
+if "aws" in INSTALLED_MODULES:
     from developers_chamber.scripts.ecs import *
-except ImportError:
-    pass
 
-from developers_chamber.scripts.git import *
+if "git" in INSTALLED_MODULES:
+    from developers_chamber.scripts.git import *
+
 from developers_chamber.scripts.gitlab import *
-try:
-    from developers_chamber.scripts.jira import *
-except ImportError:
-    pass
-from developers_chamber.scripts.project import *
 
-try:
+if "jira" in INSTALLED_MODULES:
+    from developers_chamber.scripts.jira import *
+
+if "qa" in INSTALLED_MODULES:
     from developers_chamber.scripts.qa import *
-except ImportError:
-    pass
+
 from developers_chamber.scripts.sh import *
 
-try:
+if "slack" in INSTALLED_MODULES:
     from developers_chamber.scripts.slack import *
-except ImportError:
-    pass
-try:
+
+if "toggle" in INSTALLED_MODULES:
     from developers_chamber.scripts.toggle import *
-except ImportError:
-    pass
+
 from developers_chamber.scripts.version import *
 from developers_chamber.scripts.init_aliasses import *
 

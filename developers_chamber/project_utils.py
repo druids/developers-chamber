@@ -12,11 +12,11 @@ from click import BadParameter, ClickException, confirm
 from python_hosts.exception import UnableToWriteHosts
 from python_hosts.hosts import Hosts, HostsEntry
 
-from developers_chamber.git_utils import get_current_branch_name
 from developers_chamber.utils import (
     call_command,
     call_compose_command,
     pretty_time_delta,
+    INSTALLED_MODULES,
 )
 
 LOGGER = logging.getLogger()
@@ -25,7 +25,12 @@ LOGGER = logging.getLogger()
 ISSUE_KEY_PATTERN = re.compile(r"(?P<issue_key>[A-Z][A-Z]+-\d+).*")
 
 
-try:
+if (
+    "jira" in INSTALLED_MODULES
+    and "git" in INSTALLED_MODULES
+    and "toggle" in INSTALLED_MODULES
+):
+    from developers_chamber.git_utils import get_current_branch_name
     from developers_chamber.jira_utils import (
         clean_issue_key,
         get_issue_fields,
@@ -46,19 +51,21 @@ try:
         return "Toggl #{}".format(timer["id"])
 
     def start_task(
-            jira_url,
-            jira_username,
-            jira_api_key,
-            jira_project_key,
-            toggl_api_key,
-            toggl_workspace_id,
-            toggl_project_id,
-            issue_key,
+        jira_url,
+        jira_username,
+        jira_api_key,
+        jira_project_key,
+        toggl_api_key,
+        toggl_workspace_id,
+        toggl_project_id,
+        issue_key,
     ):
         running_timer = get_running_timer_data(toggl_api_key)
         if running_timer:
             # Do not stop timer if toggl workspace or project is invalid
-            check_workspace_and_project(toggl_api_key, toggl_workspace_id, toggl_project_id)
+            check_workspace_and_project(
+                toggl_api_key, toggl_workspace_id, toggl_project_id
+            )
             if confirm("Timer is already running do you want to log it?"):
                 stop_task(jira_url, jira_username, jira_api_key, toggl_api_key)
 
@@ -67,18 +74,19 @@ try:
             jira_url, jira_username, jira_api_key, issue_key, jira_project_key
         )
         toggl_description = "{} {}".format(issue_key, issue_data.summary)
-        start_timer(toggl_api_key, toggl_description, toggl_workspace_id, toggl_project_id)
+        start_timer(
+            toggl_api_key, toggl_description, toggl_workspace_id, toggl_project_id
+        )
         return 'Toggle was started with description "{}"'.format(toggl_description)
 
-
     def create_or_update_pull_request(
-            jira_url,
-            jira_username,
-            jira_api_key,
-            bitbucket_username,
-            bitbucket_password,
-            bitbucket_destination_branch_name,
-            bitbucket_repository_name,
+        jira_url,
+        jira_username,
+        jira_api_key,
+        bitbucket_username,
+        bitbucket_password,
+        bitbucket_destination_branch_name,
+        bitbucket_repository_name,
     ):
         issue_key = clean_issue_key()
         issue_data = get_issue_fields(jira_url, jira_username, jira_api_key, issue_key)
@@ -126,9 +134,9 @@ try:
     ):
         def get_timer_worklog(timer, issue_data):
             for worklog in issue_data.worklog.worklogs:
-                if hasattr(worklog, "comment") and worklog.comment == _get_timer_comment(
-                    timer
-                ):
+                if hasattr(
+                    worklog, "comment"
+                ) and worklog.comment == _get_timer_comment(timer):
                     return worklog
             return None
 
@@ -180,9 +188,6 @@ try:
                         time_spend=timedelta(seconds=timer_seconds),
                         comment=_get_timer_comment(timer),
                     )
-except ImportError:
-    pass
-
 
 
 def get_command_output(command):
@@ -347,5 +352,3 @@ def compose_install(
         compose_run(project_name, compose_files, [container_name], command)
 
     compose_stop(project_name, compose_files, None)
-
-

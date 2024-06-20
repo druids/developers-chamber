@@ -129,3 +129,23 @@ class RepoMixin:
             or self._get_unstaged()
             or self._get_repo().untracked_files
         )
+
+
+modules = {
+    "git": ["git"],
+    "jira": ["jira", "unidecode"],
+    "aws": ["boto3"],
+    "qa": ["isort", "flake8"],
+    "toggle": ["toggl"],
+    "slack": ["slack_sdk"],
+}
+
+INSTALLED_MODULES = []
+
+for module, requirements in modules.items():
+    try:
+        for requirement in requirements:
+            __import__(requirement)
+        INSTALLED_MODULES.append(module)
+    except ModuleNotFoundError:
+        pass

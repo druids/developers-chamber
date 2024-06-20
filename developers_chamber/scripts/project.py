@@ -23,11 +23,9 @@ from developers_chamber.project_utils import (
 from developers_chamber.project_utils import (
     copy_containers_dirs as copy_containers_dirs_func,
 )
-from developers_chamber.project_utils import (
-    docker_clean,
-    set_hosts
-)
+from developers_chamber.project_utils import docker_clean, set_hosts
 from developers_chamber.scripts import cli
+from developers_chamber.utils import INSTALLED_MODULES
 
 default_project_name = os.environ.get("PROJECT_DOCKER_COMPOSE_PROJECT_NAME")
 default_compose_files = (
@@ -459,7 +457,11 @@ def clean(all):
     docker_clean(all)
 
 
-try:
+if (
+    "jira" in INSTALLED_MODULES
+    and "git" in INSTALLED_MODULES
+    and "toggle" in INSTALLED_MODULES
+):
     from developers_chamber.jira_utils import get_branch_name
     from developers_chamber.bitbucket_utils import get_commit_builds
     from developers_chamber.project_utils import (
@@ -475,9 +477,10 @@ try:
     def task():
         """Helpers to work with project task in Jira and Toggle"""
 
-
     @task.command()
-    @click.option("--jira-url", help="Jira URL", type=str, required=True, default=jira_url)
+    @click.option(
+        "--jira-url", help="Jira URL", type=str, required=True, default=jira_url
+    )
     @click.option(
         "--jira-username",
         help="Jira username",
@@ -549,9 +552,10 @@ try:
             )
         )
 
-
     @task.command()
-    @click.option("--jira-url", help="Jira URL", type=str, required=True, default=jira_url)
+    @click.option(
+        "--jira-url", help="Jira URL", type=str, required=True, default=jira_url
+    )
     @click.option(
         "--jira-username",
         help="Jira username",
@@ -579,9 +583,10 @@ try:
         """
         click.echo(stop_task(jira_url, jira_username, jira_api_key, toggl_api_key))
 
-
     @task.command()
-    @click.option("--jira-url", help="Jira URL", type=str, required=True, default=jira_url)
+    @click.option(
+        "--jira-url", help="Jira URL", type=str, required=True, default=jira_url
+    )
     @click.option(
         "--jira-username",
         help="Jira username",
@@ -612,7 +617,12 @@ try:
     )
     @click.option("--issue-key", "-i", help="key of the task", type=str, required=True)
     def create_branch_from_issue(
-        jira_url, jira_username, jira_api_key, project_key, source_branch_name, issue_key
+        jira_url,
+        jira_username,
+        jira_api_key,
+        project_key,
+        source_branch_name,
+        issue_key,
     ):
         """
         Create a new git branch from the source branch with name generated from the Jira issue.
@@ -627,7 +637,6 @@ try:
                 )
             )
         )
-
 
     @task.command()
     @click.option(
@@ -704,9 +713,10 @@ try:
             )
         )
 
-
     @task.command()
-    @click.option("--jira-url", help="Jira URL", type=str, required=True, default=jira_url)
+    @click.option(
+        "--jira-url", help="Jira URL", type=str, required=True, default=jira_url
+    )
     @click.option(
         "--jira-username",
         help="Jira username",
@@ -783,7 +793,6 @@ try:
         )
         click.echo("Issue times were synchronized with the timer")
 
-
     @task.command()
     @click.option(
         "--bitbucket-username",
@@ -828,5 +837,3 @@ try:
                 click.echo("  URL: {}\n".format(build_data["url"]))
         else:
             click.echo("Builds weren't found")
-except ImportError:
-    pass
