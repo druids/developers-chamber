@@ -3,7 +3,6 @@ from datetime import date
 
 import click
 
-from developers_chamber.bitbucket_utils import get_commit_builds
 from developers_chamber.click.options import (
     ContainerCommandType,
     ContainerDirToCopyType,
@@ -11,7 +10,6 @@ from developers_chamber.click.options import (
 )
 from developers_chamber.git_utils import create_branch as create_branch_func
 from developers_chamber.git_utils import get_commit_hash, get_current_branch_name
-from developers_chamber.jira_utils import get_branch_name
 from developers_chamber.project_utils import bind_library as bind_library_func
 from developers_chamber.project_utils import (
     compose_build,
@@ -26,14 +24,8 @@ from developers_chamber.project_utils import (
     copy_containers_dirs as copy_containers_dirs_func,
 )
 from developers_chamber.project_utils import (
-    create_or_update_pull_request as create_or_update_pull_request_func,
-)
-from developers_chamber.project_utils import (
     docker_clean,
-    set_hosts,
-    start_task,
-    stop_task,
-    sync_timer_to_jira,
+    set_hosts
 )
 from developers_chamber.scripts import cli
 
@@ -467,360 +459,374 @@ def clean(all):
     docker_clean(all)
 
 
-@project.group()
-def task():
-    """Helpers to work with project task in Jira and Toggle"""
-
-
-@task.command()
-@click.option("--jira-url", help="Jira URL", type=str, required=True, default=jira_url)
-@click.option(
-    "--jira-username",
-    help="Jira username",
-    type=str,
-    required=True,
-    default=jira_username,
-)
-@click.option(
-    "--jira-api-key",
-    help="Jira API key/password",
-    type=str,
-    required=True,
-    default=jira_api_key,
-)
-@click.option(
-    "--jira_project-key",
-    help="Jira project key",
-    type=str,
-    required=False,
-    default=jira_project_key,
-)
-@click.option(
-    "--toggl-api-key",
-    help="toggle API key",
-    type=str,
-    required=True,
-    default=toggl_api_key,
-)
-@click.option(
-    "--toggl-workspace-id",
-    "-w",
-    help="toggl workspace ID",
-    type=str,
-    required=False,
-    default=toggl_workspace_id,
-)
-@click.option(
-    "--toggl-project-id",
-    "-p",
-    help="toggl project ID",
-    type=str,
-    required=False,
-    default=toggl_project_id,
-)
-@click.option("--issue-key", "-i", help="key of the task", type=str)
-def start(
-    jira_url,
-    jira_username,
-    jira_api_key,
-    jira_project_key,
-    toggl_api_key,
-    toggl_workspace_id,
-    toggl_project_id,
-    issue_key,
-):
-    """
-    Get information from Jira about issue and start Toggle timer.
-    """
-    click.echo(
-        start_task(
-            jira_url,
-            jira_username,
-            jira_api_key,
-            jira_project_key,
-            toggl_api_key,
-            toggl_workspace_id,
-            toggl_project_id,
-            issue_key,
-        )
+try:
+    from developers_chamber.jira_utils import get_branch_name
+    from developers_chamber.bitbucket_utils import get_commit_builds
+    from developers_chamber.project_utils import (
+        start_task,
+        stop_task,
+        sync_timer_to_jira,
+    )
+    from developers_chamber.project_utils import (
+        create_or_update_pull_request as create_or_update_pull_request_func,
     )
 
-
-@task.command()
-@click.option("--jira-url", help="Jira URL", type=str, required=True, default=jira_url)
-@click.option(
-    "--jira-username",
-    help="Jira username",
-    type=str,
-    required=True,
-    default=jira_username,
-)
-@click.option(
-    "--jira-api-key",
-    help="Jira API key/password",
-    type=str,
-    required=True,
-    default=jira_api_key,
-)
-@click.option(
-    "--toggl-api-key",
-    help="toggle API key",
-    type=str,
-    required=True,
-    default=toggl_api_key,
-)
-def stop(jira_url, jira_username, jira_api_key, toggl_api_key):
-    """
-    Stop Toggle timer and logs time to the Jira issue.
-    """
-    click.echo(stop_task(jira_url, jira_username, jira_api_key, toggl_api_key))
+    @project.group()
+    def task():
+        """Helpers to work with project task in Jira and Toggle"""
 
 
-@task.command()
-@click.option("--jira-url", help="Jira URL", type=str, required=True, default=jira_url)
-@click.option(
-    "--jira-username",
-    help="Jira username",
-    type=str,
-    required=True,
-    default=jira_username,
-)
-@click.option(
-    "--jira-api-key",
-    help="Jira API key/password",
-    type=str,
-    required=True,
-    default=jira_api_key,
-)
-@click.option(
-    "--jira-project-key",
-    help="Jira project key",
-    type=str,
-    required=False,
-    default=jira_project_key,
-)
-@click.option(
-    "--source_branch_name",
-    "-s",
-    help="source branch name",
-    type=str,
-    default=source_branch_name,
-)
-@click.option("--issue-key", "-i", help="key of the task", type=str, required=True)
-def create_branch_from_issue(
-    jira_url, jira_username, jira_api_key, project_key, source_branch_name, issue_key
-):
-    """
-    Create a new git branch from the source branch with name generated from the Jira issue.
-    """
-    click.echo(
-        'Branch "{}" was created'.format(
-            create_branch_func(
-                source_branch_name,
-                get_branch_name(
-                    jira_url, jira_username, jira_api_key, issue_key, project_key
-                ),
-            )
-        )
+    @task.command()
+    @click.option("--jira-url", help="Jira URL", type=str, required=True, default=jira_url)
+    @click.option(
+        "--jira-username",
+        help="Jira username",
+        type=str,
+        required=True,
+        default=jira_username,
     )
-
-
-@task.command()
-@click.option(
-    "--jira-url", "-u", help="Jira URL", type=str, required=True, default=jira_url
-)
-@click.option(
-    "--jira-username",
-    "-a",
-    help="Jira username",
-    type=str,
-    required=True,
-    default=jira_username,
-)
-@click.option(
-    "--jira-api-key",
-    "-p",
-    help="Jira API key/password",
-    type=str,
-    required=True,
-    default=jira_api_key,
-)
-@click.option(
-    "--bitbucket-username",
-    help="username",
-    type=str,
-    required=True,
-    default=bitbucket_username,
-)
-@click.option(
-    "--bitbucket-password",
-    help="password",
-    type=str,
-    required=True,
-    default=bitbucket_password,
-)
-@click.option(
-    "--bitbucket-destination-branch-name",
-    help="destination bitbucket branch name",
-    type=str,
-    required=True,
-    default=bitbucket_destination_branch_name,
-)
-@click.option(
-    "--bitbucket-repository-name",
-    "-r",
-    help="bitbucket repository name",
-    type=str,
-    required=True,
-    default=bitbucket_repository_name,
-)
-def create_or_update_pull_request(
-    jira_url,
-    jira_username,
-    jira_api_key,
-    bitbucket_username,
-    bitbucket_password,
-    bitbucket_destination_branch_name,
-    bitbucket_repository_name,
-):
-    """
-    Create a Bitbucket pull request named according to the Jira issue.
-    """
-    click.echo(
-        'Pull request "{}" was created or updated'.format(
-            create_or_update_pull_request_func(
+    @click.option(
+        "--jira-api-key",
+        help="Jira API key/password",
+        type=str,
+        required=True,
+        default=jira_api_key,
+    )
+    @click.option(
+        "--jira_project-key",
+        help="Jira project key",
+        type=str,
+        required=False,
+        default=jira_project_key,
+    )
+    @click.option(
+        "--toggl-api-key",
+        help="toggle API key",
+        type=str,
+        required=True,
+        default=toggl_api_key,
+    )
+    @click.option(
+        "--toggl-workspace-id",
+        "-w",
+        help="toggl workspace ID",
+        type=str,
+        required=False,
+        default=toggl_workspace_id,
+    )
+    @click.option(
+        "--toggl-project-id",
+        "-p",
+        help="toggl project ID",
+        type=str,
+        required=False,
+        default=toggl_project_id,
+    )
+    @click.option("--issue-key", "-i", help="key of the task", type=str)
+    def start(
+        jira_url,
+        jira_username,
+        jira_api_key,
+        jira_project_key,
+        toggl_api_key,
+        toggl_workspace_id,
+        toggl_project_id,
+        issue_key,
+    ):
+        """
+        Get information from Jira about issue and start Toggle timer.
+        """
+        click.echo(
+            start_task(
                 jira_url,
                 jira_username,
                 jira_api_key,
-                bitbucket_username,
-                bitbucket_password,
-                bitbucket_destination_branch_name,
-                bitbucket_repository_name,
+                jira_project_key,
+                toggl_api_key,
+                toggl_workspace_id,
+                toggl_project_id,
+                issue_key,
             )
         )
+
+
+    @task.command()
+    @click.option("--jira-url", help="Jira URL", type=str, required=True, default=jira_url)
+    @click.option(
+        "--jira-username",
+        help="Jira username",
+        type=str,
+        required=True,
+        default=jira_username,
     )
+    @click.option(
+        "--jira-api-key",
+        help="Jira API key/password",
+        type=str,
+        required=True,
+        default=jira_api_key,
+    )
+    @click.option(
+        "--toggl-api-key",
+        help="toggle API key",
+        type=str,
+        required=True,
+        default=toggl_api_key,
+    )
+    def stop(jira_url, jira_username, jira_api_key, toggl_api_key):
+        """
+        Stop Toggle timer and logs time to the Jira issue.
+        """
+        click.echo(stop_task(jira_url, jira_username, jira_api_key, toggl_api_key))
 
 
-@task.command()
-@click.option("--jira-url", help="Jira URL", type=str, required=True, default=jira_url)
-@click.option(
-    "--jira-username",
-    help="Jira username",
-    type=str,
-    required=True,
-    default=jira_username,
-)
-@click.option(
-    "--jira-api-key",
-    help="Jira API key/password",
-    type=str,
-    required=True,
-    default=jira_api_key,
-)
-@click.option(
-    "--toggl-api-key",
-    help="toggle API key",
-    type=str,
-    required=True,
-    default=toggl_api_key,
-)
-@click.option(
-    "--toggl-workspace-id",
-    "-w",
-    help="toggl workspace ID",
-    type=str,
-    required=False,
-    default=toggl_workspace_id,
-)
-@click.option(
-    "--toggl-project-id",
-    "-p",
-    help="toggl project ID",
-    type=str,
-    required=False,
-    default=toggl_project_id,
-)
-@click.option(
-    "--from-date",
-    "-f",
-    help="report from",
-    type=click.DateTime(formats=["%Y-%m-%d"]),
-    default=str(date.today()),
-)
-@click.option(
-    "--to-date",
-    "-t",
-    help="report to",
-    type=click.DateTime(formats=["%Y-%m-%d"]),
-    default=str(date.today()),
-)
-def sync_timer_log_to_issues(
-    jira_url,
-    jira_username,
-    jira_api_key,
-    toggl_api_key,
-    toggl_workspace_id,
-    toggl_project_id,
-    from_date,
-    to_date,
-):
-    """
-    Synchronize logged time in Toggle timer with issues worklog in Jira.
-    """
-    sync_timer_to_jira(
+    @task.command()
+    @click.option("--jira-url", help="Jira URL", type=str, required=True, default=jira_url)
+    @click.option(
+        "--jira-username",
+        help="Jira username",
+        type=str,
+        required=True,
+        default=jira_username,
+    )
+    @click.option(
+        "--jira-api-key",
+        help="Jira API key/password",
+        type=str,
+        required=True,
+        default=jira_api_key,
+    )
+    @click.option(
+        "--jira-project-key",
+        help="Jira project key",
+        type=str,
+        required=False,
+        default=jira_project_key,
+    )
+    @click.option(
+        "--source_branch_name",
+        "-s",
+        help="source branch name",
+        type=str,
+        default=source_branch_name,
+    )
+    @click.option("--issue-key", "-i", help="key of the task", type=str, required=True)
+    def create_branch_from_issue(
+        jira_url, jira_username, jira_api_key, project_key, source_branch_name, issue_key
+    ):
+        """
+        Create a new git branch from the source branch with name generated from the Jira issue.
+        """
+        click.echo(
+            'Branch "{}" was created'.format(
+                create_branch_func(
+                    source_branch_name,
+                    get_branch_name(
+                        jira_url, jira_username, jira_api_key, issue_key, project_key
+                    ),
+                )
+            )
+        )
+
+
+    @task.command()
+    @click.option(
+        "--jira-url", "-u", help="Jira URL", type=str, required=True, default=jira_url
+    )
+    @click.option(
+        "--jira-username",
+        "-a",
+        help="Jira username",
+        type=str,
+        required=True,
+        default=jira_username,
+    )
+    @click.option(
+        "--jira-api-key",
+        "-p",
+        help="Jira API key/password",
+        type=str,
+        required=True,
+        default=jira_api_key,
+    )
+    @click.option(
+        "--bitbucket-username",
+        help="username",
+        type=str,
+        required=True,
+        default=bitbucket_username,
+    )
+    @click.option(
+        "--bitbucket-password",
+        help="password",
+        type=str,
+        required=True,
+        default=bitbucket_password,
+    )
+    @click.option(
+        "--bitbucket-destination-branch-name",
+        help="destination bitbucket branch name",
+        type=str,
+        required=True,
+        default=bitbucket_destination_branch_name,
+    )
+    @click.option(
+        "--bitbucket-repository-name",
+        "-r",
+        help="bitbucket repository name",
+        type=str,
+        required=True,
+        default=bitbucket_repository_name,
+    )
+    def create_or_update_pull_request(
+        jira_url,
+        jira_username,
+        jira_api_key,
+        bitbucket_username,
+        bitbucket_password,
+        bitbucket_destination_branch_name,
+        bitbucket_repository_name,
+    ):
+        """
+        Create a Bitbucket pull request named according to the Jira issue.
+        """
+        click.echo(
+            'Pull request "{}" was created or updated'.format(
+                create_or_update_pull_request_func(
+                    jira_url,
+                    jira_username,
+                    jira_api_key,
+                    bitbucket_username,
+                    bitbucket_password,
+                    bitbucket_destination_branch_name,
+                    bitbucket_repository_name,
+                )
+            )
+        )
+
+
+    @task.command()
+    @click.option("--jira-url", help="Jira URL", type=str, required=True, default=jira_url)
+    @click.option(
+        "--jira-username",
+        help="Jira username",
+        type=str,
+        required=True,
+        default=jira_username,
+    )
+    @click.option(
+        "--jira-api-key",
+        help="Jira API key/password",
+        type=str,
+        required=True,
+        default=jira_api_key,
+    )
+    @click.option(
+        "--toggl-api-key",
+        help="toggle API key",
+        type=str,
+        required=True,
+        default=toggl_api_key,
+    )
+    @click.option(
+        "--toggl-workspace-id",
+        "-w",
+        help="toggl workspace ID",
+        type=str,
+        required=False,
+        default=toggl_workspace_id,
+    )
+    @click.option(
+        "--toggl-project-id",
+        "-p",
+        help="toggl project ID",
+        type=str,
+        required=False,
+        default=toggl_project_id,
+    )
+    @click.option(
+        "--from-date",
+        "-f",
+        help="report from",
+        type=click.DateTime(formats=["%Y-%m-%d"]),
+        default=str(date.today()),
+    )
+    @click.option(
+        "--to-date",
+        "-t",
+        help="report to",
+        type=click.DateTime(formats=["%Y-%m-%d"]),
+        default=str(date.today()),
+    )
+    def sync_timer_log_to_issues(
         jira_url,
         jira_username,
         jira_api_key,
         toggl_api_key,
         toggl_workspace_id,
         toggl_project_id,
-        from_date.date(),
-        to_date.date(),
-    )
-    click.echo("Issue times were synchronized with the timer")
+        from_date,
+        to_date,
+    ):
+        """
+        Synchronize logged time in Toggle timer with issues worklog in Jira.
+        """
+        sync_timer_to_jira(
+            jira_url,
+            jira_username,
+            jira_api_key,
+            toggl_api_key,
+            toggl_workspace_id,
+            toggl_project_id,
+            from_date.date(),
+            to_date.date(),
+        )
+        click.echo("Issue times were synchronized with the timer")
 
 
-@task.command()
-@click.option(
-    "--bitbucket-username",
-    help="username",
-    type=str,
-    required=True,
-    default=bitbucket_username,
-)
-@click.option(
-    "--bitbucket-password",
-    help="password",
-    type=str,
-    required=True,
-    default=bitbucket_password,
-)
-@click.option(
-    "--bitbucket-repository-name",
-    "-r",
-    help="bitbucket repository name",
-    type=str,
-    required=True,
-    default=bitbucket_repository_name,
-)
-@click.option("--branch-name", help="git branch name", type=str, required=False)
-def print_last_commit_build(
-    bitbucket_username, bitbucket_password, bitbucket_repository_name, branch_name
-):
-    """
-    Print the last commit test results in Bitbucket of the selected branch.
-    """
-    branch_name = branch_name or get_current_branch_name()
-    commit_builds = get_commit_builds(
-        bitbucket_username,
-        bitbucket_password,
-        bitbucket_repository_name,
-        get_commit_hash(branch_name),
+    @task.command()
+    @click.option(
+        "--bitbucket-username",
+        help="username",
+        type=str,
+        required=True,
+        default=bitbucket_username,
     )
-    if commit_builds:
-        for build_data in commit_builds:
-            click.echo(build_data["name"])
-            click.echo("  Description: {}".format(build_data["description"]))
-            click.echo("  URL: {}\n".format(build_data["url"]))
-    else:
-        click.echo("Builds weren't found")
+    @click.option(
+        "--bitbucket-password",
+        help="password",
+        type=str,
+        required=True,
+        default=bitbucket_password,
+    )
+    @click.option(
+        "--bitbucket-repository-name",
+        "-r",
+        help="bitbucket repository name",
+        type=str,
+        required=True,
+        default=bitbucket_repository_name,
+    )
+    @click.option("--branch-name", help="git branch name", type=str, required=False)
+    def print_last_commit_build(
+        bitbucket_username, bitbucket_password, bitbucket_repository_name, branch_name
+    ):
+        """
+        Print the last commit test results in Bitbucket of the selected branch.
+        """
+        branch_name = branch_name or get_current_branch_name()
+        commit_builds = get_commit_builds(
+            bitbucket_username,
+            bitbucket_password,
+            bitbucket_repository_name,
+            get_commit_hash(branch_name),
+        )
+        if commit_builds:
+            for build_data in commit_builds:
+                click.echo(build_data["name"])
+                click.echo("  Description: {}".format(build_data["description"]))
+                click.echo("  URL: {}\n".format(build_data["url"]))
+        else:
+            click.echo("Builds weren't found")
+except ImportError:
+    pass

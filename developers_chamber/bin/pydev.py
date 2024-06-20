@@ -22,15 +22,34 @@ for config_path in (Path.home(), Path.cwd()):
 from developers_chamber.scripts import cli
 from developers_chamber.scripts.bitbucket import *
 from developers_chamber.scripts.docker import *
-from developers_chamber.scripts.ecs import *
+
+try:
+    from developers_chamber.scripts.ecs import *
+except ImportError:
+    pass
+
 from developers_chamber.scripts.git import *
 from developers_chamber.scripts.gitlab import *
-from developers_chamber.scripts.jira import *
+try:
+    from developers_chamber.scripts.jira import *
+except ImportError:
+    pass
 from developers_chamber.scripts.project import *
-from developers_chamber.scripts.qa import *
+
+try:
+    from developers_chamber.scripts.qa import *
+except ImportError:
+    pass
 from developers_chamber.scripts.sh import *
-from developers_chamber.scripts.slack import *
-from developers_chamber.scripts.toggle import *
+
+try:
+    from developers_chamber.scripts.slack import *
+except ImportError:
+    pass
+try:
+    from developers_chamber.scripts.toggle import *
+except ImportError:
+    pass
 from developers_chamber.scripts.version import *
 from developers_chamber.scripts.init_aliasses import *
 
