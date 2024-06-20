@@ -3,8 +3,9 @@ import os
 import click
 
 from developers_chamber.scripts import cli
-from developers_chamber.slack_utils import \
-    upload_new_migration as upload_new_migration_func
+from developers_chamber.slack_utils import (
+    upload_new_migration as upload_new_migration_func,
+)
 from developers_chamber.utils import MIGRATIONS_PATTERN
 
 slack_bot_token = os.environ.get("SLACK_BOT_TOKEN")

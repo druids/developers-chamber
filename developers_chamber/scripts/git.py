@@ -4,18 +4,23 @@ from shutil import copy
 
 import click
 
-from developers_chamber.git_utils import \
-    bump_version_from_release_tag as bump_version_from_release_tag_func
-from developers_chamber.git_utils import \
-    checkout_to_release_branch as checkout_to_release_branch_func
+from developers_chamber.git_utils import (
+    bump_version_from_release_tag as bump_version_from_release_tag_func,
+)
+from developers_chamber.git_utils import (
+    checkout_to_release_branch as checkout_to_release_branch_func,
+)
 from developers_chamber.git_utils import commit_version as commit_version_func
-from developers_chamber.git_utils import \
-    create_deployment_branch as create_deployment_branch_func
+from developers_chamber.git_utils import (
+    create_deployment_branch as create_deployment_branch_func,
+)
 from developers_chamber.git_utils import create_release as create_release_func
-from developers_chamber.git_utils import \
-    create_release_branch as create_release_branch_func
-from developers_chamber.git_utils import \
-    merge_release_branch as merge_release_branch_func
+from developers_chamber.git_utils import (
+    create_release_branch as create_release_branch_func,
+)
+from developers_chamber.git_utils import (
+    merge_release_branch as merge_release_branch_func,
+)
 from developers_chamber.scripts import cli
 from developers_chamber.types import EnumType, ReleaseType
 from developers_chamber.version_utils import get_next_version, get_version

@@ -4,10 +4,13 @@ from datetime import date
 import click
 
 from developers_chamber.scripts import cli
-from developers_chamber.toggle_utils import (get_full_timer_report,
-                                             get_running_timer_data,
-                                             get_timer_report, start_timer,
-                                             stop_running_timer)
+from developers_chamber.toggle_utils import (
+    get_full_timer_report,
+    get_running_timer_data,
+    get_timer_report,
+    start_timer,
+    stop_running_timer,
+)
 from developers_chamber.utils import pretty_time_delta
 
 api_key = os.environ.get("TOGGL_API_KEY")

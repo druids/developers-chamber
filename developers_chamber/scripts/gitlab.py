@@ -3,8 +3,9 @@ import os
 import click
 
 from developers_chamber.git_utils import get_current_branch_name
-from developers_chamber.gitlab_utils import \
-    create_merge_request as create_merge_request_func
+from developers_chamber.gitlab_utils import (
+    create_merge_request as create_merge_request_func,
+)
 from developers_chamber.scripts import cli
 
 DEFAULT_API_URL = os.environ.get("GITLAB_API_URL", "https://gitlab.com/api/v4")

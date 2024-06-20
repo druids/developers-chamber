@@ -4,25 +4,37 @@ from datetime import date
 import click
 
 from developers_chamber.bitbucket_utils import get_commit_builds
-from developers_chamber.click.options import (ContainerCommandType,
-                                              ContainerDirToCopyType,
-                                              ContainerEnvironment)
+from developers_chamber.click.options import (
+    ContainerCommandType,
+    ContainerDirToCopyType,
+    ContainerEnvironment,
+)
 from developers_chamber.git_utils import create_branch as create_branch_func
-from developers_chamber.git_utils import (get_commit_hash,
-                                          get_current_branch_name)
+from developers_chamber.git_utils import get_commit_hash, get_current_branch_name
 from developers_chamber.jira_utils import get_branch_name
 from developers_chamber.project_utils import bind_library as bind_library_func
-from developers_chamber.project_utils import (compose_build, compose_exec,
-                                              compose_install,
-                                              compose_kill_all, compose_run,
-                                              compose_stop, compose_up)
-from developers_chamber.project_utils import \
-    copy_containers_dirs as copy_containers_dirs_func
-from developers_chamber.project_utils import \
-    create_or_update_pull_request as create_or_update_pull_request_func
-from developers_chamber.project_utils import (docker_clean, set_hosts,
-                                              start_task, stop_task,
-                                              sync_timer_to_jira)
+from developers_chamber.project_utils import (
+    compose_build,
+    compose_exec,
+    compose_install,
+    compose_kill_all,
+    compose_run,
+    compose_stop,
+    compose_up,
+)
+from developers_chamber.project_utils import (
+    copy_containers_dirs as copy_containers_dirs_func,
+)
+from developers_chamber.project_utils import (
+    create_or_update_pull_request as create_or_update_pull_request_func,
+)
+from developers_chamber.project_utils import (
+    docker_clean,
+    set_hosts,
+    start_task,
+    stop_task,
+    sync_timer_to_jira,
+)
 from developers_chamber.scripts import cli
 
 default_project_name = os.environ.get("PROJECT_DOCKER_COMPOSE_PROJECT_NAME")

@@ -12,17 +12,27 @@ from click import BadParameter, ClickException, confirm
 from python_hosts.exception import UnableToWriteHosts
 from python_hosts.hosts import Hosts, HostsEntry
 
-from developers_chamber.bitbucket_utils import \
-    create_pull_request as bitbucket_create_pull_request
+from developers_chamber.bitbucket_utils import (
+    create_pull_request as bitbucket_create_pull_request,
+)
 from developers_chamber.git_utils import get_current_branch_name
-from developers_chamber.jira_utils import (clean_issue_key, get_issue_fields,
-                                           log_issue_time)
-from developers_chamber.toggle_utils import (check_workspace_and_project,
-                                             get_full_timer_report,
-                                             get_running_timer_data,
-                                             start_timer, stop_running_timer)
-from developers_chamber.utils import (call_command, call_compose_command,
-                                      pretty_time_delta)
+from developers_chamber.jira_utils import (
+    clean_issue_key,
+    get_issue_fields,
+    log_issue_time,
+)
+from developers_chamber.toggle_utils import (
+    check_workspace_and_project,
+    get_full_timer_report,
+    get_running_timer_data,
+    start_timer,
+    stop_running_timer,
+)
+from developers_chamber.utils import (
+    call_command,
+    call_compose_command,
+    pretty_time_delta,
+)
 
 LOGGER = logging.getLogger()
 

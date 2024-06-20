@@ -60,7 +60,7 @@ def create_release(version_file, release_type, remote_name=None, branch_name=Non
         g.tag("-d", str(version))
 
     g.checkout(branch_name or "HEAD", b=release_branch_name)
-    g.commit(message=f'Bump version to "{version}"')
+    g.commit(message=f"Bump version to '{version}'")
 
     g.tag(str(version))
     if remote_name:
@@ -102,7 +102,7 @@ def create_deployment_branch(environment, remote_name=None, is_hot=False):
         pass
 
     g.checkout("HEAD", b=deployment_branch_name)
-    g.commit("--allow-empty", message='Deployment of "{}"'.format(source_branch_name))
+    g.commit("--allow-empty", message="Deployment of '{}'".format(source_branch_name))
 
     if remote_name:
         g.push(remote_name, deployment_branch_name, force=True)
@@ -181,7 +181,7 @@ def merge_release_branch(to_branch_name=None, remote_name=None):
 
     # GitPython does not support merge --no-ff or what?
     git_cmd = git.cmd.Git(".")
-    no_ff_commit = 'Merge branch "{}"'.format(source_branch_name)
+    no_ff_commit = f"Merge branch '{source_branch_name}'"
     git_cmd.execute(
         ("git", "merge", "--no-ff", "-m", no_ff_commit, str(source_branch_name))
     )

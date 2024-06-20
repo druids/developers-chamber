@@ -1,11 +1,13 @@
 from developers_chamber.qa.base import QACheck, QACheckRunner
-from developers_chamber.qa.checks import (ImportOrderQACheck,
-                                          MigrationFilenamesQACheck,
-                                          MissingMigrationsQACheck,
-                                          MissingTranslationsQACheck,
-                                          PrintStatementsQACheck,
-                                          TestMethodNamesQACheck,
-                                          UnusedImportsQACheck)
+from developers_chamber.qa.checks import (
+    ImportOrderQACheck,
+    MigrationFilenamesQACheck,
+    MissingMigrationsQACheck,
+    MissingTranslationsQACheck,
+    PrintStatementsQACheck,
+    TestMethodNamesQACheck,
+    UnusedImportsQACheck,
+)
 from developers_chamber.scripts import cli
 
 

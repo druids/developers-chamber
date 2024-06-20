@@ -33,6 +33,7 @@ from developers_chamber.scripts.slack import *
 from developers_chamber.scripts.toggle import *
 from developers_chamber.scripts.version import *
 from developers_chamber.scripts.init_aliasses import *
+
 click_completion.init()
 
 

@@ -2,12 +2,11 @@ import os
 
 import click
 
-from developers_chamber.jira_utils import \
-    get_branch_name as get_branch_name_func
-from developers_chamber.jira_utils import (get_current_user_issues,
-                                           get_issue_worklog)
-from developers_chamber.jira_utils import \
-    invoke_issues_transition as invoke_issues_transition_func
+from developers_chamber.jira_utils import get_branch_name as get_branch_name_func
+from developers_chamber.jira_utils import get_current_user_issues, get_issue_worklog
+from developers_chamber.jira_utils import (
+    invoke_issues_transition as invoke_issues_transition_func,
+)
 from developers_chamber.jira_utils import log_issue_time as log_issue_time_func
 from developers_chamber.jira_utils import show_issue as show_issue_func
 from developers_chamber.scripts import cli

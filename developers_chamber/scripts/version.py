@@ -4,8 +4,9 @@ import click
 
 from developers_chamber.scripts import cli
 from developers_chamber.types import EnumType, ReleaseType
-from developers_chamber.version_utils import \
-    bump_to_next_version as bump_to_next_version_func
+from developers_chamber.version_utils import (
+    bump_to_next_version as bump_to_next_version_func,
+)
 from developers_chamber.version_utils import get_next_version, get_version
 
 default_version_files = os.environ.get("VERSION_FILES", "version.json").split(",")
