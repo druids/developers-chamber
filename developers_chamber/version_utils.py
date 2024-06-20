@@ -65,10 +65,10 @@ def _write_version_to_file(file, new_version):
             f.seek(0)
             toml.dump(data, f)
         elif file_extension == ".json":
-            data = json.load(f)["version"]
-            data["version"] = new_version
+            data = json.load(f)
+            data["version"] = str(new_version)
             f.seek(0)
-            json.dump(data, f)
+            json.dump(data, f, indent=2)
 
 
 def get_version(file="version.json"):
