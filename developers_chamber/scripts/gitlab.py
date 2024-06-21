@@ -2,9 +2,9 @@ import os
 
 import click
 
-from developers_chamber.git_utils import get_current_branch_name
 from developers_chamber.gitlab_utils import (
     create_merge_request as create_merge_request_func,
+    run_job as run_job_func,
 )
 from developers_chamber.scripts import cli
 
@@ -48,11 +48,20 @@ def gitlab():
     required=True,
     default=DEFAULT_PROJECT,
 )
-def create_release_merge_request(api_url, token, source_branch, target_branch, project):
+@click.option(
+    "--assignee-id",
+    help="User ID to assign the merge request",
+    type=str,
+    required=False,
+    default=DEFAULT_PROJECT,
+)
+def create_release_merge_request(api_url, token, source_branch, target_branch, project, assignee_id=None):
     """
     Create a new merge request in a GitLab project. It is often used after the project release.
     """
     if not source_branch:
+        from developers_chamber.git_utils import get_current_branch_name
+
         source_branch = get_current_branch_name()
 
     mr_url = create_merge_request_func(
@@ -63,6 +72,109 @@ def create_release_merge_request(api_url, token, source_branch, target_branch, p
         source_branch=source_branch,
         target_branch=target_branch,
         project=project,
+        assignee_id=assignee_id
     )
 
     click.echo(f"Merge request was successfully created: {mr_url}")
+
+
+@gitlab.command()
+@click.option(
+    "--api-url",
+    help="GitLab instance API URL (defaults to gitlab.com)",
+    type=str,
+    required=True,
+    default=DEFAULT_API_URL,
+)
+@click.option(
+    "--token",
+    help="token (can be set as env variable GITLAB_TOKEN)",
+    type=str,
+    required=True,
+    default=DEFAULT_TOKEN,
+)
+@click.option("--source-branch", help="source Git branch", type=str)
+@click.option(
+    "--target-branch",
+    help="Target Git branch (defaults to env variable GITLAB_TARGET_BRANCH)",
+    type=str,
+    default=DEFAULT_TARGET_BRANCH,
+)
+@click.option(
+    "--title",
+    help="Merge request title",
+    type=str,
+    default=DEFAULT_TARGET_BRANCH,
+)
+@click.option(
+    "--project",
+    help="GitLab project name (defaults to env variable GITLAB_PROJECT)",
+    type=str,
+    required=True,
+    default=DEFAULT_PROJECT,
+)
+@click.option(
+    "--assignee-id",
+    help="User ID to assign the merge request",
+    type=str,
+    required=False,
+    default=DEFAULT_PROJECT,
+)
+def create_merge_request(api_url, token, source_branch, target_branch, title, project, assignee_id=None):
+    """
+    Create a new merge request in a GitLab project. It is often used after the project release.
+    """
+    mr_url = create_merge_request_func(
+        api_url=api_url,
+        token=token,
+        title=title,
+        description="",
+        source_branch=source_branch,
+        target_branch=target_branch,
+        project=project,
+        assignee_id=assignee_id
+    )
+
+    click.echo(f"Merge request was successfully created: {mr_url}")
+
+@gitlab.command()
+@click.option(
+    "--api-url",
+    help="GitLab instance API URL (defaults to gitlab.com)",
+    type=str,
+    required=True,
+    default=DEFAULT_API_URL,
+)
+@click.option(
+    "--token",
+    help="token (can be set as env variable GITLAB_TOKEN)",
+    type=str,
+    required=True,
+    default=DEFAULT_TOKEN,
+)
+@click.option(
+    "--project",
+    help="GitLab project name (defaults to env variable GITLAB_PROJECT)",
+    type=str,
+    required=True,
+    default=DEFAULT_PROJECT,
+)
+@click.option(
+    "--branch",
+    help="Branch name",
+    type=str,
+    required=True,
+)
+@click.option(
+    "--variables",
+    help="Variables",
+    type=str,
+    required=False,
+)
+def run_job(api_url, token, project, branch, variables):
+    """
+    Run a job in a GitLab project.
+    """
+    variables = dict([var.split('=') for var in variables.split(',')]) if variables else []
+    run_job_func(api_url, token, project, f'refs/heads/{branch}', variables)
+
