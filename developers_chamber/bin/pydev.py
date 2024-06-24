@@ -50,6 +50,7 @@ if "toggle" in INSTALLED_MODULES:
     from developers_chamber.scripts.toggle import *
 
 from developers_chamber.scripts.version import *
+from developers_chamber.scripts.project import *
 from developers_chamber.scripts.init_aliasses import *
 
 click_completion.init()
