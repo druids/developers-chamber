@@ -8,8 +8,6 @@ from developers_chamber.click.options import (
     ContainerDirToCopyType,
     ContainerEnvironment,
 )
-from developers_chamber.git_utils import create_branch as create_branch_func
-from developers_chamber.git_utils import get_commit_hash, get_current_branch_name
 from developers_chamber.project_utils import bind_library as bind_library_func
 from developers_chamber.project_utils import (
     compose_build,
@@ -472,6 +470,8 @@ if (
     from developers_chamber.project_utils import (
         create_or_update_pull_request as create_or_update_pull_request_func,
     )
+    from developers_chamber.git_utils import create_branch as create_branch_func
+    from developers_chamber.git_utils import get_commit_hash, get_current_branch_name
 
     @project.group()
     def task():
