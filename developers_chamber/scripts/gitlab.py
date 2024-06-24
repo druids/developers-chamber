@@ -176,5 +176,6 @@ def run_job(api_url, token, project, branch, variables):
     Run a job in a GitLab project.
     """
     variables = dict([var.split('=') for var in variables.split(',')]) if variables else []
-    run_job_func(api_url, token, project, f'refs/heads/{branch}', variables)
+    ci_job_url = run_job_func(api_url, token, project, f'refs/heads/{branch}', variables)
 
+    click.echo(f"CI job was started: {ci_job_url}")

@@ -49,3 +49,5 @@ def run_job(
     )
     if response.status_code != 201:
         raise UsageError(f'GitLab error: {response.content.decode("utf-8")}')
+    else:
+        return response.json()["web_url"]
