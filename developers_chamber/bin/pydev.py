@@ -32,8 +32,7 @@ if "aws" in INSTALLED_MODULES:
 if "git" in INSTALLED_MODULES:
     from developers_chamber.scripts.git import *
 
-if "gitlab" in INSTALLED_MODULES:
-    from developers_chamber.scripts.gitlab import *
+from developers_chamber.scripts.gitlab import *
 
 if "jira" in INSTALLED_MODULES:
     from developers_chamber.scripts.jira import *

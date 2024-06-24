@@ -140,7 +140,6 @@ modules = {
     "toggle": ["toggl"],
     "slack": ["slack_sdk"],
     "bitbucket": ["git"],
-    "gitlab": ["git"],
 }
 
 INSTALLED_MODULES = []
