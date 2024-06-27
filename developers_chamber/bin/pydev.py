@@ -3,6 +3,7 @@ import logging.config
 import os
 import sys
 from pathlib import Path
+import imp
 
 import click_completion
 import coloredlogs
@@ -50,17 +51,17 @@ if "toggle" in INSTALLED_MODULES:
 
 from developers_chamber.scripts.version import *
 from developers_chamber.scripts.project import *
-from developers_chamber.scripts.init_aliasses import *
 
 click_completion.init()
-
 
 # Import external scripts
 for base_path in (Path.home(), Path.cwd()):
     if (base_path / ".pydev" / "scripts").exists():
         sys.path.append(base_path / ".pydev")
-        import scripts
+        imp.load_source('*', str(base_path / ".pydev" / "scripts" / "__init__.py"))
 
+
+from developers_chamber.scripts.init_aliasses import *
 
 coloredlogs.install(milliseconds=True)
 
