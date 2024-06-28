@@ -3,7 +3,7 @@ import logging.config
 import os
 import sys
 from pathlib import Path
-import imp
+from importlib.machinery import SourceFileLoader
 
 import click_completion
 import coloredlogs
@@ -56,10 +56,8 @@ click_completion.init()
 
 # Import external scripts
 for base_path in (Path.home(), Path.cwd()):
-    if (base_path / ".pydev" / "scripts").exists():
-        sys.path.append(base_path / ".pydev")
-        imp.load_source('*', str(base_path / ".pydev" / "scripts" / "__init__.py"))
-
+    if (base_path / ".pydev" / "scripts" / "__init__.py").exists():
+        SourceFileLoader('*', str(base_path / ".pydev" / "scripts" / "__init__.py")).load_module()
 
 from developers_chamber.scripts.init_aliasses import *
 
