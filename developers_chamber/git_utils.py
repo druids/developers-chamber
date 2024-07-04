@@ -31,14 +31,14 @@ def create_release_branch(version, release_type, remote_name=None, branch_name=N
     return release_branch_name
 
 
-def create_release(version_file, release_type, remote_name=None, branch_name=None):
+def create_release(version_file, release_type, remote_name=None, branch_name=None, file_type=None):
     repo = git.Repo(".")
     g = repo.git
 
     if branch_name:
         g.checkout(branch_name)
 
-    bump_to_next_version(release_type, files=[version_file])
+    bump_to_next_version(release_type, files=[version_file], file_type=file_type)
     version = get_version(version_file)
 
     g.add(version_file)

@@ -24,7 +24,7 @@ class ReleaseType(Enum):
         return self.value
 
 
-class VersionFileType(Enum):
+class VersionFileType(str, Enum):
 
     toml = "toml"
     json = "json"

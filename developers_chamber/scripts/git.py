@@ -22,10 +22,10 @@ from developers_chamber.git_utils import (
     merge_release_branch as merge_release_branch_func,
 )
 from developers_chamber.scripts import cli
-from developers_chamber.types import EnumType, ReleaseType
+from developers_chamber.types import EnumType, ReleaseType, VersionFileType
 from developers_chamber.version_utils import get_next_version, get_version
 
-from .version import default_version_files
+from .version import default_version_files, default_version_file_type
 
 default_remote_name = os.environ.get("GIT_REMOTE_NAME")
 default_branch_name = os.environ.get("GIT_BRANCH_NAME")
@@ -114,7 +114,14 @@ def create_release_branch(release_type, file, remote_name, branch_name):
     type=str,
     default=default_branch_name,
 )
-def create_release(release_type, file, remote_name, branch_name):
+@click.option(
+    "--file-type",
+    help="version file type",
+    type=EnumType(VersionFileType),
+    default=default_version_file_type,
+    required=False
+)
+def create_release(release_type, file, remote_name, branch_name, file_type):
     """
     Create a release branch and push it to the remote repository if the remote name is specified.
     """
@@ -122,7 +129,7 @@ def create_release(release_type, file, remote_name, branch_name):
         raise click.BadParameter("build is not allowed for release")
     click.echo(
         'New release branch "{}" was created'.format(
-            create_release_func(file, release_type, remote_name, branch_name)
+            create_release_func(file, release_type, remote_name, branch_name, file_type)
         )
     )
 
