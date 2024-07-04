@@ -24,6 +24,17 @@ class ReleaseType(Enum):
         return self.value
 
 
+class VersionFileType(Enum):
+
+    toml = "toml"
+    json = "json"
+    npm = "npm"
+
+    def __str__(self):
+        return self.value
+
+
+
 class TimedeltaType(ParamType):
     name = "timedelta"
 

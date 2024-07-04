@@ -3,13 +3,14 @@ import os
 import click
 
 from developers_chamber.scripts import cli
-from developers_chamber.types import EnumType, ReleaseType
+from developers_chamber.types import EnumType, ReleaseType, VersionFileType
 from developers_chamber.version_utils import (
     bump_to_next_version as bump_to_next_version_func,
 )
 from developers_chamber.version_utils import get_next_version, get_version
 
 default_version_files = os.environ.get("VERSION_FILES", "version.json").split(",")
+default_version_file_type = os.environ.get("VERSION_TYPE")
 
 
 @cli.group()
@@ -35,7 +36,15 @@ def version():
     required=True,
     multiple=True,
 )
-def bump_to_next(release_type, build_hash, file):
+@click.option(
+    "--version-type",
+    "-t",
+    help="version type",
+    type=EnumType(VersionFileType),
+    default=default_version_file_type,
+    required=False
+)
+def bump_to_next(release_type, build_hash, file, version_type):
     """
     Bump version in the JSON file (or files) and print it.
     Version is selected according to release type, build has and version file.
@@ -53,7 +62,7 @@ def bump_to_next(release_type, build_hash, file):
         * major - current version is "1.30.2", next version will be "2.0.0"
     * build-hash - only required for release type "build"
     """
-    click.echo(bump_to_next_version_func(release_type, build_hash, file))
+    click.echo(bump_to_next_version_func(release_type, build_hash, file, version_type))
 
 
 @version.command(name="print")

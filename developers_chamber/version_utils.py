@@ -5,7 +5,7 @@ import re
 import toml
 from click import BadParameter
 
-from .types import ReleaseType
+from .types import ReleaseType, VersionFileType
 
 VERSION_PATTERN = (
     r"(?P<major>[0-9]+)\.(?P<minor>[0-9]+)(\.(?P<patch>[0-9]+))?(-(?P<build>\w+))?"
@@ -51,24 +51,43 @@ class Version:
         return self
 
 
-def _write_version_to_file(file, new_version):
+def _write_version_to_file(file, new_version, version_type=None):
     """Rewrite version number in the file"""
     full_file_path = os.path.join(os.getcwd(), file)
     filename, file_extension = os.path.splitext(full_file_path)
     if not os.path.isfile(full_file_path):
         raise BadParameter("File {} was not found".format(full_file_path))
 
+    version_type = version_type or file_extension[1:]
+
     with open(full_file_path, "r+") as f:
-        if file_extension == ".toml":
+        if version_type == VersionFileType.toml:
             data = toml.load(f)
             data["project"]["version"] = new_version
             f.seek(0)
             toml.dump(data, f)
-        elif file_extension == ".json":
+        elif version_type == VersionFileType.json:
             data = json.load(f)
             data["version"] = str(new_version)
             f.seek(0)
             json.dump(data, f, indent=2)
+        elif version_type == VersionFileType.npm:
+            lock_file = f"{file.rsplit('.', 1)[0]}-lock.{file.rsplit('.', 1)[1]}"
+            full_lock_file_path = os.path.join(os.getcwd(), lock_file)
+            if not os.path.isfile(full_lock_file_path):
+                raise BadParameter(f"Lock file {full_lock_file_path} was not found")
+            with open(full_lock_file_path, "r+") as lf:
+                file_data = json.load(f)
+                file_data["version"] = str(new_version)
+                lock_file_data = json.load(lf)
+                lock_file_data["version"] = str(new_version)
+                lock_file_data["packages"][""]["version"] = str(new_version)
+                f.seek(0)
+                lf.seek(0)
+                json.dump(file_data, f, indent=2)
+                json.dump(lock_file_data, lf, indent=2)
+        else:
+            raise BadParameter(f'Invalid version type "{version_type}"')
 
 
 def get_version(file="version.json"):
@@ -102,23 +121,23 @@ def get_next_version(release_type, build_hash=None, file="version.json"):
         return version.replace(build=None, patch=0, minor=0, major=version.major + 1)
 
 
-def bump_version(version, files=["version.json"]):
+def bump_version(version, files=["version.json"], version_type=None):
     """Bump version in the input files"""
 
     if len("files") == 0:
         raise BadParameter("Given no files to release a version")
 
     for file in files:
-        _write_version_to_file(file, version)
+        _write_version_to_file(file, version, version_type)
 
     return "Bumped version to {}".format(version)
 
 
-def bump_to_next_version(release_type, build_hash=None, files=["version.json"]):
+def bump_to_next_version(release_type, build_hash=None, files=["version.json"], version_type=None):
     """Bump version to the next version according to previous version, release type and build hash"""
 
     if len("files") == 0:
         raise BadParameter("Given no files to release a version")
 
     next_version = get_next_version(release_type, build_hash, files[0])
-    return bump_version(next_version, files)
+    return bump_version(next_version, files, version_type)
