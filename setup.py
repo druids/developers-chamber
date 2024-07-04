@@ -26,7 +26,7 @@ setup(
         'python-hosts==0.4.6',
         'requests>=2.23.0',
         'slack-sdk==3.21.3',
-        'TogglPy==0.1.2',
+        'skip-TogglPy==0.2.0',
         'unidecode==1.1.1',
     ],
     entry_points={'console_scripts': [
