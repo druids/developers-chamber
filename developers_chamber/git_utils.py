@@ -4,7 +4,7 @@ import git
 from click import BadParameter, UsageError
 from git import GitCommandError
 
-from .types import ReleaseType
+from .types import ReleaseType, VersionFileType
 from .version_utils import bump_to_next_version, bump_version, get_version
 
 DEPLOYMENT_COMMIT_PATTERN = r'^Deployment of "(?P<branch_name>.+)"$'
@@ -42,6 +42,8 @@ def create_release(version_file, release_type, remote_name=None, branch_name=Non
     version = get_version(version_file)
 
     g.add(version_file)
+    if file_type == VersionFileType.npm:
+        g.add(f"{version_file.rsplit('.', 1)[0]}-lock.{version_file.rsplit('.', 1)[1]}")
 
     if remote_name and branch_name:
         g.pull(remote_name, branch_name)
