@@ -629,6 +629,7 @@ def start_service_and_wait_for_tasks_to_start(cluster, service, count, region, e
 
 def get_min_capacity_for_service(cluster, service, region, as_client=None):
     as_client = as_client if as_client else _get_autoscaling_client(region)
+    ecs_client = _get_ecs_client(region)
 
     try:
         response = as_client.describe_scalable_targets(
