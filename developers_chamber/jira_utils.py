@@ -67,6 +67,12 @@ def get_issue_fields(url, username, api_key, issue_key, project_key=None):
     issue_key = clean_issue_key(issue_key, project_key)
     try:
         issue = get_jira_client(url, username, api_key).issue(issue_key)
+
+        # load all worklogs if some are missing
+        if issue.fields.worklog.total > issue.fields.worklog.maxResults:
+            issue.fields.worklog.worklogs = get_issue_worklog(url, username, api_key, issue_key, project_key=project_key)
+            issue.fields.worklog.maxResults = 5000  # info from API documentation
+
         return issue.fields
     except JIRAError:
         raise click.BadParameter('Invalid issue key {}'.format(issue_key))
@@ -92,8 +98,7 @@ def get_issue_worklog(url, username, api_key, issue_key, project_key=None):
 
     try:
         jira = get_jira_client(url, username, api_key)
-        issue = jira.issue(issue_key)
-        return issue.fields.worklog.worklogs
+        return jira.worklogs(issue_key)
     except JIRAError:
         raise click.BadParameter('Invalid issue key {}'.format(issue_key))
 
