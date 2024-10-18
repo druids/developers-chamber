@@ -252,7 +252,8 @@ def compose_build(
 ):
     _call_compose_command(project_name, compose_files, "build", containers, env)
 
-    copy_containers_dirs(project_name, containers_dir_to_copy, containers)
+    if containers_dir_to_copy:
+        copy_containers_dirs(project_name, containers_dir_to_copy, containers)
 
 
 def compose_run(project_name, compose_files, containers, command, env=None):

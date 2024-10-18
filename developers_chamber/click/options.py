@@ -52,17 +52,18 @@ class ContainerCommandType(click.ParamType):
     name = "container_command_type"
 
     def convert(self, value, param, ctx):
-        try:
-            container_name, command = value.split(":")
-            return container_name, command
-        except ValueError:
-            self.fail(
-                'Invalid value "{}" format must be "DOCKER_CONTAINER_NAME:COMMAND"'.format(
-                    value
-                ),
-                param,
-                ctx,
-            )
+        if value:
+            try:
+                container_name, command = value.split(":")
+                return container_name, command
+            except ValueError:
+                self.fail(
+                    'Invalid value "{}" format must be "DOCKER_CONTAINER_NAME:COMMAND"'.format(
+                        value
+                    ),
+                    param,
+                    ctx,
+                )
 
 
 class ContainerEnvironment(click.ParamType):

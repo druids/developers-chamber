@@ -57,8 +57,9 @@ default_containers_dir_to_copy = (
     else None
 )
 default_containers_install_command = os.environ.get(
-    "PROJECT_DOCKER_COMPOSE_CONTAINERS_INSTALL_COMMAND", ""
-).split(",")
+    "PROJECT_DOCKER_COMPOSE_CONTAINERS_INSTALL_COMMAND"
+).split(",") if os.environ.get("PROJECT_DOCKER_COMPOSE_CONTAINERS_INSTALL_COMMAND") else None
+print(default_containers_install_command)
 default_library_dir = os.environ.get("PROJECT_LIBRARY_DIR")
 
 jira_url = os.environ.get("JIRA_URL")
@@ -344,7 +345,7 @@ def stop(project_name, compose_file, container):
     "-v",
     help="Variable content directory",
     type=str,
-    required=True,
+    required=False,
     default=default_var_dirs,
     multiple=True,
 )
@@ -354,7 +355,7 @@ def stop(project_name, compose_file, container):
     help="Container dir which will be copied after build in format "
     "DOCKER_CONTAINER_NAME:CONTAINER_DIRECTORY:HOST_DIRECTORY",
     type=ContainerDirToCopyType(),
-    required=True,
+    required=False,
     multiple=True,
     default=default_containers_dir_to_copy,
 )
@@ -380,7 +381,7 @@ def install(
     compose_install(
         project_name,
         compose_file,
-        var_dir,
+        var_dir or [],
         container_dir_to_copy,
         install_container_command,
     )
