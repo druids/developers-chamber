@@ -59,7 +59,6 @@ default_containers_dir_to_copy = (
 default_containers_install_command = os.environ.get(
     "PROJECT_DOCKER_COMPOSE_CONTAINERS_INSTALL_COMMAND"
 ).split(",") if os.environ.get("PROJECT_DOCKER_COMPOSE_CONTAINERS_INSTALL_COMMAND") else None
-print(default_containers_install_command)
 default_library_dir = os.environ.get("PROJECT_LIBRARY_DIR")
 
 jira_url = os.environ.get("JIRA_URL")
