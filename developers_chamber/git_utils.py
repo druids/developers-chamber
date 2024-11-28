@@ -150,7 +150,7 @@ def commit_version(version, files=["version.json"], remote_name=None):
 
     try:
         g.add(files)
-        g.commit(m=str(version))
+        g.commit(m=f"Bump version to '{version}'")
     except GitCommandError as ex:
         raise UsageError(
             "Version files was not changed or another git error was raised: {}".format(

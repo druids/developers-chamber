@@ -114,13 +114,19 @@ def create_release_merge_request(api_url, token, source_branch, target_branch, p
     default=DEFAULT_PROJECT,
 )
 @click.option(
+    "--automerge",
+    help="User ID to assign the merge request",
+    is_flag=True,
+    default=False,
+)
+@click.option(
     "--assignee-id",
     help="User ID to assign the merge request",
     type=str,
     required=False,
     default=DEFAULT_PROJECT,
 )
-def create_merge_request(api_url, token, source_branch, target_branch, title, project, assignee_id=None):
+def create_merge_request(api_url, token, source_branch, target_branch, title, project, automerge, assignee_id=None):
     """
     Create a new merge request in a GitLab project. It is often used after the project release.
     """
@@ -132,7 +138,8 @@ def create_merge_request(api_url, token, source_branch, target_branch, title, pr
         source_branch=source_branch,
         target_branch=target_branch,
         project=project,
-        assignee_id=assignee_id
+        assignee_id=assignee_id,
+        automerge=automerge
     )
 
     click.echo(f"Merge request was successfully created: {mr_url}")
