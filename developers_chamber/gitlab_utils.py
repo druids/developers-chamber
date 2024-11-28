@@ -17,14 +17,30 @@ def create_merge_request(
             "target_branch": target_branch,
             "title": title,
             "description": description,
-            "assignee_id": assignee_id,
-            "merge_when_pipeline_succeeds": automerge
+            "assignee_id": assignee_id
         },
     )
 
     if response.status_code != 201:
         raise UsageError(f'GitLab error: {response.content.decode("utf-8")}')
-    return response.json()["web_url"]
+
+    message = f"Merge request was successfully created {response.json()['web_url']}"
+
+    if automerge:
+        merge_request_iid = response.json()["iid"]
+        merge_response = requests.put(
+            f"{api_url}/projects/{quote_plus(project)}/merge_requests/{merge_request_iid}/merge",
+            json={"merge_when_pipeline_succeeds": True},
+            headers={
+                "PRIVATE-TOKEN": token,
+            },
+        )
+        if merge_response.status_code != 200:
+            message += f' (Failed to activate auto-merge: {response.content.decode("utf-8")})'
+        else:
+            message += " (Automerge activated)"
+
+    return message
 
 
 
