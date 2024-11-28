@@ -5,7 +5,7 @@ from click import UsageError
 
 
 def create_merge_request(
-    api_url, token, title, description, source_branch, target_branch, project, assignee_id=None
+    api_url, token, title, description, source_branch, target_branch, project, assignee_id=None, automerge=False
 ):
     response = requests.post(
         f"{api_url}/projects/{quote_plus(project)}/merge_requests",
@@ -17,7 +17,8 @@ def create_merge_request(
             "target_branch": target_branch,
             "title": title,
             "description": description,
-            "assignee_id": assignee_id
+            "assignee_id": assignee_id,
+            "merge_when_pipeline_succeeds": automerge
         },
     )
 
