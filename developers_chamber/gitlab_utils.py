@@ -1,5 +1,6 @@
 from urllib.parse import quote_plus
 
+import time
 import requests
 from click import UsageError
 
@@ -24,24 +25,28 @@ def create_merge_request(
     if response.status_code != 201:
         raise UsageError(f'GitLab error: {response.content.decode("utf-8")}')
 
-    message = f"Merge request was successfully created {response.json()['web_url']}"
-
     if automerge:
-        merge_request_iid = response.json()["iid"]
-        merge_response = requests.put(
-            f"{api_url}/projects/{quote_plus(project)}/merge_requests/{merge_request_iid}/merge",
-            json={"merge_when_pipeline_succeeds": True},
-            headers={
-                "PRIVATE-TOKEN": token,
-            },
-        )
-        if merge_response.status_code != 200:
-            message += f' (Failed to activate auto-merge: {response.content.decode("utf-8")})'
-        else:
-            message += " (Automerge activated)"
+        time.sleep(5)
+        message = activate_automerge(api_url, token, project, response.json()['iid'])
+        return f"{response.json()['web_url']} ({message})"
 
-    return message
+    return response.json()['web_url']
 
+
+def activate_automerge(
+    api_url, token, project, merge_request_id
+):
+    merge_response = requests.put(
+        f"{api_url}/projects/{quote_plus(project)}/merge_requests/{merge_request_id}/merge",
+        json={"merge_when_pipeline_succeeds": True},
+        headers={
+            "PRIVATE-TOKEN": token,
+        },
+    )
+    if merge_response.status_code != 200:
+        raise "Automerge activation failed"
+    else:
+        return "Automerge activated"
 
 
 def run_job(

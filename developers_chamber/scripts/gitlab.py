@@ -4,6 +4,7 @@ import click
 
 from developers_chamber.gitlab_utils import (
     create_merge_request as create_merge_request_func,
+    activate_automerge as activate_automerge_func,
     run_job as run_job_func,
 )
 from developers_chamber.scripts import cli
@@ -143,6 +144,48 @@ def create_merge_request(api_url, token, source_branch, target_branch, title, pr
     )
 
     click.echo(f"Merge request was successfully created: {mr_url}")
+
+@gitlab.command()
+@click.option(
+    "--api-url",
+    help="GitLab instance API URL (defaults to gitlab.com)",
+    type=str,
+    required=True,
+    default=DEFAULT_API_URL,
+)
+@click.option(
+    "--token",
+    help="token (can be set as env variable GITLAB_TOKEN)",
+    type=str,
+    required=True,
+    default=DEFAULT_TOKEN,
+)
+@click.option(
+    "--project",
+    help="GitLab project name (defaults to env variable GITLAB_PROJECT)",
+    type=str,
+    required=True,
+    default=DEFAULT_PROJECT,
+)
+@click.option(
+    "--merge-request-id",
+    help="GitLab merge request ID",
+    type=str,
+    required=True,
+)
+def activate_merge_request_automerge(api_url, token, project, merge_request_id):
+    """
+    Create a new merge request in a GitLab project. It is often used after the project release.
+    """
+    message = activate_automerge_func(
+        api_url=api_url,
+        token=token,
+        project=project,
+        merge_request_id=merge_request_id
+    )
+
+    click.echo(f"{message}")
+
 
 @gitlab.command()
 @click.option(
