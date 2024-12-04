@@ -51,6 +51,18 @@ class Version:
         return self
 
 
+class TomlNewlineArraySeparatorEncoder(toml.TomlEncoder):
+
+    def dump_list(self, v):
+        t = []
+        retval = "[\n"
+
+        for u in v:
+            retval += "    " + str(self.dump_value(u)) + ",\n"
+        retval += "]"
+        return retval
+
+
 def _write_version_to_file(file, new_version, file_type=None):
     """Rewrite version number in the file"""
     full_file_path = os.path.join(os.getcwd(), file)
@@ -65,11 +77,13 @@ def _write_version_to_file(file, new_version, file_type=None):
             data = toml.load(f)
             data["project"]["version"] = new_version
             f.seek(0)
-            toml.dump(data, f)
+            f.truncate()
+            toml.dump(data, f, encoder=TomlNewlineArraySeparatorEncoder())
         elif file_type == VersionFileType.json:
             data = json.load(f)
             data["version"] = str(new_version)
             f.seek(0)
+            f.truncate()
             json.dump(data, f, indent=2)
         elif file_type == VersionFileType.npm:
             lock_file = f"{file.rsplit('.', 1)[0]}-lock.{file.rsplit('.', 1)[1]}"
@@ -83,7 +97,9 @@ def _write_version_to_file(file, new_version, file_type=None):
                 lock_file_data["version"] = str(new_version)
                 lock_file_data["packages"][""]["version"] = str(new_version)
                 f.seek(0)
+                f.truncate()
                 lf.seek(0)
+                lf.truncate()
                 json.dump(file_data, f, indent=2)
                 json.dump(lock_file_data, lf, indent=2)
         else:
