@@ -35,7 +35,6 @@ def create_release(version_file, release_type, remote_name=None, branch_name=Non
     repo = git.Repo(".")
     g = repo.git
 
-    print(branch_name)
     if branch_name:
         g.checkout(branch_name)
 
