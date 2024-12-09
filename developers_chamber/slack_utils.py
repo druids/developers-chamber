@@ -23,7 +23,7 @@ class RecentMigrationsSlackUploader(RepoMixin):
         self.client.chat_postMessage(channel=self.channel, text=msg)
 
     def upload_file(self, file):
-        self.client.files_upload(channels=self.channel, file=file, title=file)
+        self.client.files_upload_v2(channel=self.channel, file=file, title=file)
 
     def run(self):
         migration_files = self._get_migration_files()
