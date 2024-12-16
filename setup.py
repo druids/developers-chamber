@@ -25,7 +25,7 @@ setup(
         'python-dotenv==0.14.0',
         'python-hosts==0.4.6',
         'requests>=2.23.0',
-        'slack-sdk==3.21.3',
+        'slack-sdk==3.23.0',
         'skip-TogglPy==0.2.0',
         'unidecode==1.1.1',
     ],
