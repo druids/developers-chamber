@@ -26,7 +26,6 @@ def create_merge_request(
         raise UsageError(f'GitLab error: {response.content.decode("utf-8")}')
 
     if automerge:
-        time.sleep(5)
         message = activate_automerge(api_url, token, project, response.json()['iid'])
         return f"{response.json()['web_url']} ({message})"
 
@@ -34,19 +33,20 @@ def create_merge_request(
 
 
 def activate_automerge(
-    api_url, token, project, merge_request_id
+    api_url, token, project, merge_request_id, retries=5
 ):
-    merge_response = requests.put(
-        f"{api_url}/projects/{quote_plus(project)}/merge_requests/{merge_request_id}/merge",
-        json={"merge_when_pipeline_succeeds": True},
-        headers={
-            "PRIVATE-TOKEN": token,
-        },
-    )
-    if merge_response.status_code != 200:
-        return "Automerge activation failed"
-    else:
-        return "Automerge activated"
+    for _ in range(retries):
+        merge_response = requests.put(
+            f"{api_url}/projects/{quote_plus(project)}/merge_requests/{merge_request_id}/merge",
+            json={"merge_when_pipeline_succeeds": True},
+            headers={
+                "PRIVATE-TOKEN": token,
+            },
+        )
+        if merge_response.status_code == 200:
+            return "Automerge activated"
+        time.sleep(5)
+    return "Automerge activation failed"
 
 
 def run_job(
