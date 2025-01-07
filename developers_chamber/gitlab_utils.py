@@ -44,7 +44,7 @@ def activate_automerge(
         },
     )
     if merge_response.status_code != 200:
-        raise "Automerge activation failed"
+        return "Automerge activation failed"
     else:
         return "Automerge activated"
 
