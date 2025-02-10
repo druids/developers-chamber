@@ -221,7 +221,11 @@ def get_current_issue_key():
 def get_remote_url():
     try:
         repo = git.Repo(".")
-        return f"https://{repo.remotes.origin.url.split('@')[1].split(':')[0]}"
+        url = repo.remotes.origin.url
+        if url.startswith("git@"):
+            return f"https://{url.split('@')[1].split(':', 1)[0]}"
+        else:
+            return f"https://{url.split('@')[1].split('/', 1)[0]}"
     except InvalidGitRepositoryError:
         raise UsageError("Git repository not found in the current directory")
 
@@ -229,6 +233,10 @@ def get_remote_url():
 def get_remote_path():
     try:
         repo = git.Repo(".")
-        return repo.remotes.origin.url.split("@")[1].split(":")[1]
+        url = repo.remotes.origin.url
+        if url.startswith("git@"):
+            return url.split('@')[1].split(':', 1)[1].split('.')[0]
+        else:
+            return url.split('@')[1].split('/', 1)[1].split('.')[0]
     except InvalidGitRepositoryError:
         raise UsageError("Git repository not found in the current directory")
