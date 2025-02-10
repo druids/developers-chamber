@@ -2,7 +2,7 @@ import re
 
 import git
 from click import BadParameter, UsageError
-from git import GitCommandError
+from git import GitCommandError, InvalidGitRepositoryError
 
 from .types import ReleaseType, VersionFileType
 from .version_utils import bump_to_next_version, bump_version, get_version
@@ -31,7 +31,9 @@ def create_release_branch(version, release_type, remote_name=None, branch_name=N
     return release_branch_name
 
 
-def create_release(version_file, release_type, remote_name=None, branch_name=None, file_type=None):
+def create_release(
+    version_file, release_type, remote_name=None, branch_name=None, file_type=None
+):
     repo = git.Repo(".")
     g = repo.git
 
@@ -214,3 +216,19 @@ def get_current_issue_key():
         return match.group("issue_key")
     else:
         return None
+
+
+def get_remote_url():
+    try:
+        repo = git.Repo(".")
+        return f"https://{repo.remotes.origin.url.split('@')[1].split(':')[0]}"
+    except InvalidGitRepositoryError:
+        raise UsageError("Git repository not found in the current directory")
+
+
+def get_remote_path():
+    try:
+        repo = git.Repo(".")
+        return repo.remotes.origin.url.split("@")[1].split(":")[1]
+    except InvalidGitRepositoryError:
+        raise UsageError("Git repository not found in the current directory")

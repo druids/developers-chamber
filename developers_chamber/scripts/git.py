@@ -48,9 +48,9 @@ def git():
     "--file",
     "-f",
     help="path to the version file",
-    type=str,
     default=default_version_files[0],
     required=True,
+    type=click.Path(exists=True),
 )
 @click.option(
     "--remote-name",
@@ -96,9 +96,9 @@ def create_release_branch(release_type, file, remote_name, branch_name):
     "--file",
     "-f",
     help="path to the version file",
-    type=str,
     default=default_version_files[0],
     required=True,
+    type=click.Path(exists=True),
 )
 @click.option(
     "--remote-name",
@@ -119,7 +119,7 @@ def create_release_branch(release_type, file, remote_name, branch_name):
     help="version file type",
     type=EnumType(VersionFileType),
     default=default_version_file_type,
-    required=False
+    required=False,
 )
 def create_release(release_type, file, remote_name, branch_name, file_type):
     """
@@ -170,10 +170,10 @@ def checkout_to_release_branch():
     "--file",
     "-f",
     help="path to the version file",
-    type=str,
     default=default_version_files,
     required=True,
     multiple=True,
+    type=click.Path(exists=True),
 )
 def bump_version_from_release_tag(file):
     """
@@ -189,10 +189,10 @@ def bump_version_from_release_tag(file):
     "--file",
     "-f",
     help="path to the version file",
-    type=str,
     default=default_version_files,
     required=True,
     multiple=True,
+    type=click.Path(exists=True),
 )
 @click.option(
     "--remote-name",
