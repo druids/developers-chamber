@@ -149,7 +149,9 @@ def bump_version(version, files=["version.json"], file_type=None):
     return "Bumped version to {}".format(version)
 
 
-def bump_to_next_version(release_type, build_hash=None, files=["version.json"], file_type=None):
+def bump_to_next_version(
+    release_type, build_hash=None, files=["version.json"], file_type=None
+):
     """Bump version to the next version according to previous version, release type and build hash"""
 
     if len("files") == 0:

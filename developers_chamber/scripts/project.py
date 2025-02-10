@@ -56,9 +56,11 @@ default_containers_dir_to_copy = (
     if os.environ.get("PROJECT_DOCKER_COMPOSE_CONTAINERS_DIR_TO_COPY")
     else None
 )
-default_containers_install_command = os.environ.get(
-    "PROJECT_DOCKER_COMPOSE_CONTAINERS_INSTALL_COMMAND"
-).split(",") if os.environ.get("PROJECT_DOCKER_COMPOSE_CONTAINERS_INSTALL_COMMAND") else None
+default_containers_install_command = (
+    os.environ.get("PROJECT_DOCKER_COMPOSE_CONTAINERS_INSTALL_COMMAND").split(",")
+    if os.environ.get("PROJECT_DOCKER_COMPOSE_CONTAINERS_INSTALL_COMMAND")
+    else None
+)
 default_library_dir = os.environ.get("PROJECT_LIBRARY_DIR")
 
 jira_url = os.environ.get("JIRA_URL")
@@ -113,10 +115,10 @@ def set_domain(domain):
     "--compose-file",
     "-f",
     help="Compose file",
-    type=str,
     required=True,
     multiple=True,
     default=default_compose_files,
+    type=click.Path(exists=True),
 )
 @click.option(
     "--container", "-c", help="Container name", type=str, required=False, multiple=True
@@ -162,10 +164,10 @@ def build(project_name, compose_file, container, container_dir_to_copy, env):
     "--compose-file",
     "-f",
     help="Compose file",
-    type=str,
     required=True,
     multiple=True,
     default=default_compose_files,
+    type=click.Path(exists=True),
 )
 @click.option(
     "--container",
@@ -210,10 +212,10 @@ def run(ctx, project_name, compose_file, container, command, env):
     "--compose-file",
     "-c",
     help="Compose file",
-    type=str,
     required=True,
     multiple=True,
     default=default_compose_files,
+    type=click.Path(exists=True),
 )
 @click.option(
     "--container",
@@ -255,10 +257,10 @@ def exec_command(ctx, project_name, compose_file, container, command, env):
     "--compose-file",
     "-f",
     help="Compose file",
-    type=str,
     required=True,
     multiple=True,
     default=default_compose_files,
+    type=click.Path(exists=True),
 )
 @click.option(
     "--container",
@@ -306,10 +308,10 @@ def up(project_name, compose_file, container, all_containers, env):
     "--compose-file",
     "-f",
     help="Compose file",
-    type=str,
     required=True,
     multiple=True,
     default=default_compose_files,
+    type=click.Path(exists=True),
 )
 @click.option(
     "--container", "-c", help="Container name", type=str, required=False, multiple=True
@@ -334,10 +336,10 @@ def stop(project_name, compose_file, container):
     "--compose-file",
     "-f",
     help="Compose file",
-    type=str,
     required=True,
     multiple=True,
     default=default_compose_files,
+    type=click.Path(exists=True),
 )
 @click.option(
     "--var-dir",
@@ -417,16 +419,16 @@ def copy_container_dirs(project_name, container_dir_to_copy):
     "--library-source-dir",
     "-s",
     help="Library source directory",
-    type=str,
     required=True,
+    type=click.Path(exists=True),
 )
 @click.option(
     "--library-destination-dir",
     "-d",
     help="Library destination directory",
-    type=str,
     required=True,
     default=default_library_dir,
+    type=click.Path(exists=True),
 )
 def bind_library(library_source_dir, library_destination_dir):
     """

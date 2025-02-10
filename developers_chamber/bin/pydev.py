@@ -57,7 +57,9 @@ click_completion.init()
 # Import external scripts
 for base_path in (Path.home(), Path.cwd()):
     if (base_path / ".pydev" / "scripts" / "__init__.py").exists():
-        SourceFileLoader('*', str(base_path / ".pydev" / "scripts" / "__init__.py")).load_module()
+        SourceFileLoader(
+            "*", str(base_path / ".pydev" / "scripts" / "__init__.py")
+        ).load_module()
 
 from developers_chamber.scripts.init_aliasses import *
 

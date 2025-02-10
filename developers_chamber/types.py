@@ -34,7 +34,6 @@ class VersionFileType(str, Enum):
         return self.value
 
 
-
 class TimedeltaType(ParamType):
     name = "timedelta"
 

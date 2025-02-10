@@ -31,17 +31,17 @@ def version():
     "--file",
     "-f",
     help="path to the version file",
-    type=str,
     default=default_version_files,
     required=True,
     multiple=True,
+    type=click.Path(exists=True),
 )
 @click.option(
     "--file-type",
     help="version file type",
     type=EnumType(VersionFileType),
     default=default_version_file_type,
-    required=False
+    required=False,
 )
 def bump_to_next(release_type, build_hash, file, file_type):
     """
@@ -69,9 +69,9 @@ def bump_to_next(release_type, build_hash, file, file_type):
     "--file",
     "-f",
     help="path to the version file",
-    type=str,
     default=default_version_files[0],
     required=True,
+    type=click.Path(exists=True),
 )
 def print_version(file):
     """
@@ -96,9 +96,9 @@ def print_version(file):
     "--file",
     "-f",
     help="path to the version file",
-    type=str,
     default=default_version_files[0],
     required=True,
+    type=click.Path(exists=True),
 )
 def print_next(release_type, build_hash, file):
     """
