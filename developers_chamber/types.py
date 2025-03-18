@@ -29,6 +29,7 @@ class VersionFileType(str, Enum):
     toml = "toml"
     json = "json"
     npm = "npm"
+    xml = "xml"
 
     def __str__(self):
         return self.value

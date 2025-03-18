@@ -2,6 +2,7 @@ import json
 import os
 import re
 
+import xml.etree.ElementTree as ET
 import toml
 from click import BadParameter
 
@@ -17,7 +18,6 @@ class InvalidVersion(Exception):
 
 
 class Version:
-
     VERSION_RE = re.compile(r"^{}$".format(VERSION_PATTERN))
 
     def __init__(self, version_str):
@@ -102,6 +102,14 @@ def _write_version_to_file(file, new_version, file_type=None):
                 lf.truncate()
                 json.dump(file_data, f, indent=2)
                 json.dump(lock_file_data, lf, indent=2)
+        elif file_type == VersionFileType.xml:
+            ET.register_namespace("", "http://maven.apache.org/POM/4.0.0")
+            tree = ET.parse(f)
+            root = tree.getroot()
+            properties = root.find("{http://maven.apache.org/POM/4.0.0}properties")
+            r = properties.find("{http://maven.apache.org/POM/4.0.0}revision")
+            r.text = str(new_version)
+            tree.write(full_file_path, xml_declaration=True, encoding="utf-8", method="xml")
         else:
             raise BadParameter(f'Invalid version type "{file_type}"')
 
@@ -115,6 +123,8 @@ def get_version(file="version.json"):
                 return Version(toml.load(f)["project"]["version"])
             elif file_extension == ".json":
                 return Version(json.load(f)["version"])
+            elif file_extension == ".xml":
+                return Version(read_version_from_pom())
             else:
                 raise BadParameter(f'Invalid file format "{full_file_path}"')
     except FileNotFoundError:
@@ -127,7 +137,7 @@ def get_next_version(release_type, build_hash=None, file="version.json"):
     version = get_version(file)
     if release_type == ReleaseType.build:
         if not build_hash:
-            raise BadParameter("Build hash i required for realease type build")
+            raise BadParameter("Build hash is required for realease type build")
         return version.replace(build=build_hash[:5])
     elif release_type == ReleaseType.patch:
         return version.replace(build=None, patch=version.patch + 1)
@@ -150,7 +160,7 @@ def bump_version(version, files=["version.json"], file_type=None):
 
 
 def bump_to_next_version(
-    release_type, build_hash=None, files=["version.json"], file_type=None
+        release_type, build_hash=None, files=["version.json"], file_type=None
 ):
     """Bump version to the next version according to previous version, release type and build hash"""
 
@@ -159,3 +169,18 @@ def bump_to_next_version(
 
     next_version = get_next_version(release_type, build_hash, files[0])
     return bump_version(next_version, files, file_type)
+
+
+def read_version_from_pom(file="pom.xml"):
+    full_file_path = os.path.join(os.getcwd(), file)
+    if not os.path.isfile(full_file_path):
+        raise BadParameter("File {} was not found".format(full_file_path))
+
+    try:
+        tree = ET.parse(full_file_path)
+        root = tree.getroot()
+        properties = root.find("{http://maven.apache.org/POM/4.0.0}properties")
+        r = properties.find("{http://maven.apache.org/POM/4.0.0}revision")
+        return r.text
+    except KeyError:
+        raise BadParameter("Could not find revision in pom.xml")
