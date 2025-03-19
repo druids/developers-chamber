@@ -106,9 +106,8 @@ def _write_version_to_file(file, new_version, file_type=None):
             ET.register_namespace("", "http://maven.apache.org/POM/4.0.0")
             tree = ET.parse(f)
             root = tree.getroot()
-            properties = root.find("{http://maven.apache.org/POM/4.0.0}properties")
-            r = properties.find("{http://maven.apache.org/POM/4.0.0}revision")
-            r.text = str(new_version)
+            version = root.find("{http://maven.apache.org/POM/4.0.0}version")
+            version.text = str(new_version)
             tree.write(full_file_path, xml_declaration=True, encoding="utf-8", method="xml")
         else:
             raise BadParameter(f'Invalid version type "{file_type}"')
@@ -179,8 +178,7 @@ def read_version_from_pom(file="pom.xml"):
     try:
         tree = ET.parse(full_file_path)
         root = tree.getroot()
-        properties = root.find("{http://maven.apache.org/POM/4.0.0}properties")
-        r = properties.find("{http://maven.apache.org/POM/4.0.0}revision")
-        return r.text
+        version = root.find("{http://maven.apache.org/POM/4.0.0}version")
+        return version.text
     except KeyError:
         raise BadParameter("Could not find revision in pom.xml")
