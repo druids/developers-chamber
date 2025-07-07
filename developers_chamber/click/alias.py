@@ -99,6 +99,11 @@ class AliasCommand(click.Command):
                         click_command.format_options(ctx, formatter)
                         formatter.write_paragraph()
 
+    def shell_complete(self, ctx, param):
+        from click.shell_completion import CompletionItem
+
+        return [CompletionItem(param, type="file")]
+
     def invoke(self, ctx):
         from developers_chamber.scripts import cli
 
