@@ -23,7 +23,7 @@ from developers_chamber.git_utils import (
 )
 from developers_chamber.scripts import cli
 from developers_chamber.types import EnumType, ReleaseType, VersionFileType
-from developers_chamber.version_utils import get_next_version, get_version
+from developers_chamber.version_utils import get_next_version, get_version, get_version_files
 
 from .version import default_version_files, default_version_file_type
 
@@ -201,11 +201,21 @@ def bump_version_from_release_tag(file):
     type=str,
     default=default_remote_name,
 )
-def commit_version(file, remote_name):
+@click.option(
+    "--file-type",
+    help="version file type",
+    type=EnumType(VersionFileType),
+    default=default_version_file_type,
+    required=False,
+)
+def commit_version(file, remote_name, file_type):
     """
     Commit version files and add git tag to the commit.
     """
-    commit_version_func(get_version(file[0]), file, remote_name)
+    commit_version_func(
+        get_version(file[0]), [f for version_file in file for f in get_version_files(version_file, file_type)],
+        remote_name
+    )
     click.echo("Version commit change was successfully created")
 
 
