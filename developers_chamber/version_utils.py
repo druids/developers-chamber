@@ -113,6 +113,16 @@ def _write_version_to_file(file, new_version, file_type=None):
             raise BadParameter(f'Invalid version type "{file_type}"')
 
 
+def get_version_files(file, file_type=None):
+    version_files = [file]
+    if file_type == VersionFileType.npm:
+        lock_file = f"{file.rsplit('.', 1)[0]}-lock.{file.rsplit('.', 1)[1]}"
+        full_lock_file_path = os.path.join(os.getcwd(), lock_file)
+        if os.path.isfile(full_lock_file_path):
+            version_files.append(lock_file)
+    return version_files
+
+
 def get_version(file="version.json"):
     full_file_path = os.path.join(os.getcwd(), file)
     filename, file_extension = os.path.splitext(full_file_path)
