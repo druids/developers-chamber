@@ -116,7 +116,7 @@ if (
                     time_spend=timedelta(seconds=stopped_timer["duration"]),
                     comment=_get_timer_comment(stopped_timer),
                 )
-                return "Timner was stopped and time was logged"
+                return "Timer was stopped and time was logged"
             else:
                 ClickException("Invalid running task description")
         else:
@@ -261,7 +261,7 @@ def compose_run(project_name, compose_files, containers, command, env=None):
         _call_compose_command(
             project_name,
             compose_files,
-            ["run", "--use-aliases"],
+            ["run", "--use-aliases", "--rm"],
             [container],
             command,
             env=env,
