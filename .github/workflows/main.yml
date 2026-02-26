@@ -8,20 +8,19 @@ jobs:
     name: Build and publish
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v4
     - name: Set up Python
       if: startsWith(github.event.ref, 'refs/tags')
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v5
       with:
         python-version: 3.11
-    - name: Replace version
-      if: startsWith(github.event.ref, 'refs/tags')
-      run: sed -i 's/__version__/'"${GITHUB_REF:10}"'/' setup.py
-    - name: Build package dist
-      if: startsWith(github.event.ref, 'refs/tags')
-      run: python setup.py sdist
+    - name: Build dists
+      run: |
+        python -m pip install -U pip build twine
+        python -m build
+        ls -lah dist
+        twine check dist/*
     - name: Publish distribution to PyPI
-      if: startsWith(github.event.ref, 'refs/tags')
-      uses: pypa/gh-action-pypi-publish@v1.0.0a0
+      uses: pypa/gh-action-pypi-publish@release/v1
       with:
         password: ${{ secrets.pypi_password }}
