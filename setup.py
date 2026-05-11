@@ -20,6 +20,7 @@ setup(
         "coloredlogs==10.0",
         "click-completion==0.5.2",
         "toml>=0.10.2",
+        "PyYAML>=6.0.3"
     ],
     extras_require={
         "slack": [
