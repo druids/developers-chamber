@@ -12,7 +12,7 @@ from developers_chamber.utils import INSTALLED_MODULES
 
 for config_path in (Path.home(), Path.cwd()):
     if (config_path / ".pydev").exists() and (config_path / ".pydev").is_dir():
-        for file in (config_path / ".pydev").iterdir():
+        for file in sorted((config_path / ".pydev").iterdir()):
             if (
                 file.is_file()
                 and file.suffix == ".conf"
@@ -22,6 +22,8 @@ for config_path in (Path.home(), Path.cwd()):
 
 
 from developers_chamber.scripts import cli
+
+from developers_chamber.scripts import bind
 
 if "bitbucket" in INSTALLED_MODULES:
     from developers_chamber.scripts.bitbucket import *
