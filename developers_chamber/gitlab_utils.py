@@ -67,7 +67,7 @@ def run_job(url, token, project, ref, variables):
             "variables": [
                 {
                     "key": key,
-                    "secret_value": value,
+                    "value": value,
                     "variable_type": "env_var",
                 }
                 for key, value in variables.items()
