@@ -1,3 +1,4 @@
+import os
 import re
 
 import git
@@ -11,8 +12,14 @@ DEPLOYMENT_COMMIT_PATTERN = r'^Deployment of "(?P<branch_name>.+)"$'
 VERSION_PATTERN = r"^(?P<version>[0-9]+\.[0-9]+\.[0-9]+)$"
 
 
+def _repo():
+    # search_parent_directories lets pydev run from a subdirectory of a monorepo
+    # (e.g. CI WORKDIR=packages/...), mirroring how the git CLI locates the repo root.
+    return git.Repo(".", search_parent_directories=True)
+
+
 def create_release_branch(version, release_type, remote_name=None, branch_name=None):
-    repo = git.Repo(".")
+    repo = _repo()
     g = repo.git
 
     if branch_name:
@@ -34,7 +41,7 @@ def create_release_branch(version, release_type, remote_name=None, branch_name=N
 def create_release(
     version_file, release_type, remote_name=None, branch_name=None, file_type=None
 ):
-    repo = git.Repo(".")
+    repo = _repo()
     g = repo.git
 
     if branch_name:
@@ -43,9 +50,14 @@ def create_release(
     bump_to_next_version(release_type, files=[version_file], file_type=file_type)
     version = get_version(version_file)
 
-    g.add(version_file)
+    # Add files by absolute path: g.add runs with cwd == git root, but the version
+    # file may live in a subdirectory (monorepo WORKDIR) from which pydev was invoked.
+    g.add(os.path.abspath(version_file))
     if file_type == VersionFileType.npm:
-        g.add(f"{version_file.rsplit('.', 1)[0]}-lock.{version_file.rsplit('.', 1)[1]}")
+        lock_file = (
+            f"{version_file.rsplit('.', 1)[0]}-lock.{version_file.rsplit('.', 1)[1]}"
+        )
+        g.add(os.path.abspath(lock_file))
 
     if remote_name and branch_name:
         g.pull(remote_name, branch_name)
@@ -75,7 +87,7 @@ def create_release(
 
 def create_branch(source_branch_name, new_branch_name):
     try:
-        repo = git.Repo(".")
+        repo = _repo()
         g = repo.git
 
         g.checkout(source_branch_name, b=new_branch_name)
@@ -85,7 +97,7 @@ def create_branch(source_branch_name, new_branch_name):
 
 
 def create_deployment_branch(environment, remote_name=None, is_hot=False):
-    repo = git.Repo(".")
+    repo = _repo()
     g = repo.git
     source_branch_name = str(repo.head.reference)
     deployment_branch_name = "deploy-{}".format(environment)
@@ -119,7 +131,7 @@ def create_deployment_branch(environment, remote_name=None, is_hot=False):
 
 
 def checkout_to_release_branch(remote_name=None):
-    repo = git.Repo(".")
+    repo = _repo()
     g = repo.git
     match = re.match(DEPLOYMENT_COMMIT_PATTERN, repo.head.commit.message)
     if not match:
@@ -133,7 +145,7 @@ def checkout_to_release_branch(remote_name=None):
 
 
 def bump_version_from_release_tag(files=["version.json"]):
-    repo = git.Repo(".")
+    repo = _repo()
 
     g = repo.git
 
@@ -147,11 +159,13 @@ def bump_version_from_release_tag(files=["version.json"]):
 
 
 def commit_version(version, files=["version.json"], remote_name=None):
-    repo = git.Repo(".")
+    repo = _repo()
     g = repo.git
 
     try:
-        g.add(files)
+        # Add files by absolute path: g.add runs with cwd == git root, but the version
+        # files may live in a subdirectory (monorepo WORKDIR) from which pydev was invoked.
+        g.add([os.path.abspath(f) for f in files])
         g.commit(m=f"Bump version to '{version}'")
     except GitCommandError as ex:
         raise UsageError(
@@ -175,7 +189,7 @@ def commit_version(version, files=["version.json"], remote_name=None):
 
 
 def merge_release_branch(to_branch_name=None, remote_name=None):
-    repo = git.Repo(".")
+    repo = _repo()
     g = repo.git
     source_branch_name = str(repo.head.reference)
 
@@ -197,13 +211,13 @@ def merge_release_branch(to_branch_name=None, remote_name=None):
 
 
 def get_current_branch_name():
-    repo = git.Repo(".")
+    repo = _repo()
     return str(repo.head.reference)
 
 
 def get_commit_hash(branch_name):
     try:
-        repo = git.Repo(".")
+        repo = _repo()
         return repo.heads[branch_name].object.hexsha
     except IndexError:
         raise UsageError("Invalid branch name: {}".format(branch_name))
@@ -220,7 +234,7 @@ def get_current_issue_key():
 
 def get_remote_url():
     try:
-        repo = git.Repo(".")
+        repo = _repo()
         url = repo.remotes.origin.url
         if url.startswith("git@"):
             return f"https://{url.split('@')[1].split(':', 1)[0]}"
@@ -232,11 +246,11 @@ def get_remote_url():
 
 def get_remote_path():
     try:
-        repo = git.Repo(".")
+        repo = _repo()
         url = repo.remotes.origin.url
         if url.startswith("git@"):
-            return url.split('@')[1].split(':', 1)[1].split('.')[0]
+            return url.split("@")[1].split(":", 1)[1].split(".")[0]
         else:
-            return url.split('@')[1].split('/', 1)[1].split('.')[0]
+            return url.split("@")[1].split("/", 1)[1].split(".")[0]
     except InvalidGitRepositoryError:
         raise UsageError("Git repository not found in the current directory")
