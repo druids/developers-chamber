@@ -138,6 +138,12 @@ def create_release_merge_request(
     required=False,
     default=DEFAULT_PROJECT,
 )
+@click.option(
+    "--remove-source-branch",
+    help="Remove the source branch once the merge request is merged",
+    is_flag=True,
+    default=False,
+)
 def create_merge_request(
     url,
     token,
@@ -147,6 +153,7 @@ def create_merge_request(
     project,
     automerge,
     assignee_id=None,
+    remove_source_branch=False,
 ):
     """
     Create a new merge request in a GitLab project. It is often used after the project release.
@@ -166,6 +173,7 @@ def create_merge_request(
         project=project,
         assignee_id=assignee_id,
         automerge=automerge,
+        remove_source_branch=remove_source_branch,
     )
 
     click.echo(f"Merge request was successfully created: {mr_url}")
