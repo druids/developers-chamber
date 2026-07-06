@@ -16,6 +16,7 @@ def create_merge_request(
     project,
     assignee_id=None,
     automerge=False,
+    remove_source_branch=False,
 ):
     response = requests.post(
         f"{url}/api/v4/projects/{quote_plus(project)}/merge_requests",
@@ -28,6 +29,7 @@ def create_merge_request(
             "title": title,
             "description": description,
             "assignee_id": assignee_id,
+            "remove_source_branch": remove_source_branch,
         },
     )
 
