@@ -73,14 +73,21 @@ def bump_to_next(release_type, build_hash, file, file_type):
     required=True,
     type=click.Path(exists=True),
 )
-def print_version(file):
+@click.option(
+    "--file-type",
+    help="version file type",
+    type=EnumType(VersionFileType),
+    default=default_version_file_type,
+    required=False,
+)
+def print_version(file, file_type):
     """
     Return current project version according to version JSON file
     \b
     * version file - contains current version in json format,
                      example (version is "1.30.0"): {"version": "1.30.0"}
     """
-    click.echo(get_version(file))
+    click.echo(get_version(file, file_type))
 
 
 @version.command()
@@ -100,7 +107,14 @@ def print_version(file):
     required=True,
     type=click.Path(exists=True),
 )
-def print_next(release_type, build_hash, file):
+@click.option(
+    "--file-type",
+    help="version file type",
+    type=EnumType(VersionFileType),
+    default=default_version_file_type,
+    required=False,
+)
+def print_next(release_type, build_hash, file, file_type):
     """
     Return next version according to input release type, build hash and version JSON file
 
@@ -117,4 +131,4 @@ def print_next(release_type, build_hash, file):
         * major - current version is "1.30.2", next version will be "2.0.0"
     * build-hash - only required for release type "build"
     """
-    click.echo(get_next_version(release_type, build_hash, file))
+    click.echo(get_next_version(release_type, build_hash, file, file_type))

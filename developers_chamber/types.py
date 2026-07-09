@@ -30,6 +30,7 @@ class VersionFileType(str, Enum):
     json = "json"
     npm = "npm"
     xml = "xml"
+    text = "text"
 
     def __str__(self):
         return self.value

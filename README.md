@@ -220,6 +220,7 @@ Helpers for automatic update version in the version file.
 
 #### Configuration
 * `VERSION_FILES` - path to the files containing information about project version. There can be more paths which are split with character `,`.
+* `VERSION_FILE_TYPE` - explicit version file type (`toml`, `json`, `npm`, `xml`, `text`). When not set, the type is detected from the file extension; a file without an extension (e.g. a Ruby-style plain text `VERSION` file that contains only the version number) defaults to `text`. Can also be passed with the `--file-type` option.
 
 ### Sh
 

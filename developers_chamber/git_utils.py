@@ -48,7 +48,7 @@ def create_release(
         g.checkout(branch_name)
 
     bump_to_next_version(release_type, files=[version_file], file_type=file_type)
-    version = get_version(version_file)
+    version = get_version(version_file, file_type)
 
     # Add files by absolute path: g.add runs with cwd == git root, but the version
     # file may live in a subdirectory (monorepo WORKDIR) from which pydev was invoked.
