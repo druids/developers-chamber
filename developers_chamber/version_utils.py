@@ -63,6 +63,15 @@ class TomlNewlineArraySeparatorEncoder(toml.TomlEncoder):
         return retval
 
 
+def _resolve_file_type(file_type, file_extension):
+    """Prefer the explicit file type, otherwise detect it from the extension.
+
+    Files without an extension (e.g. a Ruby-style plain text VERSION file) hold
+    only the bare version number, so they default to the text type.
+    """
+    return file_type or file_extension[1:] or VersionFileType.text
+
+
 def _write_version_to_file(file, new_version, file_type=None):
     """Rewrite version number in the file"""
     full_file_path = os.path.join(os.getcwd(), file)
@@ -70,7 +79,7 @@ def _write_version_to_file(file, new_version, file_type=None):
     if not os.path.isfile(full_file_path):
         raise BadParameter("File {} was not found".format(full_file_path))
 
-    file_type = file_type or file_extension[1:]
+    file_type = _resolve_file_type(file_type, file_extension)
 
     with open(full_file_path, "r+") as f:
         if file_type == VersionFileType.toml:
@@ -108,7 +117,13 @@ def _write_version_to_file(file, new_version, file_type=None):
             root = tree.getroot()
             version = root.find("{http://maven.apache.org/POM/4.0.0}version")
             version.text = str(new_version)
-            tree.write(full_file_path, xml_declaration=True, encoding="utf-8", method="xml")
+            tree.write(
+                full_file_path, xml_declaration=True, encoding="utf-8", method="xml"
+            )
+        elif file_type == VersionFileType.text:
+            f.seek(0)
+            f.truncate()
+            f.write(str(new_version))
         else:
             raise BadParameter(f'Invalid version type "{file_type}"')
 
@@ -123,27 +138,34 @@ def get_version_files(file, file_type=None):
     return version_files
 
 
-def get_version(file="version.json"):
+def get_version(file="version.json", file_type=None):
     full_file_path = os.path.join(os.getcwd(), file)
     filename, file_extension = os.path.splitext(full_file_path)
+
+    file_type = _resolve_file_type(file_type, file_extension)
+
     try:
         with open(full_file_path) as f:
-            if file_extension == ".toml":
+            if file_type == VersionFileType.toml:
                 return Version(toml.load(f)["project"]["version"])
-            elif file_extension == ".json":
+            elif file_type == VersionFileType.json:
                 return Version(json.load(f)["version"])
-            elif file_extension == ".xml":
+            elif file_type == VersionFileType.xml:
                 return Version(read_version_from_pom())
+            elif file_type == VersionFileType.text:
+                return Version(f.read().strip())
             else:
                 raise BadParameter(f'Invalid file format "{full_file_path}"')
     except FileNotFoundError:
         raise BadParameter("File {} was not found".format(full_file_path))
 
 
-def get_next_version(release_type, build_hash=None, file="version.json"):
+def get_next_version(
+    release_type, build_hash=None, file="version.json", file_type=None
+):
     """Return next version according to previous version, release type and build hash"""
 
-    version = get_version(file)
+    version = get_version(file, file_type)
     if release_type == ReleaseType.build:
         if not build_hash:
             raise BadParameter("Build hash is required for realease type build")
@@ -169,14 +191,14 @@ def bump_version(version, files=["version.json"], file_type=None):
 
 
 def bump_to_next_version(
-        release_type, build_hash=None, files=["version.json"], file_type=None
+    release_type, build_hash=None, files=["version.json"], file_type=None
 ):
     """Bump version to the next version according to previous version, release type and build hash"""
 
     if len("files") == 0:
         raise BadParameter("Given no files to release a version")
 
-    next_version = get_next_version(release_type, build_hash, files[0])
+    next_version = get_next_version(release_type, build_hash, files[0], file_type)
     return bump_version(next_version, files, file_type)
 
 
