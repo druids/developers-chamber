@@ -81,7 +81,7 @@ def _write_version_to_file(file, new_version, file_type=None):
 
     file_type = _resolve_file_type(file_type, file_extension)
 
-    with open(full_file_path, "r+") as f:
+    with open(full_file_path, "r+", encoding="utf-8") as f:
         if file_type == VersionFileType.toml:
             data = toml.load(f)
             data["project"]["version"] = new_version
@@ -93,13 +93,13 @@ def _write_version_to_file(file, new_version, file_type=None):
             data["version"] = str(new_version)
             f.seek(0)
             f.truncate()
-            json.dump(data, f, indent=2)
+            json.dump(data, f, indent=2, ensure_ascii=False)
         elif file_type == VersionFileType.npm:
             lock_file = f"{file.rsplit('.', 1)[0]}-lock.{file.rsplit('.', 1)[1]}"
             full_lock_file_path = os.path.join(os.getcwd(), lock_file)
             if not os.path.isfile(full_lock_file_path):
                 raise BadParameter(f"Lock file {full_lock_file_path} was not found")
-            with open(full_lock_file_path, "r+") as lf:
+            with open(full_lock_file_path, "r+", encoding="utf-8") as lf:
                 file_data = json.load(f)
                 file_data["version"] = str(new_version)
                 lock_file_data = json.load(lf)
@@ -109,8 +109,8 @@ def _write_version_to_file(file, new_version, file_type=None):
                 f.truncate()
                 lf.seek(0)
                 lf.truncate()
-                json.dump(file_data, f, indent=2)
-                json.dump(lock_file_data, lf, indent=2)
+                json.dump(file_data, f, indent=2, ensure_ascii=False)
+                json.dump(lock_file_data, lf, indent=2, ensure_ascii=False)
         elif file_type == VersionFileType.xml:
             ET.register_namespace("", "http://maven.apache.org/POM/4.0.0")
             tree = ET.parse(f)
@@ -145,10 +145,10 @@ def get_version(file="version.json", file_type=None):
     file_type = _resolve_file_type(file_type, file_extension)
 
     try:
-        with open(full_file_path) as f:
+        with open(full_file_path, encoding="utf-8") as f:
             if file_type == VersionFileType.toml:
                 return Version(toml.load(f)["project"]["version"])
-            elif file_type == VersionFileType.json:
+            elif file_type in (VersionFileType.json, VersionFileType.npm):
                 return Version(json.load(f)["version"])
             elif file_type == VersionFileType.xml:
                 return Version(read_version_from_pom())
