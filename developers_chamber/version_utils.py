@@ -2,11 +2,15 @@ import json
 import os
 import re
 
+import xml.etree.ElementTree as ET
+import toml
 from click import BadParameter
 
-from .types import ReleaseType
+from .types import ReleaseType, VersionFileType
 
-VERSION_PATTERN = r'(?P<major>[0-9]+)\.(?P<minor>[0-9]+)(\.(?P<patch>[0-9]+))?(-(?P<build>\w+))?'
+VERSION_PATTERN = (
+    r"(?P<major>[0-9]+)\.(?P<minor>[0-9]+)(\.(?P<patch>[0-9]+))?(-(?P<build>\w+))?"
+)
 
 
 class InvalidVersion(Exception):
@@ -14,8 +18,7 @@ class InvalidVersion(Exception):
 
 
 class Version:
-
-    VERSION_RE = re.compile(r'^{}$'.format(VERSION_PATTERN))
+    VERSION_RE = re.compile(r"^{}$".format(VERSION_PATTERN))
 
     def __init__(self, version_str):
         self._parse(version_str)
@@ -25,60 +28,147 @@ class Version:
         if not match:
             raise InvalidVersion
 
-        self.major = int(match.group('major'))
-        self.minor = int(match.group('minor'))
-        self.patch = int(match.group('patch')) if match.group('patch') else 0
-        self.build = match.group('build')
+        self.major = int(match.group("major"))
+        self.minor = int(match.group("minor"))
+        self.patch = int(match.group("patch")) if match.group("patch") else 0
+        self.build = match.group("build")
 
     def __repr__(self):
         return (
-            '{}.{}.{}-{}'.format(self.major, self.minor, self.patch, self.build) if self.build
-            else '{}.{}.{}'.format(self.major, self.minor, self.patch)
+            "{}.{}.{}-{}".format(self.major, self.minor, self.patch, self.build)
+            if self.build
+            else "{}.{}.{}".format(self.major, self.minor, self.patch)
         )
 
     def __str__(self):
         return self.__repr__()
 
     def replace(self, **kwargs):
-        assert set(kwargs.keys()) <= {'major', 'minor', 'patch', 'build'}
+        assert set(kwargs.keys()) <= {"major", "minor", "patch", "build"}
 
         for k, v in kwargs.items():
             setattr(self, k, v)
         return self
 
 
-def _write_version_to_file(file, new_version):
+class TomlNewlineArraySeparatorEncoder(toml.TomlEncoder):
+
+    def dump_list(self, v):
+        t = []
+        retval = "[\n"
+
+        for u in v:
+            retval += "    " + str(self.dump_value(u)) + ",\n"
+        retval += "]"
+        return retval
+
+
+def _resolve_file_type(file_type, file_extension):
+    """Prefer the explicit file type, otherwise detect it from the extension.
+
+    Files without an extension (e.g. a Ruby-style plain text VERSION file) hold
+    only the bare version number, so they default to the text type.
+    """
+    return file_type or file_extension[1:] or VersionFileType.text
+
+
+def _write_version_to_file(file, new_version, file_type=None):
     """Rewrite version number in the file"""
-
-    VERSION_FILE_RE = re.compile(r'"version": "{}"'.format(VERSION_PATTERN))
-
-    substitution = '"version": "{}"'.format(new_version)
     full_file_path = os.path.join(os.getcwd(), file)
+    filename, file_extension = os.path.splitext(full_file_path)
     if not os.path.isfile(full_file_path):
-        raise BadParameter('File {} was not found'.format(full_file_path))
+        raise BadParameter("File {} was not found".format(full_file_path))
 
-    with open(file, 'r+') as f:
-        replaced = VERSION_FILE_RE.sub(substitution, f.read())
-        f.seek(0)
-        f.write(replaced)
+    file_type = _resolve_file_type(file_type, file_extension)
+
+    with open(full_file_path, "r+", encoding="utf-8") as f:
+        if file_type == VersionFileType.toml:
+            data = toml.load(f)
+            data["project"]["version"] = new_version
+            f.seek(0)
+            f.truncate()
+            toml.dump(data, f, encoder=TomlNewlineArraySeparatorEncoder())
+        elif file_type == VersionFileType.json:
+            data = json.load(f)
+            data["version"] = str(new_version)
+            f.seek(0)
+            f.truncate()
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        elif file_type == VersionFileType.npm:
+            lock_file = f"{file.rsplit('.', 1)[0]}-lock.{file.rsplit('.', 1)[1]}"
+            full_lock_file_path = os.path.join(os.getcwd(), lock_file)
+            if not os.path.isfile(full_lock_file_path):
+                raise BadParameter(f"Lock file {full_lock_file_path} was not found")
+            with open(full_lock_file_path, "r+", encoding="utf-8") as lf:
+                file_data = json.load(f)
+                file_data["version"] = str(new_version)
+                lock_file_data = json.load(lf)
+                lock_file_data["version"] = str(new_version)
+                lock_file_data["packages"][""]["version"] = str(new_version)
+                f.seek(0)
+                f.truncate()
+                lf.seek(0)
+                lf.truncate()
+                json.dump(file_data, f, indent=2, ensure_ascii=False)
+                json.dump(lock_file_data, lf, indent=2, ensure_ascii=False)
+        elif file_type == VersionFileType.xml:
+            ET.register_namespace("", "http://maven.apache.org/POM/4.0.0")
+            tree = ET.parse(f)
+            root = tree.getroot()
+            version = root.find("{http://maven.apache.org/POM/4.0.0}version")
+            version.text = str(new_version)
+            tree.write(
+                full_file_path, xml_declaration=True, encoding="utf-8", method="xml"
+            )
+        elif file_type == VersionFileType.text:
+            f.seek(0)
+            f.truncate()
+            f.write(str(new_version))
+        else:
+            raise BadParameter(f'Invalid version type "{file_type}"')
 
 
-def get_version(file='version.json'):
+def get_version_files(file, file_type=None):
+    version_files = [file]
+    if file_type == VersionFileType.npm:
+        lock_file = f"{file.rsplit('.', 1)[0]}-lock.{file.rsplit('.', 1)[1]}"
+        full_lock_file_path = os.path.join(os.getcwd(), lock_file)
+        if os.path.isfile(full_lock_file_path):
+            version_files.append(lock_file)
+    return version_files
+
+
+def get_version(file="version.json", file_type=None):
     full_file_path = os.path.join(os.getcwd(), file)
+    filename, file_extension = os.path.splitext(full_file_path)
+
+    file_type = _resolve_file_type(file_type, file_extension)
+
     try:
-        with open(full_file_path) as f:
-            return Version(json.load(f)['version'])
+        with open(full_file_path, encoding="utf-8") as f:
+            if file_type == VersionFileType.toml:
+                return Version(toml.load(f)["project"]["version"])
+            elif file_type in (VersionFileType.json, VersionFileType.npm):
+                return Version(json.load(f)["version"])
+            elif file_type == VersionFileType.xml:
+                return Version(read_version_from_pom())
+            elif file_type == VersionFileType.text:
+                return Version(f.read().strip())
+            else:
+                raise BadParameter(f'Invalid file format "{full_file_path}"')
     except FileNotFoundError:
-        raise BadParameter('File {} was not found'.format(full_file_path))
+        raise BadParameter("File {} was not found".format(full_file_path))
 
 
-def get_next_version(release_type, build_hash=None, file='version.json'):
+def get_next_version(
+    release_type, build_hash=None, file="version.json", file_type=None
+):
     """Return next version according to previous version, release type and build hash"""
 
-    version = get_version(file)
+    version = get_version(file, file_type)
     if release_type == ReleaseType.build:
         if not build_hash:
-            raise BadParameter('Build hash i required for realease type build')
+            raise BadParameter("Build hash is required for realease type build")
         return version.replace(build=build_hash[:5])
     elif release_type == ReleaseType.patch:
         return version.replace(build=None, patch=version.patch + 1)
@@ -88,23 +178,39 @@ def get_next_version(release_type, build_hash=None, file='version.json'):
         return version.replace(build=None, patch=0, minor=0, major=version.major + 1)
 
 
-def bump_version(version, files=['version.json']):
+def bump_version(version, files=["version.json"], file_type=None):
     """Bump version in the input files"""
 
-    if len('files') == 0:
-        raise BadParameter('Given no files to release a version')
+    if len("files") == 0:
+        raise BadParameter("Given no files to release a version")
 
     for file in files:
-        _write_version_to_file(file, version)
+        _write_version_to_file(file, version, file_type)
 
-    return 'Bumped version to {}'.format(version)
+    return "Bumped version to {}".format(version)
 
 
-def bump_to_next_version(release_type, build_hash=None, files=['version.json']):
+def bump_to_next_version(
+    release_type, build_hash=None, files=["version.json"], file_type=None
+):
     """Bump version to the next version according to previous version, release type and build hash"""
 
-    if len('files') == 0:
-        raise BadParameter('Given no files to release a version')
+    if len("files") == 0:
+        raise BadParameter("Given no files to release a version")
 
-    next_version = get_next_version(release_type, build_hash, files[0])
-    return bump_version(next_version, files)
+    next_version = get_next_version(release_type, build_hash, files[0], file_type)
+    return bump_version(next_version, files, file_type)
+
+
+def read_version_from_pom(file="pom.xml"):
+    full_file_path = os.path.join(os.getcwd(), file)
+    if not os.path.isfile(full_file_path):
+        raise BadParameter("File {} was not found".format(full_file_path))
+
+    try:
+        tree = ET.parse(full_file_path)
+        root = tree.getroot()
+        version = root.find("{http://maven.apache.org/POM/4.0.0}version")
+        return version.text
+    except KeyError:
+        raise BadParameter("Could not find revision in pom.xml")

@@ -11,12 +11,15 @@ class RecentMigrationsSlackUploader(RepoMixin):
         self.client = WebClient(token=token)
         self.channel = channel
         self.target_branch = target_branch
-        self.migrations_pattern = r'{}'.format(migrations_pattern)
+        self.migrations_pattern = r"{}".format(migrations_pattern)
         self.active_branch = self._get_active_branch_name()
 
     def _get_migration_files(self):
-        return [diff.b_path for diff in self._get_diffs(target_branch=self.target_branch)
-                if diff.new_file and re.search(self.migrations_pattern, diff.b_path)]
+        return [
+            diff.b_path
+            for diff in self._get_diffs(target_branch=self.target_branch)
+            if diff.new_file and re.search(self.migrations_pattern, diff.b_path)
+        ]
 
     def send_message(self, msg):
         self.client.chat_postMessage(channel=self.channel, text=msg)
@@ -28,18 +31,22 @@ class RecentMigrationsSlackUploader(RepoMixin):
         migration_files = self._get_migration_files()
         if migration_files:
             self.send_message(
-                f'Uploading *new migration files* ({len(migration_files)}) between'
-                f' `{self.active_branch}` and `{self.target_branch}` git branches :arrow_down:'
+                f"Uploading *new migration files* ({len(migration_files)}) between"
+                f" `{self.active_branch}` and `{self.target_branch}` git branches :arrow_down:"
             )
             for file in migration_files:
                 self.upload_file(file=file)
-            self.send_message('Done :white_check_mark:')
+            self.send_message("Done :white_check_mark:")
         else:
-            self.send_message((
-                'Cannot find any *new migrations files* between'
-                f' `{self.active_branch}` and `{self.target_branch}` git branches :travolta:'
-            ))
+            self.send_message(
+                (
+                    "Cannot find any *new migrations files* between"
+                    f" `{self.active_branch}` and `{self.target_branch}` git branches :travolta:"
+                )
+            )
 
 
 def upload_new_migration(token, channel, target_branch, migrations_pattern):
-    RecentMigrationsSlackUploader(token, channel, target_branch, migrations_pattern).run()
+    RecentMigrationsSlackUploader(
+        token, channel, target_branch, migrations_pattern
+    ).run()

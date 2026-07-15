@@ -18,9 +18,9 @@ Docker and docker-compose is required for most of `pydev project` commands.
 
 ### Bindfs
 
-If you want to use pydev command `pydev project bind-library` you have to install `bindfs` for mounting location to the right directory. For exymple you can mount directory with library to a docker shared volume. 
+If you want to use pydev command `pydev project bind-library` you have to install `bindfs` for mounting location to the right directory. For example you can mount directory with library to a docker shared volume. 
 
-Instalation command for linux/macOS:
+Installation command for linux/macOS:
 ```bash
 apt-get install bindfs
 yum install bindfs
@@ -215,11 +215,12 @@ Helpers for automatic update version in the version file.
 
 #### Commands
 * `pydev version bump-to-next` - bump version in the JSON file (or files) and print it
-* `pydev version print-version` - return current project version according to version JSON file
+* `pydev version print` - return current project version according to version JSON file
 * `pydev version print-next` - return next version according to input release type, build hash and version JSON file
 
 #### Configuration
 * `VERSION_FILES` - path to the files containing information about project version. There can be more paths which are split with character `,`.
+* `VERSION_FILE_TYPE` - explicit version file type (`toml`, `json`, `npm`, `xml`, `text`). When not set, the type is detected from the file extension; a file without an extension (e.g. a Ruby-style plain text `VERSION` file that contains only the version number) defaults to `text`. Can also be passed with the `--file-type` option.
 
 ### Sh
 
