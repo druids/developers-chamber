@@ -6,10 +6,11 @@ import xml.etree.ElementTree as ET
 import toml
 from click import BadParameter
 
-from .types import ReleaseType, VersionFileType
+from .types import PreReleaseType, ReleaseType, VersionFileType
 
 VERSION_PATTERN = (
-    r"(?P<major>[0-9]+)\.(?P<minor>[0-9]+)(\.(?P<patch>[0-9]+))?(-(?P<build>\w+))?"
+    r"(?P<major>[0-9]+)\.(?P<minor>[0-9]+)(\.(?P<patch>[0-9]+))?"
+    r"(-(?:(?P<pre_release>alpha|beta|rc)\.(?P<pre_release_num>[0-9]+)|(?P<build>[a-zA-Z0-9]+)))?"
 )
 
 
@@ -31,20 +32,34 @@ class Version:
         self.major = int(match.group("major"))
         self.minor = int(match.group("minor"))
         self.patch = int(match.group("patch")) if match.group("patch") else 0
-        self.build = match.group("build")
+        self.pre_release = match.group("pre_release")
+        self.pre_release_num = (
+            int(match.group("pre_release_num"))
+            if match.group("pre_release_num")
+            else None
+        )
+        self.build = match.group("build") if not self.pre_release else None
 
     def __repr__(self):
-        return (
-            "{}.{}.{}-{}".format(self.major, self.minor, self.patch, self.build)
-            if self.build
-            else "{}.{}.{}".format(self.major, self.minor, self.patch)
-        )
+        base = "{}.{}.{}".format(self.major, self.minor, self.patch)
+        if self.pre_release:
+            return "{}-{}.{}".format(base, self.pre_release, self.pre_release_num)
+        if self.build:
+            return "{}-{}".format(base, self.build)
+        return base
 
     def __str__(self):
         return self.__repr__()
 
     def replace(self, **kwargs):
-        assert set(kwargs.keys()) <= {"major", "minor", "patch", "build"}
+        assert set(kwargs.keys()) <= {
+            "major",
+            "minor",
+            "patch",
+            "build",
+            "pre_release",
+            "pre_release_num",
+        }
 
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -161,27 +176,104 @@ def get_version(file="version.json", file_type=None):
 
 
 def get_next_version(
-    release_type, build_hash=None, file="version.json", file_type=None
+    release_type=None,
+    build_hash=None,
+    pre_release=None,
+    file="version.json",
+    file_type=None,
 ):
-    """Return next version according to previous version, release type and build hash"""
+    """Return next version according to previous version, release type, pre-release stage and build hash"""
 
     version = get_version(file, file_type)
+
     if release_type == ReleaseType.build:
         if not build_hash:
-            raise BadParameter("Build hash is required for realease type build")
-        return version.replace(build=build_hash[:5])
-    elif release_type == ReleaseType.patch:
-        return version.replace(build=None, patch=version.patch + 1)
+            raise BadParameter("Build hash is required for release type build")
+        return version.replace(
+            build=build_hash[:5], pre_release=None, pre_release_num=None
+        )
+
+    if release_type == ReleaseType.release:
+        return version.replace(pre_release=None, pre_release_num=None, build=None)
+
+    if pre_release is not None:
+        pre_release_str = str(pre_release)
+
+        if release_type is None and not version.pre_release:
+            raise BadParameter(
+                f"Cannot add pre-release stage to a stable version without specifying --release-type "
+                f"(patch, minor or major)."
+            )
+
+        if release_type == ReleaseType.patch:
+            raise BadParameter(
+                "Pre-release is not allowed for patch releases. Use -r patch without -p."
+            )
+
+        if (
+            release_type in {ReleaseType.minor, ReleaseType.major}
+            and pre_release_str != "alpha"
+        ):
+            raise BadParameter(
+                f"When bumping the base version, pre-release stage must be 'alpha'. "
+                f"Use -p alpha to start a new pre-release cycle."
+            )
+
+        if (
+            release_type is None
+            and version.pre_release
+            and version.pre_release != pre_release_str
+        ):
+            order = ["alpha", "beta", "rc"]
+            if order.index(pre_release_str) < order.index(version.pre_release):
+                raise BadParameter(
+                    f"Cannot downgrade pre-release stage from '{version.pre_release}' to '{pre_release_str}'. "
+                    f"Use --release-type to bump the base version first."
+                )
+
+        if release_type == ReleaseType.patch:
+            version.replace(patch=version.patch + 1)
+        elif release_type == ReleaseType.minor:
+            version.replace(minor=version.minor + 1, patch=0)
+        elif release_type == ReleaseType.major:
+            version.replace(major=version.major + 1, minor=0, patch=0)
+
+        if version.pre_release == pre_release_str and release_type is None:
+            return version.replace(
+                pre_release_num=version.pre_release_num + 1, build=None
+            )
+        else:
+            return version.replace(
+                pre_release=pre_release_str, pre_release_num=1, build=None
+            )
+
+    if release_type == ReleaseType.patch:
+        return version.replace(
+            build=None, pre_release=None, pre_release_num=None, patch=version.patch + 1
+        )
     elif release_type == ReleaseType.minor:
-        return version.replace(build=None, patch=0, minor=version.minor + 1)
+        return version.replace(
+            build=None,
+            pre_release=None,
+            pre_release_num=None,
+            patch=0,
+            minor=version.minor + 1,
+        )
     else:
-        return version.replace(build=None, patch=0, minor=0, major=version.major + 1)
+        return version.replace(
+            build=None,
+            pre_release=None,
+            pre_release_num=None,
+            patch=0,
+            minor=0,
+            major=version.major + 1,
+        )
 
 
 def bump_version(version, files=["version.json"], file_type=None):
     """Bump version in the input files"""
 
-    if len("files") == 0:
+    if len(files) == 0:
         raise BadParameter("Given no files to release a version")
 
     for file in files:
@@ -191,14 +283,20 @@ def bump_version(version, files=["version.json"], file_type=None):
 
 
 def bump_to_next_version(
-    release_type, build_hash=None, files=["version.json"], file_type=None
+    release_type=None,
+    build_hash=None,
+    pre_release=None,
+    files=["version.json"],
+    file_type=None,
 ):
-    """Bump version to the next version according to previous version, release type and build hash"""
+    """Bump version to the next version according to previous version, release type, pre-release stage and build hash"""
 
-    if len("files") == 0:
+    if len(files) == 0:
         raise BadParameter("Given no files to release a version")
 
-    next_version = get_next_version(release_type, build_hash, files[0], file_type)
+    next_version = get_next_version(
+        release_type, build_hash, pre_release, files[0], file_type
+    )
     return bump_version(next_version, files, file_type)
 
 

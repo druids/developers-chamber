@@ -19,6 +19,17 @@ class ReleaseType(Enum):
     minor = "minor"
     patch = "patch"
     build = "build"
+    release = "release"
+
+    def __str__(self):
+        return self.value
+
+
+class PreReleaseType(Enum):
+
+    alpha = "alpha"
+    beta = "beta"
+    rc = "rc"
 
     def __str__(self):
         return self.value
