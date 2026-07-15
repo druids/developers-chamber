@@ -30,18 +30,18 @@ setup(
             "boto3<2",
         ],
         "qa": [
-            "gitpython==3.1.30",
+            "gitpython==3.1.37",
             "isort==5.12.0",
             "flake8>=7.0.0",
         ],
         "bitbucket": [
-            "gitpython==3.1.30",
+            "gitpython==3.1.37",
         ],
         "gitlab": [
-            "gitpython==3.1.30",
+            "gitpython==3.1.37",
         ],
         "jira": [
-            "gitpython==3.1.30",
+            "gitpython==3.1.37",
             "jira==2.0.0",
             "unidecode==1.1.1",
         ],
@@ -49,7 +49,7 @@ setup(
             "TogglPy==0.1.2",
         ],
         "git": [
-            "gitpython==3.1.30",
+            "gitpython==3.1.37",
         ],
     },
     entry_points={
