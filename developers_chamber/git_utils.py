@@ -27,7 +27,12 @@ def create_release_branch(version, release_type, remote_name=None, branch_name=N
     if remote_name:
         g.pull(remote_name, branch_name)
 
-    if release_type in {ReleaseType.minor, ReleaseType.major, ReleaseType.patch}:
+    if release_type in {
+        ReleaseType.minor,
+        ReleaseType.major,
+        ReleaseType.patch,
+        ReleaseType.release,
+    }:
         release_branch_name = "release/v{}".format(f"{version.major}.{version.minor}")
     else:
         raise BadParameter("build is not allowed for release")
@@ -39,7 +44,12 @@ def create_release_branch(version, release_type, remote_name=None, branch_name=N
 
 
 def create_release(
-    version_file, release_type, remote_name=None, branch_name=None, file_type=None
+    version_file,
+    release_type,
+    remote_name=None,
+    branch_name=None,
+    file_type=None,
+    pre_release=None,
 ):
     repo = _repo()
     g = repo.git
@@ -47,7 +57,9 @@ def create_release(
     if branch_name:
         g.checkout(branch_name)
 
-    bump_to_next_version(release_type, files=[version_file], file_type=file_type)
+    bump_to_next_version(
+        release_type, pre_release=pre_release, files=[version_file], file_type=file_type
+    )
     version = get_version(version_file, file_type)
 
     # Add files by absolute path: g.add runs with cwd == git root, but the version
@@ -62,7 +74,12 @@ def create_release(
     if remote_name and branch_name:
         g.pull(remote_name, branch_name)
 
-    if release_type in {ReleaseType.minor, ReleaseType.major, ReleaseType.patch}:
+    if release_type in {
+        ReleaseType.minor,
+        ReleaseType.major,
+        ReleaseType.patch,
+        ReleaseType.release,
+    }:
         release_branch_name = "release/v{}".format(f"{version.major}.{version.minor}")
     else:
         raise BadParameter("build is not allowed for release")

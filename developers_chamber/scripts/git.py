@@ -22,7 +22,12 @@ from developers_chamber.git_utils import (
     merge_release_branch as merge_release_branch_func,
 )
 from developers_chamber.scripts import cli
-from developers_chamber.types import EnumType, ReleaseType, VersionFileType
+from developers_chamber.types import (
+    EnumType,
+    PreReleaseType,
+    ReleaseType,
+    VersionFileType,
+)
 from developers_chamber.version_utils import (
     get_next_version,
     get_version,
@@ -46,7 +51,16 @@ def git():
     "-t",
     help="release type",
     type=EnumType(ReleaseType),
-    required=True,
+    required=False,
+    default=None,
+)
+@click.option(
+    "--pre-release",
+    "-p",
+    help="pre-release stage (alpha, beta, rc)",
+    type=EnumType(PreReleaseType),
+    required=False,
+    default=None,
 )
 @click.option(
     "--file",
@@ -70,7 +84,7 @@ def git():
     type=str,
     default=default_branch_name,
 )
-def create_release_branch(release_type, file, remote_name, branch_name):
+def create_release_branch(release_type, pre_release, file, remote_name, branch_name):
     """
     Create a release branch and push it to the remote repository if the remote name is specified.
     """
@@ -79,7 +93,9 @@ def create_release_branch(release_type, file, remote_name, branch_name):
     click.echo(
         'New release branch "{}" was created'.format(
             create_release_branch_func(
-                get_next_version(release_type, None, file),
+                get_next_version(
+                    release_type=release_type, pre_release=pre_release, file=file
+                ),
                 release_type,
                 remote_name,
                 branch_name,
@@ -94,7 +110,16 @@ def create_release_branch(release_type, file, remote_name, branch_name):
     "-t",
     help="release type",
     type=EnumType(ReleaseType),
-    required=True,
+    required=False,
+    default=None,
+)
+@click.option(
+    "--pre-release",
+    "-p",
+    help="pre-release stage (alpha, beta, rc)",
+    type=EnumType(PreReleaseType),
+    required=False,
+    default=None,
 )
 @click.option(
     "--file",
@@ -125,15 +150,23 @@ def create_release_branch(release_type, file, remote_name, branch_name):
     default=default_version_file_type,
     required=False,
 )
-def create_release(release_type, file, remote_name, branch_name, file_type):
+def create_release(
+    release_type, pre_release, file, remote_name, branch_name, file_type
+):
     """
     Create a release branch and push it to the remote repository if the remote name is specified.
     """
     if release_type == ReleaseType.build:
         raise click.BadParameter("build is not allowed for release")
+    if release_type is None and pre_release is None:
+        raise click.UsageError(
+            "At least one of --release-type or --pre-release must be provided."
+        )
     click.echo(
         'New release branch "{}" was created'.format(
-            create_release_func(file, release_type, remote_name, branch_name, file_type)
+            create_release_func(
+                file, release_type, remote_name, branch_name, file_type, pre_release
+            )
         )
     )
 

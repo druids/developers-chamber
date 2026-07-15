@@ -3,7 +3,12 @@ import os
 import click
 
 from developers_chamber.scripts import cli
-from developers_chamber.types import EnumType, ReleaseType, VersionFileType
+from developers_chamber.types import (
+    EnumType,
+    PreReleaseType,
+    ReleaseType,
+    VersionFileType,
+)
 from developers_chamber.version_utils import (
     bump_to_next_version as bump_to_next_version_func,
 )
@@ -24,9 +29,18 @@ def version():
     "-r",
     help="release type",
     type=EnumType(ReleaseType),
-    required=True,
+    required=False,
+    default=None,
 )
 @click.option("--build-hash", "-h", help="hash of the build", type=str)
+@click.option(
+    "--pre-release",
+    "-p",
+    help="pre-release stage (alpha, beta, rc)",
+    type=EnumType(PreReleaseType),
+    required=False,
+    default=None,
+)
 @click.option(
     "--file",
     "-f",
@@ -43,25 +57,38 @@ def version():
     default=default_version_file_type,
     required=False,
 )
-def bump_to_next(release_type, build_hash, file, file_type):
+def bump_to_next(release_type, build_hash, pre_release, file, file_type):
     """
     Bump version in the JSON file (or files) and print it.
-    Version is selected according to release type, build has and version file.
+    Version is selected according to release type, pre-release stage, build hash and version file.
 
     \b
     * version file - contains current version in json format,
                      example (version is "1.30.0"): {"version": "1.30.0"}
     * release type - select one of the values
-        * build - first 5 characters from build hash is joined to the end of
-                  the current version
-                  example: "1.30.0-abcde" will be generated for a version 1.30.0
-                           and a build hash "abcdefghi"
-        * patch - current version is "1.30.0", next version will be "1.30.1"
-        * minor - current version is "1.30.1", next version will be "1.31.0"
-        * major - current version is "1.30.2", next version will be "2.0.0"
+        * build   - first 5 characters from build hash is joined to the end of
+                    the current version
+                    example: "1.30.0-abcde" for version 1.30.0 and hash "abcdefghi"
+        * patch   - "1.30.0" -> "1.30.1"
+        * minor   - "1.30.1" -> "1.31.0"
+        * major   - "1.30.2" -> "2.0.0"
+        * release - strip pre-release suffix: "1.4.0-rc.1" -> "1.4.0"
+    * pre-release - set or transition the pre-release stage (alpha, beta, rc)
+        * same stage as current -> increment number: "1.4.0-alpha.1" -p alpha -> "1.4.0-alpha.2"
+        * different stage       -> reset to 1:       "1.4.0-alpha.1" -p beta  -> "1.4.0-beta.1"
+        * combined with release type -> bump base version first, then set pre-release to 1
+          example: "1.3.5" -r minor -p alpha -> "1.4.0-alpha.1"
     * build-hash - only required for release type "build"
     """
-    click.echo(bump_to_next_version_func(release_type, build_hash, file, file_type))
+    if release_type is None and pre_release is None:
+        raise click.UsageError(
+            "At least one of --release-type or --pre-release must be provided."
+        )
+    click.echo(
+        bump_to_next_version_func(
+            release_type, build_hash, pre_release, file, file_type
+        )
+    )
 
 
 @version.command(name="print")
@@ -96,9 +123,18 @@ def print_version(file, file_type):
     "-r",
     help="release type",
     type=EnumType(ReleaseType),
-    required=True,
+    required=False,
+    default=None,
 )
 @click.option("--build-hash", "-h", help="hash of the build", type=str)
+@click.option(
+    "--pre-release",
+    "-p",
+    help="pre-release stage (alpha, beta, rc)",
+    type=EnumType(PreReleaseType),
+    required=False,
+    default=None,
+)
 @click.option(
     "--file",
     "-f",
@@ -114,21 +150,26 @@ def print_version(file, file_type):
     default=default_version_file_type,
     required=False,
 )
-def print_next(release_type, build_hash, file, file_type):
+def print_next(release_type, build_hash, pre_release, file, file_type):
     """
-    Return next version according to input release type, build hash and version JSON file
+    Return next version according to input release type, pre-release stage, build hash and version JSON file
 
     \b
     * version file - contains current version in json format,
                      example (version is "1.30.0"): {"version": "1.30.0"}
     * release type - select one of the values
-        * build - first 5 characters from build hash is joined to the end of
-                  the current version
-                  example: "1.30.0-abcde" will be generated for a version 1.30.0
-                           and a build hash "abcdefghi"
-        * patch - current version is "1.30.0", next version will be "1.30.1"
-        * minor - current version is "1.30.1", next version will be "1.31.0"
-        * major - current version is "1.30.2", next version will be "2.0.0"
+        * build   - first 5 characters from build hash is joined to the end of
+                    the current version
+                    example: "1.30.0-abcde" for version 1.30.0 and hash "abcdefghi"
+        * patch   - "1.30.0" -> "1.30.1"
+        * minor   - "1.30.1" -> "1.31.0"
+        * major   - "1.30.2" -> "2.0.0"
+        * release - strip pre-release suffix: "1.4.0-rc.1" -> "1.4.0"
+    * pre-release - set or transition the pre-release stage (alpha, beta, rc)
     * build-hash - only required for release type "build"
     """
-    click.echo(get_next_version(release_type, build_hash, file, file_type))
+    if release_type is None and pre_release is None:
+        raise click.UsageError(
+            "At least one of --release-type or --pre-release must be provided."
+        )
+    click.echo(get_next_version(release_type, build_hash, pre_release, file, file_type))
