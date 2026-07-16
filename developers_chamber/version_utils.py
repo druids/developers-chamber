@@ -211,15 +211,6 @@ def get_next_version(
             )
 
         if (
-            release_type in {ReleaseType.minor, ReleaseType.major}
-            and pre_release_str != "alpha"
-        ):
-            raise BadParameter(
-                f"When bumping the base version, pre-release stage must be 'alpha'. "
-                f"Use -p alpha to start a new pre-release cycle."
-            )
-
-        if (
             release_type is None
             and version.pre_release
             and version.pre_release != pre_release_str
