@@ -200,9 +200,15 @@ def bump_version_from_release_tag(files=["version.json"]):
     return match.group("version")
 
 
-def commit_version(version, files=["version.json"], remote_name=None):
+def commit_version(
+    version, files=["version.json"], remote_name=None, release_prefix=None
+):
     repo = _repo()
     g = repo.git
+
+    # In a monorepo the tag must carry the release prefix (e.g. "habarico@1.3.0"),
+    # otherwise packages collide on the same bare "1.3.0" tag.
+    tag_name = _release_tag_name(version, release_prefix)
 
     try:
         # Add files by absolute path: g.add runs with cwd == git root, but the version
@@ -217,17 +223,17 @@ def commit_version(version, files=["version.json"], remote_name=None):
         )
 
     try:
-        g.tag(str(version))
+        g.tag(tag_name)
     except GitCommandError as ex:
         raise UsageError(
             "Tag {} already exists or another git error was raised: {}".format(
-                version, ex
+                tag_name, ex
             )
         )
 
     if remote_name:
         g.push(remote_name, str(repo.head.reference))
-        g.push(remote_name, str(version))
+        g.push(remote_name, tag_name)
 
 
 def merge_release_branch(to_branch_name=None, remote_name=None):
