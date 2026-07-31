@@ -271,7 +271,14 @@ def bump_version_from_release_tag(file):
     default=default_version_file_type,
     required=False,
 )
-def commit_version(file, remote_name, file_type):
+@click.option(
+    "--release-prefix",
+    "-P",
+    help="prefix joined to the version tag with '@' (e.g. 'habarico' -> 'habarico@1.3.0')",
+    type=str,
+    default=default_release_prefix,
+)
+def commit_version(file, remote_name, file_type, release_prefix):
     """
     Commit version files and add git tag to the commit.
     """
@@ -283,6 +290,7 @@ def commit_version(file, remote_name, file_type):
             for f in get_version_files(version_file, file_type)
         ],
         remote_name,
+        release_prefix,
     )
     click.echo("Version commit change was successfully created")
 
