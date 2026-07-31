@@ -214,7 +214,9 @@ def commit_version(
         # Add files by absolute path: g.add runs with cwd == git root, but the version
         # files may live in a subdirectory (monorepo WORKDIR) from which pydev was invoked.
         g.add([os.path.abspath(f) for f in files])
-        g.commit(m=f"Bump version to '{version}'")
+        # Use the prefixed tag name so the merge bump commit reads
+        # "Bump version to 'lib-a@1.3.0'" in a monorepo; with no prefix it stays "1.3.0".
+        g.commit(m=f"Bump version to '{tag_name}'")
     except GitCommandError as ex:
         raise UsageError(
             "Version files was not changed or another git error was raised: {}".format(
