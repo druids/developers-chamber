@@ -168,6 +168,7 @@ Docker utilities helping with managing docker in your project:
 Helpers to run git commands which simplify releasing.
 
 #### Commands
+* `pydev git create-release` - bump the version file, create a release branch, tag it and push both to the remote repository if the remote name is specified
 * `pydev git create-release-branch` - create a release branch and push it to the remote repository if the remote name is specified
 * `pydev git create-deployment-branch` - create a deployment branch and new commit to trigger a deployment event
 * `pydev git checkout-to-release-branch` - checkout git repository back to the release branch from deployment branch
@@ -176,9 +177,17 @@ Helpers to run git commands which simplify releasing.
 * `pydev git merge-release-branch` - merge current branch to the selected branch
 * `pydev git init-hooks` - initialize git hooks defined in the directory ./.pydev/git/hooks
 
+The `create-release` and `create-release-branch` commands accept `--release-prefix/-P` (default from `RELEASE_PREFIX`). When set, the prefix is joined to the version with `@`, so a monorepo can release multiple packages without collisions:
+
+| | with `--release-prefix habarico` | without prefix |
+|---|---|---|
+| branch | `release/habarico@v1.3` | `release/v1.3` |
+| tag | `habarico@1.3.0` | `1.3.0` |
+
 #### Configuration
 * `GIT_REMOTE_NAME` - remote repository name
 * `GIT_BRANCH_NAME` - source branch name for create-release-branch command
+* `RELEASE_PREFIX` - package/component prefix for the release branch name and tag (see `--release-prefix`)
 
 ### Gitlab
 

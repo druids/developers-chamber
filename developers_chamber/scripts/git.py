@@ -38,6 +38,7 @@ from .version import default_version_files, default_version_file_type
 
 default_remote_name = os.environ.get("GIT_REMOTE_NAME")
 default_branch_name = os.environ.get("GIT_BRANCH_NAME")
+default_release_prefix = os.environ.get("RELEASE_PREFIX")
 
 
 @cli.group()
@@ -84,7 +85,17 @@ def git():
     type=str,
     default=default_branch_name,
 )
-def create_release_branch(release_type, pre_release, file, remote_name, branch_name):
+@click.option(
+    "--release-prefix",
+    "-P",
+    help="package/component prefix inserted into the release branch name "
+    '(e.g. "habarico" -> release/habarico@v1.3)',
+    type=str,
+    default=default_release_prefix,
+)
+def create_release_branch(
+    release_type, pre_release, file, remote_name, branch_name, release_prefix
+):
     """
     Create a release branch and push it to the remote repository if the remote name is specified.
     """
@@ -99,6 +110,7 @@ def create_release_branch(release_type, pre_release, file, remote_name, branch_n
                 release_type,
                 remote_name,
                 branch_name,
+                release_prefix,
             )
         )
     )
@@ -150,8 +162,16 @@ def create_release_branch(release_type, pre_release, file, remote_name, branch_n
     default=default_version_file_type,
     required=False,
 )
+@click.option(
+    "--release-prefix",
+    "-P",
+    help="package/component prefix inserted into the release branch name and tag "
+    '(e.g. "habarico" -> release/habarico@v1.3 + tag habarico@1.3.0)',
+    type=str,
+    default=default_release_prefix,
+)
 def create_release(
-    release_type, pre_release, file, remote_name, branch_name, file_type
+    release_type, pre_release, file, remote_name, branch_name, file_type, release_prefix
 ):
     """
     Create a release branch and push it to the remote repository if the remote name is specified.
@@ -165,7 +185,13 @@ def create_release(
     click.echo(
         'New release branch "{}" was created'.format(
             create_release_func(
-                file, release_type, remote_name, branch_name, file_type, pre_release
+                file,
+                release_type,
+                remote_name,
+                branch_name,
+                file_type,
+                pre_release,
+                release_prefix,
             )
         )
     )
