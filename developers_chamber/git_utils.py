@@ -9,7 +9,9 @@ from .types import ReleaseType, VersionFileType
 from .version_utils import bump_to_next_version, bump_version, get_version
 
 DEPLOYMENT_COMMIT_PATTERN = r'^Deployment of "(?P<branch_name>.+)"$'
-VERSION_PATTERN = r"^(?P<version>[0-9]+\.[0-9]+\.[0-9]+)$"
+# The optional "<prefix>@" (or "<prefix>/") group lets a package-prefixed tag like
+# "habarico@1.3.0" resolve back to the bare version. Prefix-agnostic on purpose.
+VERSION_PATTERN = r"^(?:.+[@/])?(?P<version>[0-9]+\.[0-9]+\.[0-9]+)$"
 
 
 def _repo():
@@ -18,7 +20,27 @@ def _repo():
     return git.Repo(".", search_parent_directories=True)
 
 
-def create_release_branch(version, release_type, remote_name=None, branch_name=None):
+def _release_prefix_part(release_prefix):
+    # A non-empty prefix is joined to the version with "@"; empty/whitespace means no prefix,
+    # keeping the historical naming untouched.
+    if release_prefix and release_prefix.strip():
+        return f"{release_prefix.strip()}@"
+    return ""
+
+
+def _release_branch_name(version, release_prefix=None):
+    return "release/{}v{}.{}".format(
+        _release_prefix_part(release_prefix), version.major, version.minor
+    )
+
+
+def _release_tag_name(version, release_prefix=None):
+    return f"{_release_prefix_part(release_prefix)}{version}"
+
+
+def create_release_branch(
+    version, release_type, remote_name=None, branch_name=None, release_prefix=None
+):
     repo = _repo()
     g = repo.git
 
@@ -33,7 +55,7 @@ def create_release_branch(version, release_type, remote_name=None, branch_name=N
         ReleaseType.patch,
         ReleaseType.release,
     }:
-        release_branch_name = "release/v{}".format(f"{version.major}.{version.minor}")
+        release_branch_name = _release_branch_name(version, release_prefix)
     else:
         raise BadParameter("build is not allowed for release")
     g.checkout(branch_name or "HEAD", b=release_branch_name)
@@ -50,6 +72,7 @@ def create_release(
     branch_name=None,
     file_type=None,
     pre_release=None,
+    release_prefix=None,
 ):
     repo = _repo()
     g = repo.git
@@ -80,25 +103,27 @@ def create_release(
         ReleaseType.patch,
         ReleaseType.release,
     }:
-        release_branch_name = "release/v{}".format(f"{version.major}.{version.minor}")
+        release_branch_name = _release_branch_name(version, release_prefix)
     else:
         raise BadParameter("build is not allowed for release")
+
+    release_tag_name = _release_tag_name(version, release_prefix)
 
     branch_names = [branch.name for branch in repo.branches]
     if release_branch_name in branch_names:
         g.branch("-D", release_branch_name)
 
     tags = [tag.name for tag in repo.tags]
-    if str(version) in tags:
-        g.tag("-d", str(version))
+    if release_tag_name in tags:
+        g.tag("-d", release_tag_name)
 
     g.checkout(branch_name or "HEAD", b=release_branch_name)
     g.commit(message=f"Bump version to '{version}'")
 
-    g.tag(str(version))
+    g.tag(release_tag_name)
     if remote_name:
         g.push(remote_name, release_branch_name)
-        g.push(remote_name, str(version))
+        g.push(remote_name, release_tag_name)
     return release_branch_name
 
 
