@@ -2,6 +2,7 @@ import os
 
 import click
 
+from developers_chamber.click.options import CommaSeparatedPathType
 from developers_chamber.scripts import cli
 from developers_chamber.types import (
     EnumType,
@@ -14,8 +15,9 @@ from developers_chamber.version_utils import (
 )
 from developers_chamber.version_utils import get_next_version, get_version
 
-default_version_files = os.environ.get("VERSION_FILES", "version.json").split(",")
-default_version_file_type = os.environ.get("VERSION_FILE_TYPE")
+def _default_version_file():
+    """The commands which work on a single file take the first configured one."""
+    return os.environ.get("VERSION_FILES", "version.json").split(",")[0]
 
 
 @cli.group()
@@ -45,16 +47,17 @@ def version():
     "--file",
     "-f",
     help="path to the version file",
-    default=default_version_files,
+    envvar="VERSION_FILES",
+    default=("version.json",),
     required=True,
     multiple=True,
-    type=click.Path(exists=True),
+    type=CommaSeparatedPathType(exists=True),
 )
 @click.option(
     "--file-type",
     help="version file type",
     type=EnumType(VersionFileType),
-    default=default_version_file_type,
+    envvar="VERSION_FILE_TYPE",
     required=False,
 )
 def bump_to_next(release_type, build_hash, pre_release, file, file_type):
@@ -96,7 +99,7 @@ def bump_to_next(release_type, build_hash, pre_release, file, file_type):
     "--file",
     "-f",
     help="path to the version file",
-    default=default_version_files[0],
+    default=_default_version_file,
     required=True,
     type=click.Path(exists=True),
 )
@@ -104,7 +107,7 @@ def bump_to_next(release_type, build_hash, pre_release, file, file_type):
     "--file-type",
     help="version file type",
     type=EnumType(VersionFileType),
-    default=default_version_file_type,
+    envvar="VERSION_FILE_TYPE",
     required=False,
 )
 def print_version(file, file_type):
@@ -139,7 +142,7 @@ def print_version(file, file_type):
     "--file",
     "-f",
     help="path to the version file",
-    default=default_version_files[0],
+    default=_default_version_file,
     required=True,
     type=click.Path(exists=True),
 )
@@ -147,7 +150,7 @@ def print_version(file, file_type):
     "--file-type",
     help="version file type",
     type=EnumType(VersionFileType),
-    default=default_version_file_type,
+    envvar="VERSION_FILE_TYPE",
     required=False,
 )
 def print_next(release_type, build_hash, pre_release, file, file_type):

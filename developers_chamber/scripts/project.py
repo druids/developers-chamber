@@ -4,6 +4,8 @@ from datetime import date
 import click
 
 from developers_chamber.click.options import (
+    COMMA_SEPARATED,
+    CommaSeparatedPathType,
     ContainerCommandType,
     ContainerDirToCopyType,
     ContainerEnvironment,
@@ -25,63 +27,11 @@ from developers_chamber.project_utils import docker_clean, set_hosts
 from developers_chamber.scripts import cli
 from developers_chamber.utils import INSTALLED_MODULES
 
-default_project_name = os.environ.get("PROJECT_DOCKER_COMPOSE_PROJECT_NAME")
-default_compose_files = (
-    os.environ.get("PROJECT_DOCKER_COMPOSE_FILES").split(",")
-    if os.environ.get("PROJECT_DOCKER_COMPOSE_FILES")
-    else None
-)
-default_domains = (
-    os.environ.get("PROJECT_DOMAINS").split(",")
-    if os.environ.get("PROJECT_DOMAINS")
-    else None
-)
-default_containers = (
-    os.environ.get("PROJECT_DOCKER_COMPOSE_CONTAINERS").split(",")
-    if os.environ.get("PROJECT_DOCKER_COMPOSE_CONTAINERS")
-    else None
-)
-default_up_containers = (
-    os.environ.get("PROJECT_DOCKER_COMPOSE_DEFAULT_UP_CONTAINERS").split(",")
-    if os.environ.get("PROJECT_DOCKER_COMPOSE_DEFAULT_UP_CONTAINERS")
-    else None
-)
-default_var_dirs = (
-    os.environ.get("PROJECT_DOCKER_COMPOSE_VAR_DIRS").split(",")
-    if os.environ.get("PROJECT_DOCKER_COMPOSE_VAR_DIRS")
-    else None
-)
-default_containers_dir_to_copy = (
-    os.environ.get("PROJECT_DOCKER_COMPOSE_CONTAINERS_DIR_TO_COPY").split(",")
-    if os.environ.get("PROJECT_DOCKER_COMPOSE_CONTAINERS_DIR_TO_COPY")
-    else None
-)
-default_containers_install_command = (
-    os.environ.get("PROJECT_DOCKER_COMPOSE_CONTAINERS_INSTALL_COMMAND").split(",")
-    if os.environ.get("PROJECT_DOCKER_COMPOSE_CONTAINERS_INSTALL_COMMAND")
-    else None
-)
-default_containers_env = (
-    os.environ.get("PROJECT_DOCKER_COMPOSE_CONTAINERS_ENV")
-    if os.environ.get("PROJECT_DOCKER_COMPOSE_CONTAINERS_ENV")
-    else None
-)
-default_library_dir = os.environ.get("PROJECT_LIBRARY_DIR")
 
-jira_url = os.environ.get("JIRA_URL")
-jira_username = os.environ.get("JIRA_USERNAME")
-jira_api_key = os.environ.get("JIRA_API_KEY")
-jira_project_key = os.environ.get("JIRA_PROJECT_KEY")
-
-toggl_api_key = os.environ.get("TOGGL_API_KEY")
-toggl_project_id = os.environ.get("TOGGL_PROJECT_ID")
-toggl_workspace_id = os.environ.get("TOGGL_WORKSPACE_ID")
-
-source_branch_name = os.environ.get("PROJECT_SOURCE_BRANCH_NAME", "next")
-bitbucket_username = os.environ.get("BITBUCKET_USERNAME")
-bitbucket_password = os.environ.get("BITBUCKET_PASSWORD")
-bitbucket_destination_branch_name = os.environ.get("BITBUCKET_BRANCH_NAME", "next")
-bitbucket_repository_name = os.environ.get("BITBUCKET_REPOSITORY")
+def _default_first_container():
+    """The run and exec commands work on a single container, take the first configured one."""
+    containers = os.environ.get("PROJECT_DOCKER_COMPOSE_CONTAINERS")
+    return containers.split(",")[:1] if containers else None
 
 
 @cli.group()
@@ -94,10 +44,10 @@ def project():
     "--domain",
     "-d",
     help="Domain which will be set to the hosts file",
-    type=str,
+    type=COMMA_SEPARATED,
     required=True,
     multiple=True,
-    default=default_domains,
+    envvar="PROJECT_DOMAINS",
 )
 def set_domain(domain):
     """
@@ -114,7 +64,7 @@ def set_domain(domain):
     help="Name of the project",
     type=str,
     required=True,
-    default=default_project_name,
+    envvar="PROJECT_DOCKER_COMPOSE_PROJECT_NAME",
 )
 @click.option(
     "--compose-file",
@@ -122,8 +72,8 @@ def set_domain(domain):
     help="Compose file",
     required=True,
     multiple=True,
-    default=default_compose_files,
-    type=click.Path(exists=True),
+    envvar="PROJECT_DOCKER_COMPOSE_FILES",
+    type=CommaSeparatedPathType(exists=True),
 )
 @click.option(
     "--container", "-c", help="Container name", type=str, required=False, multiple=True
@@ -135,14 +85,14 @@ def set_domain(domain):
     "DOCKER_CONTAINER_NAME:CONTAINER_DIRECTORY:HOST_DIRECTORY",
     type=ContainerDirToCopyType(),
     multiple=True,
-    default=default_containers_dir_to_copy,
+    envvar="PROJECT_DOCKER_COMPOSE_CONTAINERS_DIR_TO_COPY",
 )
 @click.option(
     "--env",
     "env",
     help="Environment variables",
     type=ContainerEnvironment(),
-    default=default_containers_env,
+    envvar="PROJECT_DOCKER_COMPOSE_CONTAINERS_ENV",
 )
 def build(project_name, compose_file, container, container_dir_to_copy, env):
     """
@@ -163,7 +113,7 @@ def build(project_name, compose_file, container, container_dir_to_copy, env):
     help="Name of the project",
     type=str,
     required=True,
-    default=default_project_name,
+    envvar="PROJECT_DOCKER_COMPOSE_PROJECT_NAME",
 )
 @click.option(
     "--compose-file",
@@ -171,8 +121,8 @@ def build(project_name, compose_file, container, container_dir_to_copy, env):
     help="Compose file",
     required=True,
     multiple=True,
-    default=default_compose_files,
-    type=click.Path(exists=True),
+    envvar="PROJECT_DOCKER_COMPOSE_FILES",
+    type=CommaSeparatedPathType(exists=True),
 )
 @click.option(
     "--container",
@@ -181,14 +131,14 @@ def build(project_name, compose_file, container, container_dir_to_copy, env):
     type=str,
     required=True,
     multiple=True,
-    default=default_containers[:1] if default_containers else None,
+    default=_default_first_container,
 )
 @click.option(
     "--env",
     "env",
     help="Environment variables",
     type=ContainerEnvironment(),
-    default=default_containers_env,
+    envvar="PROJECT_DOCKER_COMPOSE_CONTAINERS_ENV",
 )
 @click.pass_context
 def run(ctx, project_name, compose_file, container, command, env):
@@ -211,7 +161,7 @@ def run(ctx, project_name, compose_file, container, command, env):
     help="Name of the project",
     type=str,
     required=True,
-    default=default_project_name,
+    envvar="PROJECT_DOCKER_COMPOSE_PROJECT_NAME",
 )
 @click.option(
     "--compose-file",
@@ -219,8 +169,8 @@ def run(ctx, project_name, compose_file, container, command, env):
     help="Compose file",
     required=True,
     multiple=True,
-    default=default_compose_files,
-    type=click.Path(exists=True),
+    envvar="PROJECT_DOCKER_COMPOSE_FILES",
+    type=CommaSeparatedPathType(exists=True),
 )
 @click.option(
     "--container",
@@ -229,14 +179,14 @@ def run(ctx, project_name, compose_file, container, command, env):
     type=str,
     required=True,
     multiple=True,
-    default=default_containers[:1] if default_containers else None,
+    default=_default_first_container,
 )
 @click.option(
     "--env",
     "env",
     help="Environment variables",
     type=ContainerEnvironment(),
-    default=default_containers_env,
+    envvar="PROJECT_DOCKER_COMPOSE_CONTAINERS_ENV",
 )
 @click.pass_context
 def exec_command(ctx, project_name, compose_file, container, command, env):
@@ -256,7 +206,7 @@ def exec_command(ctx, project_name, compose_file, container, command, env):
     help="Name of the project",
     type=str,
     required=True,
-    default=default_project_name,
+    envvar="PROJECT_DOCKER_COMPOSE_PROJECT_NAME",
 )
 @click.option(
     "--compose-file",
@@ -264,17 +214,17 @@ def exec_command(ctx, project_name, compose_file, container, command, env):
     help="Compose file",
     required=True,
     multiple=True,
-    default=default_compose_files,
-    type=click.Path(exists=True),
+    envvar="PROJECT_DOCKER_COMPOSE_FILES",
+    type=CommaSeparatedPathType(exists=True),
 )
 @click.option(
     "--container",
     "-c",
     help="Container name",
-    type=str,
+    type=COMMA_SEPARATED,
     required=False,
     multiple=True,
-    default=default_up_containers,
+    envvar="PROJECT_DOCKER_COMPOSE_DEFAULT_UP_CONTAINERS",
 )
 @click.option(
     "--all",
@@ -289,7 +239,7 @@ def exec_command(ctx, project_name, compose_file, container, command, env):
     "env",
     help="Environment variables",
     type=ContainerEnvironment(),
-    default=default_containers_env,
+    envvar="PROJECT_DOCKER_COMPOSE_CONTAINERS_ENV",
 )
 def up(project_name, compose_file, container, all_containers, env):
     """
@@ -307,7 +257,7 @@ def up(project_name, compose_file, container, all_containers, env):
     help="Name of the project",
     type=str,
     required=True,
-    default=default_project_name,
+    envvar="PROJECT_DOCKER_COMPOSE_PROJECT_NAME",
 )
 @click.option(
     "--compose-file",
@@ -315,8 +265,8 @@ def up(project_name, compose_file, container, all_containers, env):
     help="Compose file",
     required=True,
     multiple=True,
-    default=default_compose_files,
-    type=click.Path(exists=True),
+    envvar="PROJECT_DOCKER_COMPOSE_FILES",
+    type=CommaSeparatedPathType(exists=True),
 )
 @click.option(
     "--container", "-c", help="Container name", type=str, required=False, multiple=True
@@ -335,7 +285,7 @@ def stop(project_name, compose_file, container):
     help="Name of the project",
     type=str,
     required=True,
-    default=default_project_name,
+    envvar="PROJECT_DOCKER_COMPOSE_PROJECT_NAME",
 )
 @click.option(
     "--compose-file",
@@ -343,16 +293,16 @@ def stop(project_name, compose_file, container):
     help="Compose file",
     required=True,
     multiple=True,
-    default=default_compose_files,
-    type=click.Path(exists=True),
+    envvar="PROJECT_DOCKER_COMPOSE_FILES",
+    type=CommaSeparatedPathType(exists=True),
 )
 @click.option(
     "--var-dir",
     "-v",
     help="Variable content directory",
-    type=str,
+    type=COMMA_SEPARATED,
     required=False,
-    default=default_var_dirs,
+    envvar="PROJECT_DOCKER_COMPOSE_VAR_DIRS",
     multiple=True,
 )
 @click.option(
@@ -363,7 +313,7 @@ def stop(project_name, compose_file, container):
     type=ContainerDirToCopyType(),
     required=False,
     multiple=True,
-    default=default_containers_dir_to_copy,
+    envvar="PROJECT_DOCKER_COMPOSE_CONTAINERS_DIR_TO_COPY",
 )
 @click.option(
     "--install-container-command",
@@ -372,7 +322,7 @@ def stop(project_name, compose_file, container):
     type=ContainerCommandType(),
     required=False,
     multiple=True,
-    default=default_containers_install_command,
+    envvar="PROJECT_DOCKER_COMPOSE_CONTAINERS_INSTALL_COMMAND",
 )
 def install(
     project_name,
@@ -400,7 +350,7 @@ def install(
     help="Name of the project",
     type=str,
     required=True,
-    default=default_project_name,
+    envvar="PROJECT_DOCKER_COMPOSE_PROJECT_NAME",
 )
 @click.option(
     "--container-dir-to-copy",
@@ -410,7 +360,7 @@ def install(
     type=ContainerDirToCopyType(),
     required=False,
     multiple=True,
-    default=default_containers_dir_to_copy,
+    envvar="PROJECT_DOCKER_COMPOSE_CONTAINERS_DIR_TO_COPY",
 )
 def copy_container_dirs(project_name, container_dir_to_copy):
     """
@@ -432,7 +382,7 @@ def copy_container_dirs(project_name, container_dir_to_copy):
     "-d",
     help="Library destination directory",
     required=True,
-    default=default_library_dir,
+    envvar="PROJECT_LIBRARY_DIR",
     type=click.Path(exists=True),
 )
 def bind_library(library_source_dir, library_destination_dir):
@@ -486,35 +436,35 @@ if (
 
     @task.command()
     @click.option(
-        "--jira-url", help="Jira URL", type=str, required=True, default=jira_url
+        "--jira-url", help="Jira URL", type=str, required=True, envvar="JIRA_URL"
     )
     @click.option(
         "--jira-username",
         help="Jira username",
         type=str,
         required=True,
-        default=jira_username,
+        envvar="JIRA_USERNAME",
     )
     @click.option(
         "--jira-api-key",
         help="Jira API key/password",
         type=str,
         required=True,
-        default=jira_api_key,
+        envvar="JIRA_API_KEY",
     )
     @click.option(
         "--jira_project-key",
         help="Jira project key",
         type=str,
         required=False,
-        default=jira_project_key,
+        envvar="JIRA_PROJECT_KEY",
     )
     @click.option(
         "--toggl-api-key",
         help="toggle API key",
         type=str,
         required=True,
-        default=toggl_api_key,
+        envvar="TOGGL_API_KEY",
     )
     @click.option(
         "--toggl-workspace-id",
@@ -522,7 +472,7 @@ if (
         help="toggl workspace ID",
         type=str,
         required=False,
-        default=toggl_workspace_id,
+        envvar="TOGGL_WORKSPACE_ID",
     )
     @click.option(
         "--toggl-project-id",
@@ -530,7 +480,7 @@ if (
         help="toggl project ID",
         type=str,
         required=False,
-        default=toggl_project_id,
+        envvar="TOGGL_PROJECT_ID",
     )
     @click.option("--issue-key", "-i", help="key of the task", type=str)
     def start(
@@ -561,28 +511,28 @@ if (
 
     @task.command()
     @click.option(
-        "--jira-url", help="Jira URL", type=str, required=True, default=jira_url
+        "--jira-url", help="Jira URL", type=str, required=True, envvar="JIRA_URL"
     )
     @click.option(
         "--jira-username",
         help="Jira username",
         type=str,
         required=True,
-        default=jira_username,
+        envvar="JIRA_USERNAME",
     )
     @click.option(
         "--jira-api-key",
         help="Jira API key/password",
         type=str,
         required=True,
-        default=jira_api_key,
+        envvar="JIRA_API_KEY",
     )
     @click.option(
         "--toggl-api-key",
         help="toggle API key",
         type=str,
         required=True,
-        default=toggl_api_key,
+        envvar="TOGGL_API_KEY",
     )
     def stop(jira_url, jira_username, jira_api_key, toggl_api_key):
         """
@@ -592,35 +542,35 @@ if (
 
     @task.command()
     @click.option(
-        "--jira-url", help="Jira URL", type=str, required=True, default=jira_url
+        "--jira-url", help="Jira URL", type=str, required=True, envvar="JIRA_URL"
     )
     @click.option(
         "--jira-username",
         help="Jira username",
         type=str,
         required=True,
-        default=jira_username,
+        envvar="JIRA_USERNAME",
     )
     @click.option(
         "--jira-api-key",
         help="Jira API key/password",
         type=str,
         required=True,
-        default=jira_api_key,
+        envvar="JIRA_API_KEY",
     )
     @click.option(
         "--jira-project-key",
         help="Jira project key",
         type=str,
         required=False,
-        default=jira_project_key,
+        envvar="JIRA_PROJECT_KEY",
     )
     @click.option(
         "--source_branch_name",
         "-s",
         help="source branch name",
         type=str,
-        default=source_branch_name,
+        envvar="PROJECT_SOURCE_BRANCH_NAME", default="next",
     )
     @click.option("--issue-key", "-i", help="key of the task", type=str, required=True)
     def create_branch_from_issue(
@@ -647,7 +597,7 @@ if (
 
     @task.command()
     @click.option(
-        "--jira-url", "-u", help="Jira URL", type=str, required=True, default=jira_url
+        "--jira-url", "-u", help="Jira URL", type=str, required=True, envvar="JIRA_URL"
     )
     @click.option(
         "--jira-username",
@@ -655,7 +605,7 @@ if (
         help="Jira username",
         type=str,
         required=True,
-        default=jira_username,
+        envvar="JIRA_USERNAME",
     )
     @click.option(
         "--jira-api-key",
@@ -663,28 +613,28 @@ if (
         help="Jira API key/password",
         type=str,
         required=True,
-        default=jira_api_key,
+        envvar="JIRA_API_KEY",
     )
     @click.option(
         "--bitbucket-username",
         help="username",
         type=str,
         required=True,
-        default=bitbucket_username,
+        envvar="BITBUCKET_USERNAME",
     )
     @click.option(
         "--bitbucket-password",
         help="password",
         type=str,
         required=True,
-        default=bitbucket_password,
+        envvar="BITBUCKET_PASSWORD",
     )
     @click.option(
         "--bitbucket-destination-branch-name",
         help="destination bitbucket branch name",
         type=str,
         required=True,
-        default=bitbucket_destination_branch_name,
+        envvar="BITBUCKET_BRANCH_NAME", default="next",
     )
     @click.option(
         "--bitbucket-repository-name",
@@ -692,7 +642,7 @@ if (
         help="bitbucket repository name",
         type=str,
         required=True,
-        default=bitbucket_repository_name,
+        envvar="BITBUCKET_REPOSITORY",
     )
     def create_or_update_pull_request(
         jira_url,
@@ -722,28 +672,28 @@ if (
 
     @task.command()
     @click.option(
-        "--jira-url", help="Jira URL", type=str, required=True, default=jira_url
+        "--jira-url", help="Jira URL", type=str, required=True, envvar="JIRA_URL"
     )
     @click.option(
         "--jira-username",
         help="Jira username",
         type=str,
         required=True,
-        default=jira_username,
+        envvar="JIRA_USERNAME",
     )
     @click.option(
         "--jira-api-key",
         help="Jira API key/password",
         type=str,
         required=True,
-        default=jira_api_key,
+        envvar="JIRA_API_KEY",
     )
     @click.option(
         "--toggl-api-key",
         help="toggle API key",
         type=str,
         required=True,
-        default=toggl_api_key,
+        envvar="TOGGL_API_KEY",
     )
     @click.option(
         "--toggl-workspace-id",
@@ -751,7 +701,7 @@ if (
         help="toggl workspace ID",
         type=str,
         required=False,
-        default=toggl_workspace_id,
+        envvar="TOGGL_WORKSPACE_ID",
     )
     @click.option(
         "--toggl-project-id",
@@ -759,7 +709,7 @@ if (
         help="toggl project ID",
         type=str,
         required=False,
-        default=toggl_project_id,
+        envvar="TOGGL_PROJECT_ID",
     )
     @click.option(
         "--from-date",
@@ -806,14 +756,14 @@ if (
         help="username",
         type=str,
         required=True,
-        default=bitbucket_username,
+        envvar="BITBUCKET_USERNAME",
     )
     @click.option(
         "--bitbucket-password",
         help="password",
         type=str,
         required=True,
-        default=bitbucket_password,
+        envvar="BITBUCKET_PASSWORD",
     )
     @click.option(
         "--bitbucket-repository-name",
@@ -821,7 +771,7 @@ if (
         help="bitbucket repository name",
         type=str,
         required=True,
-        default=bitbucket_repository_name,
+        envvar="BITBUCKET_REPOSITORY",
     )
     @click.option("--branch-name", help="git branch name", type=str, required=False)
     def print_last_commit_build(

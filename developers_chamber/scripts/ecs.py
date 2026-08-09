@@ -1,4 +1,3 @@
-import os
 
 import click
 
@@ -44,8 +43,6 @@ from developers_chamber.ecs_utils import (
 )
 from developers_chamber.scripts import cli
 
-default_region = os.environ.get("AWS_REGION")
-default_cluster = os.environ.get("AWS_ECS_CLUSTER")
 
 
 @cli.group()
@@ -59,7 +56,7 @@ def ecs():
     "-c",
     help="ECS cluster name",
     type=str,
-    default=default_cluster,
+    envvar="AWS_ECS_CLUSTER",
     required=True,
 )
 @click.option("--service", "-s", help="ECS service names", type=str, required=True)
@@ -74,7 +71,7 @@ def ecs():
     required=True,
 )
 @click.option(
-    "--region", "-r", help="AWS region", type=str, default=default_region, required=True
+    "--region", "-r", help="AWS region", type=str, envvar="AWS_REGION", required=True
 )
 def deploy_new_task_definition(cluster, service, task_definition, images, region):
     """
@@ -95,7 +92,7 @@ def deploy_new_task_definition(cluster, service, task_definition, images, region
     required=True,
 )
 @click.option(
-    "--region", "-r", help="AWS region", type=str, default=default_region, required=True
+    "--region", "-r", help="AWS region", type=str, envvar="AWS_REGION", required=True
 )
 def register_new_task_definition(task_definition, images, region):
     """
@@ -110,12 +107,12 @@ def register_new_task_definition(task_definition, images, region):
     "-c",
     help="ECS cluster name",
     type=str,
-    default=default_cluster,
+    envvar="AWS_ECS_CLUSTER",
     required=True,
 )
 @click.option("--service", "-s", help="ECS service names", type=str, required=True)
 @click.option(
-    "--region", "-r", help="AWS region", type=str, default=default_region, required=True
+    "--region", "-r", help="AWS region", type=str, envvar="AWS_REGION", required=True
 )
 def update_service_to_latest_task_definition(cluster, service, region):
     """
@@ -130,12 +127,12 @@ def update_service_to_latest_task_definition(cluster, service, region):
     "-c",
     help="ECS cluster name",
     type=str,
-    default=default_cluster,
+    envvar="AWS_ECS_CLUSTER",
     required=True,
 )
 @click.option("--service", "-s", help="ECS service name", type=str, required=True)
 @click.option(
-    "--region", "-r", help="AWS region", type=str, default=default_region, required=True
+    "--region", "-r", help="AWS region", type=str, envvar="AWS_REGION", required=True
 )
 def stop_service(cluster, service, region):
     """
@@ -150,13 +147,13 @@ def stop_service(cluster, service, region):
     "-c",
     help="ECS cluster name",
     type=str,
-    default=default_cluster,
+    envvar="AWS_ECS_CLUSTER",
     required=True,
 )
 @click.option("--service", "-s", help="ECS service name", type=str, required=True)
 @click.option("--count", "-o", help="Desired count for service", type=int)
 @click.option(
-    "--region", "-r", help="AWS region", type=str, default=default_region, required=True
+    "--region", "-r", help="AWS region", type=str, envvar="AWS_REGION", required=True
 )
 def start_service(cluster, service, count, region):
     """
@@ -171,12 +168,12 @@ def start_service(cluster, service, count, region):
     "-c",
     help="ECS cluster name",
     type=str,
-    default=default_cluster,
+    envvar="AWS_ECS_CLUSTER",
     required=True,
 )
 @click.option("--count", "-o", help="Desired count for service", type=int)
 @click.option(
-    "--region", "-r", help="AWS region", type=str, default=default_region, required=True
+    "--region", "-r", help="AWS region", type=str, envvar="AWS_REGION", required=True
 )
 def start_cluster_services(cluster, count, region):
     """
@@ -191,7 +188,7 @@ def start_cluster_services(cluster, count, region):
     "-c",
     help="ECS cluster name",
     type=str,
-    default=default_cluster,
+    envvar="AWS_ECS_CLUSTER",
     required=True,
 )
 @click.option(
@@ -203,7 +200,7 @@ def start_cluster_services(cluster, count, region):
 )
 @click.option("--count", "-o", help="Desired count for service", type=int)
 @click.option(
-    "--region", "-r", help="AWS region", type=str, default=default_region, required=True
+    "--region", "-r", help="AWS region", type=str, envvar="AWS_REGION", required=True
 )
 def start_services(cluster, services, count, region):
     """
@@ -219,7 +216,7 @@ def start_services(cluster, services, count, region):
     "-c",
     help="ECS cluster name",
     type=str,
-    default=default_cluster,
+    envvar="AWS_ECS_CLUSTER",
     required=True,
 )
 @click.option(
@@ -228,7 +225,7 @@ def start_services(cluster, services, count, region):
 @click.option("--command", "-m", help="command to run", type=str, default=None)
 @click.option("--name", "-n", help="ECS task name", type=str, required=True)
 @click.option(
-    "--region", "-r", help="AWS region", type=str, default=default_region, required=True
+    "--region", "-r", help="AWS region", type=str, envvar="AWS_REGION", required=True
 )
 def run_task(cluster, task_definition, command, name, region):
     """
@@ -243,7 +240,7 @@ def run_task(cluster, task_definition, command, name, region):
     "-c",
     help="ECS cluster name",
     type=str,
-    default=default_cluster,
+    envvar="AWS_ECS_CLUSTER",
     required=True,
 )
 @click.option(
@@ -266,7 +263,7 @@ def run_task(cluster, task_definition, command, name, region):
     default=600,
 )
 @click.option(
-    "--region", "-r", help="AWS region", type=str, default=default_region, required=True
+    "--region", "-r", help="AWS region", type=str, envvar="AWS_REGION", required=True
 )
 def run_task_and_wait_for_success(
     cluster, task_definition, command, name, success_string, timeout, region
@@ -285,7 +282,7 @@ def run_task_and_wait_for_success(
     "-c",
     help="ECS cluster name",
     type=str,
-    default=default_cluster,
+    envvar="AWS_ECS_CLUSTER",
     required=True,
 )
 @click.option("--service", "-s", help="ECS service name", type=str, required=True)
@@ -312,7 +309,7 @@ def run_task_and_wait_for_success(
     default=None,
 )
 @click.option(
-    "--region", "-r", help="AWS region", type=str, default=default_region, required=True
+    "--region", "-r", help="AWS region", type=str, envvar="AWS_REGION", required=True
 )
 def run_service_task(
     cluster, service, command, success_string, timeout, region, container
@@ -331,7 +328,7 @@ def run_service_task(
     "-c",
     help="ECS cluster name",
     type=str,
-    default=default_cluster,
+    envvar="AWS_ECS_CLUSTER",
     required=True,
 )
 @click.option("--service", "-s", help="ECS service name", type=str, required=True)
@@ -358,7 +355,7 @@ def run_service_task(
     default=None,
 )
 @click.option(
-    "--region", "-r", help="AWS region", type=str, default=default_region, required=True
+    "--region", "-r", help="AWS region", type=str, envvar="AWS_REGION", required=True
 )
 @click.option("--subnet", help="subnet ID", type=str, required=True, multiple=True)
 @click.option(
@@ -413,12 +410,12 @@ def run_service_task_fargate(
     "-c",
     help="ECS cluster name",
     type=str,
-    default=default_cluster,
+    envvar="AWS_ECS_CLUSTER",
     required=True,
 )
 @click.option("--service", "-s", help="ECS service name", type=str, required=True)
 @click.option(
-    "--region", "-r", help="AWS region", type=str, default=default_region, required=True
+    "--region", "-r", help="AWS region", type=str, envvar="AWS_REGION", required=True
 )
 def get_tasks_for_service(cluster, service, region):
     """
@@ -433,12 +430,12 @@ def get_tasks_for_service(cluster, service, region):
     "-c",
     help="ECS cluster name",
     type=str,
-    default=default_cluster,
+    envvar="AWS_ECS_CLUSTER",
     required=True,
 )
 @click.option("--service", "-s", help="ECS service name", type=str, required=True)
 @click.option(
-    "--region", "-r", help="AWS region", type=str, default=default_region, required=True
+    "--region", "-r", help="AWS region", type=str, envvar="AWS_REGION", required=True
 )
 def get_task_definition_for_service(cluster, service, region):
     """
@@ -453,7 +450,7 @@ def get_task_definition_for_service(cluster, service, region):
     "-c",
     help="ECS cluster name",
     type=str,
-    default=default_cluster,
+    envvar="AWS_ECS_CLUSTER",
     required=True,
 )
 @click.option("--service", "-s", help="ECS service name", type=str, required=True)
@@ -465,7 +462,7 @@ def get_task_definition_for_service(cluster, service, region):
     default=600,
 )
 @click.option(
-    "--region", "-r", help="AWS region", type=str, default=default_region, required=True
+    "--region", "-r", help="AWS region", type=str, envvar="AWS_REGION", required=True
 )
 def stop_service_and_wait_for_tasks_to_stop(cluster, service, timeout, region):
     """
@@ -480,7 +477,7 @@ def stop_service_and_wait_for_tasks_to_stop(cluster, service, timeout, region):
     "-c",
     help="ECS cluster name",
     type=str,
-    default=default_cluster,
+    envvar="AWS_ECS_CLUSTER",
     required=True,
 )
 @click.option(
@@ -498,7 +495,7 @@ def stop_service_and_wait_for_tasks_to_stop(cluster, service, timeout, region):
     default=600,
 )
 @click.option(
-    "--region", "-r", help="AWS region", type=str, default=default_region, required=True
+    "--region", "-r", help="AWS region", type=str, envvar="AWS_REGION", required=True
 )
 def stop_services_and_wait_for_tasks_to_stop(cluster, services, timeout, region):
     """
@@ -514,11 +511,11 @@ def stop_services_and_wait_for_tasks_to_stop(cluster, services, timeout, region)
     "-c",
     help="ECS cluster name",
     type=str,
-    default=default_cluster,
+    envvar="AWS_ECS_CLUSTER",
     required=True,
 )
 @click.option(
-    "--region", "-r", help="AWS region", type=str, default=default_region, required=True
+    "--region", "-r", help="AWS region", type=str, envvar="AWS_REGION", required=True
 )
 def get_services_names(cluster, region):
     """
@@ -534,7 +531,7 @@ def get_services_names(cluster, region):
     "-c",
     help="ECS cluster name",
     type=str,
-    default=default_cluster,
+    envvar="AWS_ECS_CLUSTER",
     required=True,
 )
 @click.option(
@@ -545,7 +542,7 @@ def get_services_names(cluster, region):
     required=True,
 )
 @click.option(
-    "--region", "-r", help="AWS region", type=str, default=default_region, required=True
+    "--region", "-r", help="AWS region", type=str, envvar="AWS_REGION", required=True
 )
 def redeploy_services(cluster, services, region):
     """
@@ -561,11 +558,11 @@ def redeploy_services(cluster, services, region):
     "-c",
     help="ECS cluster name",
     type=str,
-    default=default_cluster,
+    envvar="AWS_ECS_CLUSTER",
     required=True,
 )
 @click.option(
-    "--region", "-r", help="AWS region", type=str, default=default_region, required=True
+    "--region", "-r", help="AWS region", type=str, envvar="AWS_REGION", required=True
 )
 def redeploy_cluster_services(cluster, region):
     """
@@ -580,11 +577,11 @@ def redeploy_cluster_services(cluster, region):
     "-c",
     help="ECS cluster name",
     type=str,
-    default=default_cluster,
+    envvar="AWS_ECS_CLUSTER",
     required=True,
 )
 @click.option(
-    "--region", "-r", help="AWS region", type=str, default=default_region, required=True
+    "--region", "-r", help="AWS region", type=str, envvar="AWS_REGION", required=True
 )
 def wait_for_services_stable(cluster, region):
     """

@@ -72,5 +72,7 @@ class TimedeltaType(ParamType):
                 continue
             raise self.fail("Invalid time delta: {}".format(value))
         if result_value:
-            seconds = unit * int(result_value)
+            # a trailing number carries no unit of its own, it must still be added to what
+            # the preceding units already gave
+            seconds += unit * int(result_value)
         return datetime.timedelta(seconds=seconds)

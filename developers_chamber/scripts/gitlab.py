@@ -11,13 +11,10 @@ from developers_chamber.gitlab_utils import (
 from developers_chamber.scripts import cli
 from developers_chamber.git_utils import get_remote_url, get_remote_path
 
-DEFAULT_API_URL = os.environ.get("GITLAB_API_URL")
-DEFAULT_URL = os.environ.get(
-    "GITLAB_URL", DEFAULT_API_URL and DEFAULT_API_URL.split("/api/v4")[0]
-)
-DEFAULT_PROJECT = os.environ.get("GITLAB_PROJECT")
-DEFAULT_TARGET_BRANCH = os.environ.get("GITLAB_TARGET_BRANCH", "next")
-DEFAULT_TOKEN = os.environ.get("GITLAB_TOKEN")
+def _default_gitlab_url():
+    """Without its own setting the web url is the api url without the /api/v4 suffix."""
+    api_url = os.environ.get("GITLAB_API_URL")
+    return api_url and api_url.split("/api/v4")[0]
 
 
 @cli.group()
@@ -31,35 +28,37 @@ def gitlab():
     help="GitLab instance API URL (defaults to gitlab.com)",
     type=str,
     required=False,
-    default=DEFAULT_URL,
+    envvar="GITLAB_URL",
+    default=_default_gitlab_url,
 )
 @click.option(
     "--token",
     help="token (can be set as env variable GITLAB_TOKEN)",
     type=str,
     required=True,
-    default=DEFAULT_TOKEN,
+    envvar="GITLAB_TOKEN",
 )
 @click.option("--source-branch", help="source Git branch", type=str)
 @click.option(
     "--target-branch",
     help="target Git branch (defaults to env variable GITLAB_TARGET_BRANCH)",
     type=str,
-    default=DEFAULT_TARGET_BRANCH,
+    envvar="GITLAB_TARGET_BRANCH",
+    default="next",
 )
 @click.option(
     "--project",
     help="GitLab project name (defaults to env variable GITLAB_PROJECT)",
     type=str,
     required=False,
-    default=DEFAULT_PROJECT,
+    envvar="GITLAB_PROJECT",
 )
 @click.option(
     "--assignee-id",
     help="User ID to assign the merge request",
     type=str,
     required=False,
-    default=DEFAULT_PROJECT,
+    envvar="GITLAB_PROJECT",
 )
 def create_release_merge_request(
     url, token, source_branch, target_branch, project, assignee_id=None
@@ -96,34 +95,37 @@ def create_release_merge_request(
     help="GitLab instance API URL (defaults to gitlab.com)",
     type=str,
     required=False,
-    default=DEFAULT_URL,
+    envvar="GITLAB_URL",
+    default=_default_gitlab_url,
 )
 @click.option(
     "--token",
     help="token (can be set as env variable GITLAB_TOKEN)",
     type=str,
     required=True,
-    default=DEFAULT_TOKEN,
+    envvar="GITLAB_TOKEN",
 )
 @click.option("--source-branch", help="source Git branch", type=str)
 @click.option(
     "--target-branch",
     help="Target Git branch (defaults to env variable GITLAB_TARGET_BRANCH)",
     type=str,
-    default=DEFAULT_TARGET_BRANCH,
+    envvar="GITLAB_TARGET_BRANCH",
+    default="next",
 )
 @click.option(
     "--title",
     help="Merge request title",
     type=str,
-    default=DEFAULT_TARGET_BRANCH,
+    envvar="GITLAB_TARGET_BRANCH",
+    default="next",
 )
 @click.option(
     "--project",
     help="GitLab project name (defaults to env variable GITLAB_PROJECT)",
     type=str,
     required=False,
-    default=DEFAULT_PROJECT,
+    envvar="GITLAB_PROJECT",
 )
 @click.option(
     "--automerge",
@@ -136,7 +138,7 @@ def create_release_merge_request(
     help="User ID to assign the merge request",
     type=str,
     required=False,
-    default=DEFAULT_PROJECT,
+    envvar="GITLAB_PROJECT",
 )
 @click.option(
     "--remove-source-branch",
@@ -185,21 +187,22 @@ def create_merge_request(
     help="GitLab instance API URL (defaults to gitlab.com)",
     type=str,
     required=False,
-    default=DEFAULT_URL,
+    envvar="GITLAB_URL",
+    default=_default_gitlab_url,
 )
 @click.option(
     "--token",
     help="token (can be set as env variable GITLAB_TOKEN)",
     type=str,
     required=True,
-    default=DEFAULT_TOKEN,
+    envvar="GITLAB_TOKEN",
 )
 @click.option(
     "--project",
     help="GitLab project name (defaults to env variable GITLAB_PROJECT)",
     type=str,
     required=False,
-    default=DEFAULT_PROJECT,
+    envvar="GITLAB_PROJECT",
 )
 @click.option(
     "--merge-request-id",
@@ -229,21 +232,22 @@ def activate_merge_request_automerge(url, token, project, merge_request_id):
     help="GitLab instance API URL (defaults to gitlab.com)",
     type=str,
     required=False,
-    default=DEFAULT_URL,
+    envvar="GITLAB_URL",
+    default=_default_gitlab_url,
 )
 @click.option(
     "--token",
     help="token (can be set as env variable GITLAB_TOKEN)",
     type=str,
     required=True,
-    default=DEFAULT_TOKEN,
+    envvar="GITLAB_TOKEN",
 )
 @click.option(
     "--project",
     help="GitLab project name (defaults to env variable GITLAB_PROJECT)",
     type=str,
     required=False,
-    default=DEFAULT_PROJECT,
+    envvar="GITLAB_PROJECT",
 )
 @click.option(
     "--branch",
@@ -280,21 +284,22 @@ def run_job(url, token, project, branch, variables):
     help="GitLab instance API URL (defaults to gitlab.com)",
     type=str,
     required=False,
-    default=DEFAULT_URL,
+    envvar="GITLAB_URL",
+    default=_default_gitlab_url,
 )
 @click.option(
     "--token",
     help="token (can be set as env variable GITLAB_TOKEN)",
     type=str,
     required=True,
-    default=DEFAULT_TOKEN,
+    envvar="GITLAB_TOKEN",
 )
 @click.option(
     "--project",
     help="GitLab project name (defaults to env variable GITLAB_PROJECT)",
     type=str,
     required=False,
-    default=DEFAULT_PROJECT,
+    envvar="GITLAB_PROJECT",
 )
 def get_project_id(url, project, token):
     if not url:

@@ -1,4 +1,3 @@
-import os
 
 import click
 
@@ -8,7 +7,6 @@ from developers_chamber.slack_utils import (
 )
 from developers_chamber.utils import MIGRATIONS_PATTERN
 
-slack_bot_token = os.environ.get("SLACK_BOT_TOKEN")
 TARGET_BRANCH = "master"
 
 
@@ -19,7 +17,7 @@ def slack():
 
 @slack.command()
 @click.option(
-    "--token", help="Slack bot token", type=str, required=True, default=slack_bot_token
+    "--token", help="Slack bot token", type=str, required=True, envvar="SLACK_BOT_TOKEN"
 )
 @click.option(
     "--channel",

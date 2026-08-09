@@ -7,18 +7,14 @@ from importlib.machinery import SourceFileLoader
 
 import click_completion
 import coloredlogs
-from dotenv import load_dotenv
+from developers_chamber.config import ConfigError, load_config
 from developers_chamber.utils import INSTALLED_MODULES
 
-for config_path in (Path.home(), Path.cwd()):
-    if (config_path / ".pydev").exists() and (config_path / ".pydev").is_dir():
-        for file in sorted((config_path / ".pydev").iterdir()):
-            if (
-                file.is_file()
-                and file.suffix == ".conf"
-                and not file.name.startswith("~")
-            ):
-                load_dotenv(dotenv_path=str(file), override=True)
+try:
+    load_config()
+except ConfigError as ex:
+    sys.stderr.write("{}\n".format(ex))
+    sys.exit(1)
 
 
 from developers_chamber.scripts import cli
