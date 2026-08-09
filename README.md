@@ -10,6 +10,41 @@ Library of helpers for python development.
 pip install developers-chamber
 ```
 
+## Optional modules
+
+The commands which need a heavier library are shipped as extras and the command group appears only when its extra is installed:
+
+| extra | commands |
+| --- | --- |
+| `git` | `pydev git` |
+| `gitlab` | `pydev gitlab` |
+| `bitbucket` | `pydev bitbucket` |
+| `jira` | `pydev jira` |
+| `toggle` | `pydev toggle` |
+| `slack` | `pydev slack` |
+| `aws` | `pydev ecs` |
+| `qa` | `pydev qa` |
+
+```bash
+pip install 'developers-chamber[git,jira]'
+```
+
+# Development
+
+Install the library in the editable mode together with the extras you need and the test extra:
+
+```bash
+pip install -e '.[git,test]'
+```
+
+Run the tests with pytest from the root of the repository:
+
+```bash
+pytest
+```
+
+The tests of the `pydev git` commands are skipped without the `git` extra, the rest of the suite needs no extra at all.
+
 ## Required system libraries
 
 ### Docker
@@ -43,21 +78,28 @@ The purpose of the general pydev settings is to have some place where you can st
 The project configuration directory is stored in path `$PROJECT_DIR/.pydev` and works only if pydev commands are run in the `$PROJECT_DIR` directory. The same values in the general configuration will be overriden by to project configuration. 
 
 
-Configuration files which are stored in the `.pydev` directory must have this format:
+Configuration files which are stored in the `.pydev` directory can be written in three formats which are recognized by the file suffix:
+
+* `.conf` - the plain `KEY=VALUE` format
+* `.yaml` or `.yml`
+* `.json`
+
+The formats can be mixed in one directory and the files are applied in the alphabetical order of their whole name no matter the format:
+
 ```bash
 ./.pydev/
-    base.conf
+    base.yaml
     dev.conf
-    prod.conf
+    prod.json
 ```
 
-If you want to disable configuration file you can rename it to start with character `~`. In the example `~prod.conf` will be ignored:
+If you want to disable configuration file you can rename it to start with character `~`. In the example `~prod.yaml` will be ignored:
 
 ```bash
 ./.pydev/
-    base.conf
+    base.yaml
     dev.conf
-    ~prod.conf
+    ~prod.yaml
 ```
 
 The configuration file may contain project settings and aliases.
@@ -66,6 +108,7 @@ The configuration file may contain project settings and aliases.
 
 Project settings saves the time to the developers because pydev input parameters may be omitted if the parameter is defined in the configuration file. Example of such file can be:
 
+```bash
 JIRA_PROJECT_KEY=PROJ
 PROJECT_DOCKER_COMPOSE_FILES=path/to/the/compose.yaml
 PROJECT_DOCKER_COMPOSE_DEFAULT_UP_CONTAINERS=container_a,container_b
@@ -73,15 +116,52 @@ PROJECT_DOCKER_COMPOSE_CONTAINERS_DIR_TO_COPY=container_a:/usr/local/lib/python3
 PROJECT_DOCKER_COMPOSE_CONTAINERS_INSTALL_COMMAND=base:./manage.py compilemessages && ./manage.py migrate && ./manage.py collectstatic
 PROJECT_DOCKER_COMPOSE_VAR_DIRS=var,var/data/media,var/data/static
 PROJECT_LIBRARY_DIR=var/site-packages
+```
+
+The same settings written in the YAML format:
+
+```yaml
+jira:
+  project_key: PROJ
+
+project:
+  library_dir: var/site-packages
+  docker_compose:
+    files: [path/to/the/compose.yaml]
+    default_up_containers: [container_a, container_b]
+    var_dirs: [var, var/data/media, var/data/static]
+    containers_dir_to_copy:
+      container_a:
+        /usr/local/lib/python3.11/site-packages: var/site-packages
+    containers_install_command:
+      base: ./manage.py compilemessages && ./manage.py migrate && ./manage.py collectstatic
+```
+
+The structured formats are translated into the same settings which the commands read, therefore the rules are:
+
+* A nested object is a section and its name is joined to the name of its keys with an underscore, so `jira.project_key` becomes `JIRA_PROJECT_KEY`. Dashes in the names are read as underscores.
+* A list is joined with a comma, so `files: [a.yaml, b.yaml]` becomes `a.yaml,b.yaml`.
+* A `null` value is ignored, which is useful for turning a setting of the general configuration off.
+* Settings which have their own format - `aliases`, `containers_dir_to_copy`, `containers_install_command` and `containers_env` - accept the structured notation shown above. Each of them accepts the plain string notation too, so you can always fall back to it.
+
+A setting which is defined in a configuration file overrides the environment variable of the same name.
 
 ### Alias
 
-Alias is a shortcut for the developer to save his time and are defined with `ALIASES` setting in a JSON format:
+Alias is a shortcut for the developer to save his time and are defined with the `aliases` setting:
+
+```yaml
+aliases:
+  up: project up
+  up-all: project up -a
+```
+
+In the `.conf` format the same aliases have to be written as a JSON string:
 
 ```bash
 ALIASES='{
     "up": "project up",
-    "up-all": "project up -a",
+    "up-all": "project up -a"
 }'
 ```
 
@@ -94,10 +174,9 @@ pydev up-all # instead of pydev project up -a
 
 You can write alias with arguments too:
 
-```bash
-ALIASES='{
-    "migrate": "project run \"python manage.py migrate $app\"",
-}'
+```yaml
+aliases:
+  migrate: project run "python manage.py migrate $app"
 ```
 
 You can now run migration to the concrete app with:
@@ -106,12 +185,13 @@ You can now run migration to the concrete app with:
 pydev migrate --app=users # it will run pydev project run "python manage.py migrate users"
 ```
 
-There can be situations when you need to alias on more commands. You can use JSON list to specify it:
+There can be situations when you need to alias on more commands. You can use a list to specify it:
 
-```bash
-ALIASES='{
-    "build-js": ["project run -c static \"build-js.sh\"", "project run -c base \"./manage.py collectstatic\""],
-}'
+```yaml
+aliases:
+  build-js:
+    - project run -c static "build-js.sh"
+    - project run -c base "./manage.py collectstatic"
 ```
 
 Now you can run only one pydev command to build js and collect django static files:
@@ -120,14 +200,32 @@ Now you can run only one pydev command to build js and collect django static fil
 pydev buildjs
 ```
 
-Everything what you define after pydev alias will be sent into the command:
+An alias can describe itself. Instead of the command write an object with the `description` and the `command` key, where the command is again either a single command or a list of them:
+
+```yaml
+aliases:
+  build-js:
+    description: Build js and collect django static files
+    command:
+      - project run -c static "build-js.sh"
+      - project run -c base "./manage.py collectstatic"
+```
+
+The description is then shown next to the alias in `pydev --help` and above the list of the aliased commands in `pydev build-js --help`:
 
 ```bash
-ALIASES='{
-    "run-dj": "project run \"./manage.py\"",
-}'
+Aliases:
+  build-js  Build js and collect django static files
+```
 
-# bash
+Everything what you define after pydev alias will be sent into the command:
+
+```yaml
+aliases:
+  run-dj: project run "./manage.py"
+```
+
+```bash
 pydev run-dj migrate --no-input
 ```
 

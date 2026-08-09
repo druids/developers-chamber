@@ -1,4 +1,3 @@
-import os
 
 import click
 
@@ -8,10 +7,7 @@ from developers_chamber.bitbucket_utils import (
 from developers_chamber.git_utils import get_current_branch_name
 from developers_chamber.scripts import cli
 
-default_username = os.environ.get("BITBUCKET_USERNAME")
-default_password = os.environ.get("BITBUCKET_PASSWORD")
-default_destination_branch_name = os.environ.get("BITBUCKET_BRANCH_NAME", "next")
-default_repository_name = os.environ.get("BITBUCKET_REPOSITORY")
+
 
 
 @cli.group()
@@ -26,7 +22,7 @@ def bitbucket():
     help="username",
     type=str,
     required=True,
-    default=default_username,
+    envvar="BITBUCKET_USERNAME",
 )
 @click.option(
     "--password",
@@ -34,7 +30,7 @@ def bitbucket():
     help="password",
     type=str,
     required=True,
-    default=default_password,
+    envvar="BITBUCKET_PASSWORD",
 )
 @click.option("--source-branch-name", "-s", help="source git branch name", type=str)
 @click.option(
@@ -43,7 +39,8 @@ def bitbucket():
     help="destination git branch name",
     type=str,
     required=True,
-    default=default_destination_branch_name,
+    envvar="BITBUCKET_BRANCH_NAME",
+    default="next",
 )
 @click.option(
     "--repository-name",
@@ -51,7 +48,7 @@ def bitbucket():
     help="git repository name",
     type=str,
     required=True,
-    default=default_repository_name,
+    envvar="BITBUCKET_REPOSITORY",
 )
 def create_release_pull_request(
     username, password, source_branch_name, destination_branch_name, repository_name

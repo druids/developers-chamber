@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="developers-chamber",
-    version="0.1.51",
+    version="1.0.0",
     description="A small plugin which help with development, deployment, git",
     keywords="django, skripts, easy live, git, bitbucket, Jira",
     author="Druids team",
@@ -23,6 +23,9 @@ setup(
         "PyYAML>=6.0.3",
     ],
     extras_require={
+        "test": [
+            "pytest>=8.0",
+        ],
         "slack": [
             "slack-sdk==3.21.3",
         ],

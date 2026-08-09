@@ -1,4 +1,3 @@
-import os
 from datetime import date
 
 import click
@@ -13,9 +12,6 @@ from developers_chamber.toggle_utils import (
 )
 from developers_chamber.utils import pretty_time_delta
 
-api_key = os.environ.get("TOGGL_API_KEY")
-project_id = os.environ.get("TOGGL_PROJECT_ID")
-workspace_id = os.environ.get("TOGGL_WORKSPACE_ID")
 
 
 @cli.group()
@@ -31,7 +27,7 @@ def toggl():
     help="toggl workspace ID",
     type=str,
     required=False,
-    default=workspace_id,
+    envvar="TOGGL_WORKSPACE_ID",
 )
 @click.option(
     "--project-id",
@@ -39,10 +35,10 @@ def toggl():
     help="toggl project ID",
     type=str,
     required=False,
-    default=project_id,
+    envvar="TOGGL_PROJECT_ID",
 )
 @click.option(
-    "--api-key", "-k", help="toggle API key", type=str, required=True, default=api_key
+    "--api-key", "-k", help="toggle API key", type=str, required=True, envvar="TOGGL_API_KEY"
 )
 def start(description, workspace_id, project_id, api_key):
     """
@@ -56,7 +52,7 @@ def start(description, workspace_id, project_id, api_key):
 
 @toggl.command()
 @click.option(
-    "--api-key", "-k", help="toggle API key", type=str, required=True, default=api_key
+    "--api-key", "-k", help="toggle API key", type=str, required=True, envvar="TOGGL_API_KEY"
 )
 def stop(api_key):
     """
@@ -75,7 +71,7 @@ def stop(api_key):
 
 @toggl.command(name="print")
 @click.option(
-    "--api-key", "-k", help="toggle API key", type=str, required=True, default=api_key
+    "--api-key", "-k", help="toggle API key", type=str, required=True, envvar="TOGGL_API_KEY"
 )
 def print_toggl(api_key):
     """
@@ -96,7 +92,7 @@ def print_toggl(api_key):
     help="toggl workspace ID",
     type=str,
     required=False,
-    default=workspace_id,
+    envvar="TOGGL_WORKSPACE_ID",
 )
 @click.option(
     "--project-id",
@@ -104,7 +100,7 @@ def print_toggl(api_key):
     help="toggl project ID",
     type=str,
     required=False,
-    default=project_id,
+    envvar="TOGGL_PROJECT_ID",
 )
 @click.option("--description", "-d", help="task description", type=str)
 @click.option(
@@ -122,7 +118,7 @@ def print_toggl(api_key):
     default=str(date.today()),
 )
 @click.option(
-    "--api-key", "-k", help="toggle API key", type=str, required=True, default=api_key
+    "--api-key", "-k", help="toggle API key", type=str, required=True, envvar="TOGGL_API_KEY"
 )
 def print_report(workspace_id, project_id, description, from_date, to_date, api_key):
     """
@@ -147,7 +143,7 @@ def print_report(workspace_id, project_id, description, from_date, to_date, api_
     help="toggl workspace ID",
     type=str,
     required=False,
-    default=workspace_id,
+    envvar="TOGGL_WORKSPACE_ID",
 )
 @click.option(
     "--project-id",
@@ -155,7 +151,7 @@ def print_report(workspace_id, project_id, description, from_date, to_date, api_
     help="toggl project ID",
     type=str,
     required=False,
-    default=project_id,
+    envvar="TOGGL_PROJECT_ID",
 )
 @click.option("--description", "-d", help="task description", type=str)
 @click.option(
@@ -173,7 +169,7 @@ def print_report(workspace_id, project_id, description, from_date, to_date, api_
     default=str(date.today()),
 )
 @click.option(
-    "--api-key", "-k", help="toggle API key", type=str, required=True, default=api_key
+    "--api-key", "-k", help="toggle API key", type=str, required=True, envvar="TOGGL_API_KEY"
 )
 def print_report_tasks(
     workspace_id, project_id, description, from_date, to_date, api_key

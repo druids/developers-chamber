@@ -21,6 +21,7 @@ from developers_chamber.git_utils import (
 from developers_chamber.git_utils import (
     merge_release_branch as merge_release_branch_func,
 )
+from developers_chamber.click.options import CommaSeparatedPathType
 from developers_chamber.scripts import cli
 from developers_chamber.types import (
     EnumType,
@@ -34,11 +35,8 @@ from developers_chamber.version_utils import (
     get_version_files,
 )
 
-from .version import default_version_files, default_version_file_type
+from .version import _default_version_file
 
-default_remote_name = os.environ.get("GIT_REMOTE_NAME")
-default_branch_name = os.environ.get("GIT_BRANCH_NAME")
-default_release_prefix = os.environ.get("RELEASE_PREFIX")
 
 
 @cli.group()
@@ -67,7 +65,7 @@ def git():
     "--file",
     "-f",
     help="path to the version file",
-    default=default_version_files[0],
+    default=_default_version_file,
     required=True,
     type=click.Path(exists=True),
 )
@@ -76,14 +74,14 @@ def git():
     "-r",
     help="remote repository name if you want to push the new branch",
     type=str,
-    default=default_remote_name,
+    envvar="GIT_REMOTE_NAME",
 )
 @click.option(
     "--branch-name",
     "-b",
     help="branch name if you want to create branch from another repository",
     type=str,
-    default=default_branch_name,
+    envvar="GIT_BRANCH_NAME",
 )
 @click.option(
     "--release-prefix",
@@ -91,7 +89,7 @@ def git():
     help="package/component prefix inserted into the release branch name "
     '(e.g. "habarico" -> release/habarico@v1.3)',
     type=str,
-    default=default_release_prefix,
+    envvar="RELEASE_PREFIX",
 )
 def create_release_branch(
     release_type, pre_release, file, remote_name, branch_name, release_prefix
@@ -137,7 +135,7 @@ def create_release_branch(
     "--file",
     "-f",
     help="path to the version file",
-    default=default_version_files[0],
+    default=_default_version_file,
     required=True,
     type=click.Path(exists=True),
 )
@@ -146,20 +144,20 @@ def create_release_branch(
     "-r",
     help="remote repository name if you want to push the new branch",
     type=str,
-    default=default_remote_name,
+    envvar="GIT_REMOTE_NAME",
 )
 @click.option(
     "--branch-name",
     "-b",
     help="branch name if you want to create branch from another repository",
     type=str,
-    default=default_branch_name,
+    envvar="GIT_BRANCH_NAME",
 )
 @click.option(
     "--file-type",
     help="version file type",
     type=EnumType(VersionFileType),
-    default=default_version_file_type,
+    envvar="VERSION_FILE_TYPE",
     required=False,
 )
 @click.option(
@@ -168,7 +166,7 @@ def create_release_branch(
     help="package/component prefix inserted into the release branch name and tag "
     '(e.g. "habarico" -> release/habarico@v1.3 + tag habarico@1.3.0)',
     type=str,
-    default=default_release_prefix,
+    envvar="RELEASE_PREFIX",
 )
 def create_release(
     release_type, pre_release, file, remote_name, branch_name, file_type, release_prefix
@@ -206,7 +204,7 @@ def create_release(
     "-r",
     help="remote repository name if you want to push the new branch",
     type=str,
-    default=default_remote_name,
+    envvar="GIT_REMOTE_NAME",
 )
 @click.option("--hot", "-h", help="hot deployment", is_flag=True, default=False)
 def create_deployment_branch(environment, remote_name, hot):
@@ -233,10 +231,11 @@ def checkout_to_release_branch():
     "--file",
     "-f",
     help="path to the version file",
-    default=default_version_files,
+    envvar="VERSION_FILES",
+    default=("version.json",),
     required=True,
     multiple=True,
-    type=click.Path(exists=True),
+    type=CommaSeparatedPathType(exists=True),
 )
 def bump_version_from_release_tag(file):
     """
@@ -252,23 +251,24 @@ def bump_version_from_release_tag(file):
     "--file",
     "-f",
     help="path to the version file",
-    default=default_version_files,
+    envvar="VERSION_FILES",
+    default=("version.json",),
     required=True,
     multiple=True,
-    type=click.Path(exists=True),
+    type=CommaSeparatedPathType(exists=True),
 )
 @click.option(
     "--remote-name",
     "-r",
     help="remote repository name if you want to push the new branch",
     type=str,
-    default=default_remote_name,
+    envvar="GIT_REMOTE_NAME",
 )
 @click.option(
     "--file-type",
     help="version file type",
     type=EnumType(VersionFileType),
-    default=default_version_file_type,
+    envvar="VERSION_FILE_TYPE",
     required=False,
 )
 @click.option(
@@ -276,7 +276,7 @@ def bump_version_from_release_tag(file):
     "-P",
     help="prefix joined to the version tag with '@' (e.g. 'habarico' -> 'habarico@1.3.0')",
     type=str,
-    default=default_release_prefix,
+    envvar="RELEASE_PREFIX",
 )
 def commit_version(file, remote_name, file_type, release_prefix):
     """
@@ -302,7 +302,7 @@ def commit_version(file, remote_name, file_type, release_prefix):
     "-r",
     help="remote repository name if you want to push the new branch",
     type=str,
-    default=default_remote_name,
+    envvar="GIT_REMOTE_NAME",
 )
 def merge_release_branch(to_branch_name, remote_name):
     """

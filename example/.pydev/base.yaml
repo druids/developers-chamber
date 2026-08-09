@@ -1,0 +1,35 @@
+jira:
+  project_key: PROJ
+  url: https://example.atlassian.net
+
+version_files: [version.json]
+
+project:
+  library_dir: var/site-packages
+  domains: [example.local]
+  docker_compose:
+    project_name: example
+    files: [docker/compose.yaml]
+    default_up_containers: [base, static]
+    var_dirs: [var, var/data/media, var/data/static]
+    containers_dir_to_copy:
+      base:
+        /usr/local/lib/python3.11/site-packages: var/site-packages
+    containers_install_command:
+      base: ./manage.py compilemessages && ./manage.py migrate && ./manage.py collectstatic
+    containers_env:
+      DJANGO_SETTINGS_MODULE: example.settings.local
+
+aliases:
+  up: project up
+  up-all: project up -a
+  migrate: project run "./manage.py migrate $app"
+  build-js:
+    - project run -c static "build-js.sh"
+    - project run -c base "./manage.py collectstatic"
+  # an alias can carry a description shown in the help of the pydev commands
+  reset-db:
+    description: Drop the database and migrate it from scratch
+    command:
+      - project run "./manage.py reset_db --noinput"
+      - project run "./manage.py migrate"

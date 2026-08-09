@@ -1,4 +1,3 @@
-import os
 
 import click
 
@@ -12,15 +11,10 @@ from developers_chamber.jira_utils import show_issue as show_issue_func
 from developers_chamber.scripts import cli
 from developers_chamber.types import TimedeltaType
 
-url = os.environ.get("JIRA_URL")
-username = os.environ.get("JIRA_USERNAME")
-api_key = os.environ.get("JIRA_API_KEY")
-jql = os.environ.get(
-    "JIRA_JQL",
+DEFAULT_JQL = (
     'project = {project_key} and assignee = currentUser() and status not in ("Done", "Canceled", "Closed") and sprint !'
-    "= null order by created DESC",
+    "= null order by created DESC"
 )
-project_key = os.environ.get("JIRA_PROJECT_KEY")
 
 
 @cli.group()
@@ -29,9 +23,9 @@ def jira():
 
 
 @jira.command()
-@click.option("--url", "-u", help="Jira URL", type=str, required=True, default=url)
+@click.option("--url", "-u", help="Jira URL", type=str, required=True, envvar="JIRA_URL")
 @click.option(
-    "--username", "-a", help="Jira username", type=str, required=True, default=username
+    "--username", "-a", help="Jira username", type=str, required=True, envvar="JIRA_USERNAME"
 )
 @click.option(
     "--api-key",
@@ -39,16 +33,16 @@ def jira():
     help="Jira API key/password",
     type=str,
     required=True,
-    default=api_key,
+    envvar="JIRA_API_KEY",
 )
 @click.option(
     "--project-key",
     help="Jira project key",
     type=str,
     required=False,
-    default=project_key,
+    envvar="JIRA_PROJECT_KEY",
 )
-@click.option("--jql", help="JQL", type=str, required=True, default=jql)
+@click.option("--jql", help="JQL", type=str, required=True, envvar="JIRA_JQL", default=DEFAULT_JQL)
 def my_issues(url, username, api_key, project_key, jql):
     """
     List open Jira tasks for the current user.
@@ -57,9 +51,9 @@ def my_issues(url, username, api_key, project_key, jql):
 
 
 @jira.command()
-@click.option("--url", "-u", help="Jira URL", type=str, required=True, default=url)
+@click.option("--url", "-u", help="Jira URL", type=str, required=True, envvar="JIRA_URL")
 @click.option(
-    "--username", "-a", help="Jira username", type=str, required=True, default=username
+    "--username", "-a", help="Jira username", type=str, required=True, envvar="JIRA_USERNAME"
 )
 @click.option(
     "--api-key",
@@ -67,14 +61,14 @@ def my_issues(url, username, api_key, project_key, jql):
     help="Jira API key/password",
     type=str,
     required=True,
-    default=api_key,
+    envvar="JIRA_API_KEY",
 )
 @click.option(
     "--project-key",
     help="Jira project key",
     type=str,
     required=False,
-    default=project_key,
+    envvar="JIRA_PROJECT_KEY",
 )
 @click.option("--issue-key", "-i", help="key of the task", type=str, required=True)
 def get_branch_name(url, username, api_key, project_key, issue_key):
@@ -85,9 +79,9 @@ def get_branch_name(url, username, api_key, project_key, issue_key):
 
 
 @jira.command()
-@click.option("--url", "-u", help="Jira URL", type=str, required=True, default=url)
+@click.option("--url", "-u", help="Jira URL", type=str, required=True, envvar="JIRA_URL")
 @click.option(
-    "--username", "-a", help="Jira username", type=str, required=True, default=username
+    "--username", "-a", help="Jira username", type=str, required=True, envvar="JIRA_USERNAME"
 )
 @click.option(
     "--api-key",
@@ -95,14 +89,14 @@ def get_branch_name(url, username, api_key, project_key, issue_key):
     help="Jira API key/password",
     type=str,
     required=True,
-    default=api_key,
+    envvar="JIRA_API_KEY",
 )
 @click.option(
     "--project-key",
     help="Jira project key",
     type=str,
     required=False,
-    default=project_key,
+    envvar="JIRA_PROJECT_KEY",
 )
 @click.option("--issue-key", "-i", help="key of the task", type=str)
 def show_issue(url, username, api_key, project_key, issue_key):
@@ -113,9 +107,9 @@ def show_issue(url, username, api_key, project_key, issue_key):
 
 
 @jira.command()
-@click.option("--url", "-u", help="Jira URL", type=str, required=True, default=url)
+@click.option("--url", "-u", help="Jira URL", type=str, required=True, envvar="JIRA_URL")
 @click.option(
-    "--username", "-a", help="Jira username", type=str, required=True, default=username
+    "--username", "-a", help="Jira username", type=str, required=True, envvar="JIRA_USERNAME"
 )
 @click.option(
     "--api-key",
@@ -123,14 +117,14 @@ def show_issue(url, username, api_key, project_key, issue_key):
     help="Jira API key/password",
     type=str,
     required=True,
-    default=api_key,
+    envvar="JIRA_API_KEY",
 )
 @click.option(
     "--project-key",
     help="Jira project key",
     type=str,
     required=False,
-    default=project_key,
+    envvar="JIRA_PROJECT_KEY",
 )
 @click.option("--issue-key", "-i", help="key of the task", type=str)
 @click.option(
@@ -152,9 +146,9 @@ def log_issue_time(url, username, api_key, project_key, issue_key, time_spend, c
 
 
 @jira.command()
-@click.option("--url", "-u", help="Jira URL", type=str, required=True, default=url)
+@click.option("--url", "-u", help="Jira URL", type=str, required=True, envvar="JIRA_URL")
 @click.option(
-    "--username", "-a", help="Jira username", type=str, required=True, default=username
+    "--username", "-a", help="Jira username", type=str, required=True, envvar="JIRA_USERNAME"
 )
 @click.option(
     "--api-key",
@@ -162,14 +156,14 @@ def log_issue_time(url, username, api_key, project_key, issue_key, time_spend, c
     help="Jira API key/password",
     type=str,
     required=True,
-    default=api_key,
+    envvar="JIRA_API_KEY",
 )
 @click.option(
     "--project-key",
     help="Jira project key",
     type=str,
     required=False,
-    default=project_key,
+    envvar="JIRA_PROJECT_KEY",
 )
 @click.option("--issue-key", "-i", help="key of the task", type=str)
 def print_issue_worklog(url, username, api_key, project_key, issue_key):
@@ -183,9 +177,9 @@ def print_issue_worklog(url, username, api_key, project_key, issue_key):
 
 
 @jira.command()
-@click.option("--url", "-u", help="Jira URL", type=str, required=True, default=url)
+@click.option("--url", "-u", help="Jira URL", type=str, required=True, envvar="JIRA_URL")
 @click.option(
-    "--username", "-a", help="Jira username", type=str, required=True, default=username
+    "--username", "-a", help="Jira username", type=str, required=True, envvar="JIRA_USERNAME"
 )
 @click.option(
     "--api-key",
@@ -193,7 +187,7 @@ def print_issue_worklog(url, username, api_key, project_key, issue_key):
     help="Jira API key/password",
     type=str,
     required=True,
-    default=api_key,
+    envvar="JIRA_API_KEY",
 )
 @click.option("--jql", help="JQL", type=str, required=True)
 @click.option("--transition", help="Jira transition name", type=str, required=True)

@@ -8,7 +8,11 @@ from git import GitCommandError, InvalidGitRepositoryError
 from .types import ReleaseType, VersionFileType
 from .version_utils import bump_to_next_version, bump_version, get_version
 
-DEPLOYMENT_COMMIT_PATTERN = r'^Deployment of "(?P<branch_name>.+)"$'
+# Both quote styles are accepted: create_deployment_branch writes the branch name in single
+# quotes, older deployment branches may still carry the double quoted form.
+DEPLOYMENT_COMMIT_PATTERN = (
+    r"^Deployment of (?P<quote>[\"'])(?P<branch_name>.+)(?P=quote)$"
+)
 # The optional "<prefix>@" (or "<prefix>/") group lets a package-prefixed tag like
 # "habarico@1.3.0" resolve back to the bare version. Prefix-agnostic on purpose.
 VERSION_PATTERN = r"^(?:.+[@/])?(?P<version>[0-9]+\.[0-9]+\.[0-9]+)$"
@@ -275,7 +279,7 @@ def get_commit_hash(branch_name):
 
 def get_current_issue_key():
     branch_name = get_current_branch_name()
-    match = re.match("(?P<issue_key>.{3}-\d+).*", branch_name)
+    match = re.match(r"(?P<issue_key>.{3}-\d+).*", branch_name)
     if match:
         return match.group("issue_key")
     else:
