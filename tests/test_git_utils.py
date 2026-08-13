@@ -12,12 +12,15 @@ from developers_chamber.git_utils import (  # noqa: E402
     commit_version,
     create_branch,
     create_deployment_branch,
+    create_release,
+    create_release_branch,
     get_commit_hash,
     get_current_branch_name,
     get_current_issue_key,
     get_remote_path,
     get_remote_url,
 )
+from developers_chamber.types import ReleaseType  # noqa: E402
 from developers_chamber.version_utils import Version  # noqa: E402
 
 pytestmark = pytest.mark.usefixtures("git_repo")
@@ -126,6 +129,47 @@ class TestBumpVersionFromReleaseTag:
         git_repo.create_tag("nightly")
         with pytest.raises(UsageError, match="Invalid release branch"):
             bump_version_from_release_tag()
+
+
+class TestCreateReleaseBranch:
+
+    def test_branch_is_created_from_the_current_branch(self, git_repo):
+        assert (
+            create_release_branch(Version("1.3.0"), ReleaseType.minor) == "release/v1.3"
+        )
+        assert git_repo.active_branch.name == "release/v1.3"
+
+    def test_checked_out_release_branch_is_kept(self, git_repo):
+        """The branch cannot be created again while the worktree stands on it."""
+        git_repo.git.checkout("HEAD", b="release/v1.2")
+        assert (
+            create_release_branch(Version("1.2.4"), ReleaseType.patch) == "release/v1.2"
+        )
+        assert git_repo.active_branch.name == "release/v1.2"
+
+
+class TestCreateRelease:
+
+    def test_release_branch_is_created_from_the_current_branch(self, git_repo):
+        assert create_release("version.json", ReleaseType.minor) == "release/v1.3"
+        assert git_repo.active_branch.name == "release/v1.3"
+        assert git_repo.head.commit.message.strip() == "Bump version to '1.3.0'"
+        assert "1.3.0" in [tag.name for tag in git_repo.tags]
+
+    def test_existing_release_branch_is_replaced(self, git_repo):
+        git_repo.git.branch("release/v1.3")
+        assert create_release("version.json", ReleaseType.minor) == "release/v1.3"
+        assert git_repo.head.commit.message.strip() == "Bump version to '1.3.0'"
+
+    def test_release_is_committed_on_top_of_the_checked_out_release_branch(
+        self, git_repo
+    ):
+        """The release branch cannot be deleted while the worktree stands on it."""
+        git_repo.git.checkout("HEAD", b="release/v1.2")
+        assert create_release("version.json", ReleaseType.patch) == "release/v1.2"
+        assert git_repo.active_branch.name == "release/v1.2"
+        assert git_repo.head.commit.message.strip() == "Bump version to '1.2.4'"
+        assert "1.2.4" in [tag.name for tag in git_repo.tags]
 
 
 class TestDeploymentBranch:
