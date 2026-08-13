@@ -62,7 +62,14 @@ def create_release_branch(
         release_branch_name = _release_branch_name(version, release_prefix)
     else:
         raise BadParameter("build is not allowed for release")
-    g.checkout(branch_name or "HEAD", b=release_branch_name)
+
+    # The release branch may already be the checked out one (CI runs the release from it);
+    # git refuses to create it again and standing on it is all that is needed.
+    is_on_release_branch = (
+        not repo.head.is_detached and repo.active_branch.name == release_branch_name
+    )
+    if not is_on_release_branch:
+        g.checkout(branch_name or "HEAD", b=release_branch_name)
 
     if remote_name:
         g.push(remote_name, release_branch_name, force=True)
@@ -113,15 +120,22 @@ def create_release(
 
     release_tag_name = _release_tag_name(version, release_prefix)
 
+    # A patch release is usually built from the release branch itself (CI checks it out), so
+    # the branch can be neither deleted nor recreated - the bump commit goes on top of it.
+    is_on_release_branch = (
+        not repo.head.is_detached and repo.active_branch.name == release_branch_name
+    )
+
     branch_names = [branch.name for branch in repo.branches]
-    if release_branch_name in branch_names:
+    if release_branch_name in branch_names and not is_on_release_branch:
         g.branch("-D", release_branch_name)
 
     tags = [tag.name for tag in repo.tags]
     if release_tag_name in tags:
         g.tag("-d", release_tag_name)
 
-    g.checkout(branch_name or "HEAD", b=release_branch_name)
+    if not is_on_release_branch:
+        g.checkout(branch_name or "HEAD", b=release_branch_name)
     g.commit(message=f"Bump version to '{version}'")
 
     g.tag(release_tag_name)
