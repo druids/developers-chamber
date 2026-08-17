@@ -292,13 +292,34 @@ The `create-release` and `create-release-branch` commands accept `--release-pref
 Helpers for GitLab management.
 
 #### Commands
-* `pydev git create-release-merge-request` - create a new merge request in a GitLab project. It is often used after the project release
+* `pydev gitlab create-release-merge-request` - create a new merge request from the current branch in a GitLab project. It is often used after the project release
+* `pydev gitlab create-merge-request` - create a new merge request with the given title, optionally with automerge and removal of the source branch
+* `pydev gitlab activate-merge-request-automerge` - merge an existing merge request as soon as its pipeline succeeds
+* `pydev gitlab run-job` - run a pipeline of the selected branch, optionally with variables (`--variables "A=1,B=2"`)
+* `pydev gitlab get-project-id` - print the numeric ID of the GitLab project
+* `pydev gitlab create-release-record` - create a GitLab release object for an already existing release tag
+
+The `create-release-record` command hangs a [GitLab release](https://docs.gitlab.com/user/project/releases/) on a tag created by `pydev git create-release`. The tag stays the source of truth for publishing, the release is metadata on top of it, so that "what is released" is readable per project and across the group:
+
+```bash
+pydev gitlab create-release-record --tag-name "$CI_COMMIT_TAG" \
+    --description "$(sed -n '/^## \[1.3.0\]/,/^## /p' CHANGELOG.md)" \
+    --asset "Wheel=https://pypi.example.com/pkg-1.3.0.whl"
+```
+
+* the release name defaults to the tag with the monorepo prefix separated by a space (`lib-a@1.3.0` -> `lib-a 1.3.0`), `--name` overrides it
+* `--description` is passed in by the caller, usually as the `CHANGELOG.md` section of the released version
+* `--asset "name=URL"` can be repeated for every published artifact (package in the registry, image tag)
+* in a CI job neither a token nor a project has to be set up: `CI_JOB_TOKEN` and `CI_COMMIT_TAG` are read from the environment and `--project` accepts the numeric `$CI_PROJECT_ID`. Only `--url` has to be passed as `$CI_SERVER_URL` when `GITLAB_API_URL` is not set
+* a request rejected by GitLab (an already existing release among them) ends the command with an error. A release is an addition, not a critical path, so let the release job keep going with `|| true`
 
 #### Configuration
 * `GITLAB_API_URL` - URL to gitlab API service
 * `GITLAB_PROJECT` - GitLab project name
 * `GITLAB_TARGET_BRANCH` - target branch for the merge request
-* `GITLAB_TOKEN` - GitLab authentication token
+* `GITLAB_TOKEN` - GitLab authentication token, sent as the `PRIVATE-TOKEN` header
+* `CI_JOB_TOKEN` - CI job token of the running job, sent as the `JOB-TOKEN` header and preferred over `GITLAB_TOKEN`. Accepted by `create-release-record` only, because the endpoints of the other commands do not take a job token
+* `CI_COMMIT_TAG` - tag of the release for the `create-release-record` command
 
 ### QA
 
