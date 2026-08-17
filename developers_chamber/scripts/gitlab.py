@@ -7,9 +7,12 @@ from developers_chamber.gitlab_utils import (
     activate_automerge as activate_automerge_func,
     run_job as run_job_func,
     get_project_id as get_project_id_func,
+    create_release_record as create_release_record_func,
+    parse_asset_links,
 )
 from developers_chamber.scripts import cli
 from developers_chamber.git_utils import get_remote_url, get_remote_path
+
 
 def _default_gitlab_url():
     """Without its own setting the web url is the api url without the /api/v4 suffix."""
@@ -308,3 +311,87 @@ def get_project_id(url, project, token):
         project = get_remote_path()
 
     click.echo(get_project_id_func(url, project, token))
+
+
+@gitlab.command()
+@click.option(
+    "--url",
+    help="GitLab instance API URL (defaults to gitlab.com)",
+    type=str,
+    required=False,
+    envvar="GITLAB_URL",
+    default=_default_gitlab_url,
+)
+@click.option(
+    "--token",
+    help="token (can be set as env variable GITLAB_TOKEN)",
+    type=str,
+    required=False,
+    envvar="GITLAB_TOKEN",
+)
+@click.option(
+    "--job-token",
+    help="CI job token, preferred over the private token (can be set as env variable "
+    "CI_JOB_TOKEN)",
+    type=str,
+    required=False,
+    envvar="CI_JOB_TOKEN",
+)
+@click.option(
+    "--project",
+    help="GitLab project name or ID (defaults to env variable GITLAB_PROJECT)",
+    type=str,
+    required=False,
+    envvar="GITLAB_PROJECT",
+)
+@click.option(
+    "--tag-name",
+    help="name of the already pushed release tag (defaults to env variable CI_COMMIT_TAG)",
+    type=str,
+    required=True,
+    envvar="CI_COMMIT_TAG",
+)
+@click.option(
+    "--name",
+    help='release name (defaults to the tag name, e.g. "lib-a@1.3.0" -> "lib-a 1.3.0")',
+    type=str,
+    required=False,
+)
+@click.option(
+    "--description",
+    help="release description, usually the CHANGELOG.md section of the released version",
+    type=str,
+    required=False,
+)
+@click.option(
+    "--asset",
+    "assets",
+    help='link to a published artifact in the "name=URL" format (can be used repeatedly)',
+    type=str,
+    multiple=True,
+)
+def create_release_record(
+    url, token, job_token, project, tag_name, name, description, assets
+):
+    """
+    Create a GitLab release object for an already existing release tag.
+    """
+    if not token and not job_token:
+        raise click.UsageError("GitLab token or job token is required")
+    if not url:
+        url = get_remote_url()
+    if not project:
+        project = get_remote_path()
+
+    release_url = create_release_record_func(
+        url=url,
+        project=project,
+        tag_name=tag_name,
+        name=name,
+        description=description,
+        asset_links=parse_asset_links(assets),
+        token=token,
+        job_token=job_token,
+    )
+
+    click.echo(f"Release record was successfully created: {release_url}")
