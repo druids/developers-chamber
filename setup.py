@@ -24,7 +24,7 @@ setup(
         "requests>=2.23.0",
         "python-dotenv==0.14.0",
         "python-hosts==0.4.6",
-        "coloredlogs==10.0",
+        "coloredlogs==15.0.1",
         "click-completion==0.5.2",
         "toml>=0.10.2",
         "PyYAML>=6.0.3",
