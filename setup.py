@@ -53,7 +53,7 @@ setup(
         "jira": [
             "gitpython==3.1.37",
             "jira==2.0.0",
-            "unidecode==1.1.1",
+            "unidecode==1.4.0",
         ],
         "toggle": [
             "TogglPy==0.1.2",
