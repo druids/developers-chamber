@@ -1,7 +1,11 @@
-FROM docker:29-dind
+FROM docker:29
 
 ARG VERSION
 ENV DOCKER_TAG=${VERSION}
+
+LABEL org.opencontainers.image.source="https://github.com/druids/developers-chamber"
+LABEL org.opencontainers.image.description="pydev (developers-chamber) with Docker, compose and buildx"
+LABEL org.opencontainers.image.licenses="MIT"
 
 RUN apk update && \
 	apk add \
@@ -27,6 +31,8 @@ RUN pip install --upgrade --break-system-packages \
 	awscli \
 	"datadog==0.35.0" \
 	"pyjwt>=1.6.0" \
+	pyhcl \
+	ruamel.yaml \
 	"developers-chamber[git,gitlab,jira,slack,aws]==${DOCKER_TAG}"
 
 ENTRYPOINT ["bash", "-c"]
