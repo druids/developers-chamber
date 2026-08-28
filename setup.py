@@ -34,7 +34,7 @@ setup(
             "pytest>=8.0",
         ],
         "slack": [
-            "slack-sdk==3.21.3",
+            "slack-sdk==3.43.0",
         ],
         "aws": [
             "boto3<2",
