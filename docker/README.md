@@ -5,7 +5,9 @@ The image is published to the GitHub Container Registry on every release — the
 `linux/amd64` and `linux/arm64` variants:
 
 ```
-docker pull ghcr.io/druids/developers-chamber:1.0.2
+docker pull ghcr.io/druids/developers-chamber:1.0.4   # exact version
+docker pull ghcr.io/druids/developers-chamber:1.0     # latest patch of 1.0
+docker pull ghcr.io/druids/developers-chamber:1       # latest 1.x
 docker pull ghcr.io/druids/developers-chamber:latest
 ```
 
@@ -14,5 +16,5 @@ version. The version is based on tags on github.
 
 Example:
 ```
-docker build --build-arg VERSION=1.0.2 -f docker/Dockerfile .
+docker build --build-arg VERSION=1.0.4 -f docker/Dockerfile .
 ```
