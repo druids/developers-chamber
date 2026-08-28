@@ -4,16 +4,21 @@ ARG VERSION
 ENV DOCKER_TAG=${VERSION}
 
 LABEL org.opencontainers.image.source="https://github.com/druids/developers-chamber"
-LABEL org.opencontainers.image.description="pydev (developers-chamber) with Docker, compose and buildx"
+LABEL org.opencontainers.image.description="pydev (developers-chamber) with Docker, Helm, doctl and CI tooling"
 LABEL org.opencontainers.image.licenses="MIT"
 
 RUN apk update && \
 	apk add \
 	bash \
+	coreutils \
 	curl \
+	doctl \
+	expat \
 	gcc \
 	gettext \
 	git \
+	helm \
+	jq \
 	libc-dev \
 	libffi-dev \
 	make \
@@ -21,7 +26,9 @@ RUN apk update && \
 	py3-cryptography \
 	py3-pip \
 	python3 \
-	python3-dev
+	python3-dev \
+	skopeo \
+	zip
 
 RUN pip install --upgrade --break-system-packages \
 	pip \
