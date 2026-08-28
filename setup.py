@@ -1,9 +1,16 @@
+import os
+
 from setuptools import find_packages, setup
+
+with open(os.path.join(os.path.dirname(__file__), "README.md"), encoding="utf-8") as readme:
+    long_description = readme.read()
 
 setup(
     name="developers-chamber",
-    version="1.0.2",
+    version="1.0.3",
     description="A small plugin which help with development, deployment, git",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     keywords="django, skripts, easy live, git, bitbucket, Jira",
     author="Druids team",
     author_email="matllubos@gmail.com",

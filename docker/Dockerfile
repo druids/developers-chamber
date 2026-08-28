@@ -1,4 +1,4 @@
-FROM docker:23-dind
+FROM docker:29-dind
 
 ARG VERSION
 ENV DOCKER_TAG=${VERSION}
@@ -19,15 +19,14 @@ RUN apk update && \
 	python3 \
 	python3-dev
 
-RUN pip install --upgrade \
+RUN pip install --upgrade --break-system-packages \
 	pip \
 	setuptools
 
-RUN pip install --upgrade \
+RUN pip install --upgrade --break-system-packages \
 	awscli \
 	"datadog==0.35.0" \
-	"docker-compose==1.29.2" \
 	"pyjwt>=1.6.0" \
-	"https://github.com/druids/developers-chamber/tarball/${DOCKER_TAG}"
+	"developers-chamber[git,gitlab,jira,slack,aws]==${DOCKER_TAG}"
 
 ENTRYPOINT ["bash", "-c"]
