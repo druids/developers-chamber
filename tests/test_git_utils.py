@@ -102,6 +102,22 @@ class TestCommitVersion:
         )
         assert [str(tag) for tag in git_repo.tags] == ["habarico@1.3.0"]
 
+    def test_tag_is_not_created_when_it_is_turned_off(self, git_repo, version_file):
+        version_file.write_version("1.3.0")
+        commit_version("1.3.0", release_prefix="habarico", tag=False)
+        assert (
+            git_repo.head.commit.message.strip() == "Bump version to 'habarico@1.3.0'"
+        )
+        assert git_repo.tags == []
+
+    def test_existing_tag_does_not_block_a_commit_without_the_tag(
+        self, git_repo, version_file
+    ):
+        git_repo.create_tag("1.3.0")
+        version_file.write_version("1.3.0")
+        commit_version("1.3.0", tag=False)
+        assert git_repo.head.commit.message.strip() == "Bump version to '1.3.0'"
+
     def test_unchanged_version_files_are_reported(self):
         with pytest.raises(UsageError, match="Version files was not changed"):
             commit_version("1.3.0")

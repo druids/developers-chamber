@@ -271,7 +271,7 @@ Helpers to run git commands which simplify releasing.
 * `pydev git create-deployment-branch` - create a deployment branch and new commit to trigger a deployment event
 * `pydev git checkout-to-release-branch` - checkout git repository back to the release branch from deployment branch
 * `pydev git bump-version-from-release-branch` - get version defined in the release branch and bump version files
-* `pydev git commit-version` - commit version files and add git tag to the commit
+* `pydev git commit-version` - commit version files and add git tag to the commit, optionally without the tag (`--no-tag`)
 * `pydev git merge-release-branch` - merge current branch to the selected branch
 * `pydev git init-hooks` - initialize git hooks defined in the directory ./.pydev/git/hooks
 
