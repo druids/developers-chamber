@@ -23,7 +23,7 @@ setup(
         "click>=8.1",
         "requests>=2.23.0",
         "python-dotenv==1.2.3",
-        "python-hosts==0.4.6",
+        "python-hosts==1.1.2",
         "coloredlogs==15.0.1",
         "click-completion==0.5.2",
         "toml>=0.10.2",
