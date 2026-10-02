@@ -41,7 +41,7 @@ setup(
         ],
         "qa": [
             "gitpython==3.1.37",
-            "isort==5.12.0",
+            "isort==9.0.1",
             "flake8>=7.0.0",
         ],
         "bitbucket": [
