@@ -61,10 +61,15 @@ def gitlab():
     help="User ID to assign the merge request",
     type=str,
     required=False,
-    envvar="GITLAB_PROJECT",
+)
+@click.option(
+    "--description",
+    help="merge request description",
+    type=str,
+    default="",
 )
 def create_release_merge_request(
-    url, token, source_branch, target_branch, project, assignee_id=None
+    url, token, source_branch, target_branch, project, description, assignee_id=None
 ):
     """
     Create a new merge request in a GitLab project. It is often used after the project release.
@@ -82,7 +87,7 @@ def create_release_merge_request(
         url=url,
         token=token,
         title=f'Merge branch "{source_branch}"',
-        description="",
+        description=description,
         source_branch=source_branch,
         target_branch=target_branch,
         project=project,
@@ -120,8 +125,7 @@ def create_release_merge_request(
     "--title",
     help="Merge request title",
     type=str,
-    envvar="GITLAB_TARGET_BRANCH",
-    default="next",
+    required=True,
 )
 @click.option(
     "--project",
@@ -132,7 +136,7 @@ def create_release_merge_request(
 )
 @click.option(
     "--automerge",
-    help="User ID to assign the merge request",
+    help="Merge the merge request as soon as its pipeline succeeds",
     is_flag=True,
     default=False,
 )
@@ -141,7 +145,6 @@ def create_release_merge_request(
     help="User ID to assign the merge request",
     type=str,
     required=False,
-    envvar="GITLAB_PROJECT",
 )
 @click.option(
     "--remove-source-branch",
@@ -149,12 +152,19 @@ def create_release_merge_request(
     is_flag=True,
     default=False,
 )
+@click.option(
+    "--description",
+    help="merge request description",
+    type=str,
+    default="",
+)
 def create_merge_request(
     url,
     token,
     source_branch,
     target_branch,
     title,
+    description,
     project,
     automerge,
     assignee_id=None,
@@ -172,7 +182,7 @@ def create_merge_request(
         url=url,
         token=token,
         title=title,
-        description="",
+        description=description,
         source_branch=source_branch,
         target_branch=target_branch,
         project=project,
