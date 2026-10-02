@@ -292,8 +292,8 @@ The `create-release` and `create-release-branch` commands accept `--release-pref
 Helpers for GitLab management.
 
 #### Commands
-* `pydev gitlab create-release-merge-request` - create a new merge request from the current branch in a GitLab project. It is often used after the project release
-* `pydev gitlab create-merge-request` - create a new merge request with the given title, optionally with automerge and removal of the source branch
+* `pydev gitlab create-release-merge-request` - create a new merge request from the current branch in a GitLab project. It is often used after the project release (optionally with `--description`)
+* `pydev gitlab create-merge-request` - create a new merge request with the given title and `--description`, optionally with automerge and removal of the source branch
 * `pydev gitlab activate-merge-request-automerge` - merge an existing merge request as soon as its pipeline succeeds
 * `pydev gitlab run-job` - run a pipeline of the selected branch, optionally with variables (`--variables "A=1,B=2"`)
 * `pydev gitlab get-project-id` - print the numeric ID of the GitLab project
