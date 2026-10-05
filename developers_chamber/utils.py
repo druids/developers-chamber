@@ -10,6 +10,14 @@ LOGGER = logging.getLogger()
 MIGRATIONS_PATTERN = r"migrations\/([^\/]+)\.py$"
 
 
+class CommandError(ClickException):
+    """Failed command; pydev exits with the return code of the command."""
+
+    def __init__(self, returncode):
+        super().__init__("Command returned error")
+        self.exit_code = returncode
+
+
 def call_command(command, quiet=False, env=None):
     env = {} if env is None else env
     try:
@@ -26,6 +34,7 @@ def call_command(command, quiet=False, env=None):
 
 
 def call_compose_command(command, quiet=False, env=None):
+    """Run a compose command and return whether it finished without Ctrl+C."""
     env = {} if env is None else env
     if not quiet:
         LOGGER.info(command if isinstance(command, str) else " ".join(command))
@@ -37,12 +46,14 @@ def call_compose_command(command, quiet=False, env=None):
     )
     try:
         if compose_process.wait() != 0:
-            raise ClickException("Command returned error")
+            raise CommandError(compose_process.returncode)
     except KeyboardInterrupt:
         try:
             compose_process.wait()
         except KeyboardInterrupt:
             compose_process.wait()
+        return False
+    return True
 
 
 def pretty_time_delta(seconds):

@@ -13,6 +13,7 @@ from developers_chamber.click.options import (
 from developers_chamber.project_utils import bind_library as bind_library_func
 from developers_chamber.project_utils import (
     compose_build,
+    compose_down,
     compose_exec,
     compose_install,
     compose_kill_all,
@@ -140,13 +141,26 @@ def build(project_name, compose_file, container, container_dir_to_copy, env):
     type=ContainerEnvironment(),
     envvar="PROJECT_DOCKER_COMPOSE_CONTAINERS_ENV",
 )
+@click.option(
+    "--down/--no-down",
+    help="Remove the containers and networks of the project before start and "
+    "after end, unless another up or run of the project is running "
+    "(see Cleanup in README)",
+    default=True,
+    envvar="PROJECT_DOCKER_COMPOSE_DOWN",
+)
 @click.pass_context
-def run(ctx, project_name, compose_file, container, command, env):
+def run(ctx, project_name, compose_file, container, command, env, down):
     """
     Run one time command on docker container defined in compose file. You can specify image environment variables.
     """
     compose_run(
-        project_name, compose_file, container, " ".join([command] + ctx.args), env=env
+        project_name,
+        compose_file,
+        container,
+        " ".join([command] + ctx.args),
+        env=env,
+        down=down,
     )
 
 
@@ -241,12 +255,24 @@ def exec_command(ctx, project_name, compose_file, container, command, env):
     type=ContainerEnvironment(),
     envvar="PROJECT_DOCKER_COMPOSE_CONTAINERS_ENV",
 )
-def up(project_name, compose_file, container, all_containers, env):
+@click.option(
+    "--down/--no-down",
+    help="Remove the containers and networks of the project before start and "
+    "after end, unless another up or run of the project is running "
+    "(see Cleanup in README)",
+    default=True,
+    envvar="PROJECT_DOCKER_COMPOSE_DOWN",
+)
+def up(project_name, compose_file, container, all_containers, env, down):
     """
-    Builds, (re)creates, starts, and attaches to containers for a service defined in compose file.
+    Builds, (re)creates and starts containers for a service defined in compose file and follows their logs.
     """
     compose_up(
-        project_name, compose_file, None if all_containers else container, env=env
+        project_name,
+        compose_file,
+        None if all_containers else container,
+        env=env,
+        down=down,
     )
 
 
@@ -276,6 +302,37 @@ def stop(project_name, compose_file, container):
     Stop all the docker containers from the compose file.
     """
     compose_stop(project_name, compose_file, container)
+
+
+@project.command()
+@click.option(
+    "--project-name",
+    "-p",
+    help="Name of the project",
+    type=str,
+    required=True,
+    envvar="PROJECT_DOCKER_COMPOSE_PROJECT_NAME",
+)
+@click.option(
+    "--compose-file",
+    "-f",
+    help="Compose file",
+    required=True,
+    multiple=True,
+    envvar="PROJECT_DOCKER_COMPOSE_FILES",
+    type=CommaSeparatedPathType(exists=True),
+)
+@click.option(
+    "--volumes",
+    help="Remove also the named volumes declared in the compose file",
+    default=False,
+    is_flag=True,
+)
+def down(project_name, compose_file, volumes):
+    """
+    Stop and remove the docker containers and networks from the compose file.
+    """
+    compose_down(project_name, compose_file, volumes)
 
 
 @project.command()
@@ -570,7 +627,8 @@ if (
         "-s",
         help="source branch name",
         type=str,
-        envvar="PROJECT_SOURCE_BRANCH_NAME", default="next",
+        envvar="PROJECT_SOURCE_BRANCH_NAME",
+        default="next",
     )
     @click.option("--issue-key", "-i", help="key of the task", type=str, required=True)
     def create_branch_from_issue(
@@ -634,7 +692,8 @@ if (
         help="destination bitbucket branch name",
         type=str,
         required=True,
-        envvar="BITBUCKET_BRANCH_NAME", default="next",
+        envvar="BITBUCKET_BRANCH_NAME",
+        default="next",
     )
     @click.option(
         "--bitbucket-repository-name",
