@@ -278,9 +278,15 @@ def bump_version_from_release_tag(file):
     type=str,
     envvar="RELEASE_PREFIX",
 )
-def commit_version(file, remote_name, file_type, release_prefix):
+@click.option(
+    "--no-tag",
+    help="only commit and push the version files, do not create the release tag",
+    is_flag=True,
+    default=False,
+)
+def commit_version(file, remote_name, file_type, release_prefix, no_tag):
     """
-    Commit version files and add git tag to the commit.
+    Commit version files and, unless --no-tag is used, add git tag to the commit.
     """
     commit_version_func(
         get_version(file[0], file_type),
@@ -291,6 +297,7 @@ def commit_version(file, remote_name, file_type, release_prefix):
         ],
         remote_name,
         release_prefix,
+        tag=not no_tag,
     )
     click.echo("Version commit change was successfully created")
 

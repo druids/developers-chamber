@@ -219,13 +219,14 @@ def bump_version_from_release_tag(files=["version.json"]):
 
 
 def commit_version(
-    version, files=["version.json"], remote_name=None, release_prefix=None
+    version, files=["version.json"], remote_name=None, release_prefix=None, tag=True
 ):
     repo = _repo()
     g = repo.git
 
     # In a monorepo the tag must carry the release prefix (e.g. "habarico@1.3.0"),
-    # otherwise packages collide on the same bare "1.3.0" tag.
+    # otherwise packages collide on the same bare "1.3.0" tag. Built even when the tag is
+    # skipped: the commit message is derived from it.
     tag_name = _release_tag_name(version, release_prefix)
 
     try:
@@ -242,18 +243,20 @@ def commit_version(
             )
         )
 
-    try:
-        g.tag(tag_name)
-    except GitCommandError as ex:
-        raise UsageError(
-            "Tag {} already exists or another git error was raised: {}".format(
-                tag_name, ex
+    if tag:
+        try:
+            g.tag(tag_name)
+        except GitCommandError as ex:
+            raise UsageError(
+                "Tag {} already exists or another git error was raised: {}".format(
+                    tag_name, ex
+                )
             )
-        )
 
     if remote_name:
         g.push(remote_name, str(repo.head.reference))
-        g.push(remote_name, tag_name)
+        if tag:
+            g.push(remote_name, tag_name)
 
 
 def merge_release_branch(to_branch_name=None, remote_name=None):

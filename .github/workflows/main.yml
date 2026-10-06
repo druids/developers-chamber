@@ -44,6 +44,16 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Compute image tags
+      id: meta
+      uses: docker/metadata-action@v6
+      with:
+        images: ghcr.io/druids/developers-chamber
+        flavor: latest=auto
+        tags: |
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=semver,pattern={{major}}
     - name: Build and push Docker image
       uses: docker/build-push-action@v7
       with:
@@ -52,6 +62,4 @@ jobs:
         platforms: linux/amd64,linux/arm64
         build-args: VERSION=${{ github.ref_name }}
         push: true
-        tags: |
-          ghcr.io/druids/developers-chamber:${{ github.ref_name }}
-          ghcr.io/druids/developers-chamber:latest
+        tags: ${{ steps.meta.outputs.tags }}

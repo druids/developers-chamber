@@ -12,6 +12,7 @@ AMBIENT_ENVVARS = (
     "GITLAB_PROJECT",
     "CI_JOB_TOKEN",
     "CI_COMMIT_TAG",
+    "GITLAB_TARGET_BRANCH",
 )
 
 
@@ -207,3 +208,88 @@ class TestCreateReleaseRecordCommand:
             "Release record was successfully created: "
             "https://gitlab.example.com/g/p/-/releases/1.3.0" in result.output
         )
+
+
+@pytest.fixture
+def create_merge_request(monkeypatch):
+    """Catch what the merge request commands hand over to the API call."""
+
+    calls = []
+
+    def fake_create_merge_request(**kwargs):
+        calls.append(kwargs)
+        return "https://gitlab.example.com/g/p/-/merge_requests/1"
+
+    fake_create_merge_request.calls = calls
+    monkeypatch.setattr(
+        gitlab_script, "create_merge_request_func", fake_create_merge_request
+    )
+    return fake_create_merge_request
+
+
+MERGE_REQUEST_ARGS = [
+    "--url",
+    "https://gitlab.example.com",
+    "--token",
+    "secret",
+    "--project",
+    "group/project",
+    "--source-branch",
+    "feature",
+]
+
+
+@pytest.mark.parametrize(
+    "command, required_args",
+    [
+        (gitlab_script.create_merge_request, ["--title", "T"]),
+        (gitlab_script.create_release_merge_request, []),
+    ],
+)
+class TestMergeRequestDescription:
+    def invoke(self, command, args):
+        return CliRunner().invoke(
+            command,
+            MERGE_REQUEST_ARGS + args,
+            env={name: None for name in AMBIENT_ENVVARS},
+        )
+
+    def test_description_is_sent(self, command, required_args, create_merge_request):
+        result = self.invoke(
+            command, required_args + ["--description", "## Summary\n- a thing"]
+        )
+
+        assert result.exit_code == 0, result.output
+        assert create_merge_request.calls[0]["description"] == "## Summary\n- a thing"
+
+    def test_description_defaults_to_empty(
+        self, command, required_args, create_merge_request
+    ):
+        result = self.invoke(command, required_args)
+
+        assert result.exit_code == 0, result.output
+        assert create_merge_request.calls[0]["description"] == ""
+
+
+class TestCreateMergeRequestOptions:
+    def invoke(self, args, env=None):
+        return CliRunner().invoke(
+            gitlab_script.create_merge_request,
+            MERGE_REQUEST_ARGS + args,
+            env={**{name: None for name in AMBIENT_ENVVARS}, **(env or {})},
+        )
+
+    def test_title_is_required(self, create_merge_request):
+        result = self.invoke([], env={"GITLAB_TARGET_BRANCH": "master"})
+
+        assert result.exit_code != 0
+        assert "--title" in result.output
+        assert create_merge_request.calls == []
+
+    def test_assignee_is_not_taken_from_the_project_envvar(
+        self, create_merge_request
+    ):
+        result = self.invoke(["--title", "T"], env={"GITLAB_PROJECT": "group/project"})
+
+        assert result.exit_code == 0, result.output
+        assert create_merge_request.calls[0]["assignee_id"] is None

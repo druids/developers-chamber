@@ -1,7 +1,12 @@
 import pytest
 from click import ClickException
 
-from developers_chamber.utils import call_command, pretty_time_delta, remove_ansi
+from developers_chamber.utils import (
+    call_command,
+    call_compose_command,
+    pretty_time_delta,
+    remove_ansi,
+)
 
 
 @pytest.mark.parametrize(
@@ -56,3 +61,10 @@ def test_environment_is_passed_to_the_command():
 def test_command_without_the_environment_does_not_see_it():
     with pytest.raises(ClickException):
         call_command('[ "$PYDEV_TEST" = "1" ]', quiet=True)
+
+
+def test_failed_compose_command_keeps_its_return_code():
+    with pytest.raises(ClickException, match="Command returned error") as error:
+        call_compose_command("exit 3", quiet=True)
+
+    assert error.value.exit_code == 3

@@ -7,7 +7,7 @@ with open(os.path.join(os.path.dirname(__file__), "README.md"), encoding="utf-8"
 
 setup(
     name="developers-chamber",
-    version="1.0.3",
+    version="1.0.9",
     description="A small plugin which help with development, deployment, git",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -23,7 +23,7 @@ setup(
         "click>=8.1",
         "requests>=2.23.0",
         "python-dotenv==1.2.3",
-        "python-hosts==0.4.6",
+        "python-hosts==1.1.2",
         "coloredlogs==15.0.1",
         "click-completion==0.5.2",
         "toml>=0.10.2",
@@ -34,32 +34,37 @@ setup(
             "pytest>=8.0",
         ],
         "slack": [
-            "slack-sdk==3.43.0",
+            "slack-sdk==3.44.0",
         ],
         "aws": [
             "boto3<2",
         ],
         "qa": [
-            "gitpython==3.1.37",
+            "gitpython==3.1.62",
             "isort==5.12.0",
             "flake8>=7.0.0",
         ],
         "bitbucket": [
-            "gitpython==3.1.37",
+            "gitpython==3.1.62",
         ],
         "gitlab": [
-            "gitpython==3.1.37",
+            "gitpython==3.1.62",
         ],
         "jira": [
+<<<<<<< HEAD
             "gitpython==3.1.37",
             "jira==3.10.5",
+=======
+            "gitpython==3.1.62",
+            "jira==2.0.0",
+>>>>>>> origin/master
             "unidecode==1.4.0",
         ],
         "toggle": [
             "TogglPy==0.1.2",
         ],
         "git": [
-            "gitpython==3.1.37",
+            "gitpython==3.1.62",
         ],
     },
     entry_points={
