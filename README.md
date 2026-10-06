@@ -432,10 +432,11 @@ Group of commands which joins previous commands for simplifier development.
 #### Commands
 * `pydev project set-domain` - set local hostname translation to localhost. It updates `/etc/hosts` headers according to input domain
 * `pydev project build` - build docker container via compose file and name it with the project name
-* `pydev project run` - run one time command on docker container defined in compose file. You can specify image environment variables
+* `pydev project run` - run one time command on docker container defined in compose file and exit with its return code. You can specify image environment variables
 * `pydev project exec-command` - run command on already executed docker container defined in compose file
-* `pydev project up` - builds, (re)creates, starts, and attaches to containers for a service defined in compose file
+* `pydev project up` - builds, (re)creates and starts containers for a service defined in compose file and follows their logs
 * `pydev project stop` - stop all the docker containers from the compose file
+* `pydev project down` - stop and remove the docker containers and networks from the compose file. Use `--volumes` to remove also the named volumes
 * `pydev project install` - builds, (re)creates, starts, and attaches to containers for a service defined in compose file
 * `pydev project copy-container-dirs` - copy directories from a docker image to the host
 * `pydev project bind-library` - mount a directory to an another location on docker host with bindfs
@@ -448,12 +449,20 @@ Group of commands which joins previous commands for simplifier development.
 * `pydev project task sync-timer-log-to-issues` - synchronize logged time in Toggle timer with issues worklog in Jira
 * `pydev project task print-last-commit-build` - print the last commit test results in Bitbucket of the selected branch
 
+#### Cleanup
+`pydev project up` and `pydev project run` register as users of the project, together with the services they need, in `$XDG_RUNTIME_DIR/pydev-<uid>/compose/<project>/` (the temp directory without `XDG_RUNTIME_DIR`):
+* The first one to start removes leftovers of the project with `docker compose down`, e.g. after `kill -9` or a reboot.
+* One that ends while others run stops only the services none of them needs, so Ctrl+C in `up` keeps the database of a running shell.
+* The last one to end removes the containers and networks of the project, also after a closed terminal or `kill`.
+* `--no-down` or `PROJECT_DOCKER_COMPOSE_DOWN=false` skips the removal: `up` only stops its services and `run` leaves its dependencies running.
+
 #### Configuration
 * `PROJECT_DOCKER_COMPOSE_PROJECT_NAME` - project name which be used as a prefix aff all builded docker images with compose
 * `PROJECT_DOCKER_COMPOSE_FILES` - list of the paths to the compose files separated by a character `,`
 * `PROJECT_DOMAINS` - list of the project domain names separated by a character `,`
 * `PROJECT_DOCKER_COMPOSE_CONTAINERS` - list of all your docker container names separated by a character `,`
 * `PROJECT_DOCKER_COMPOSE_DEFAULT_UP_CONTAINERS` - list of docker container names separated by a character `,` which will be by default started with command `pydev project up`
+* `PROJECT_DOCKER_COMPOSE_DOWN` - set to `false` to skip removing the containers and networks of the project, see [Cleanup](#cleanup). By default value is set to `true`
 * `PROJECT_DOCKER_COMPOSE_VAR_DIRS` - list of your variable directories which will be created before project build
 * `PROJECT_DOCKER_COMPOSE_CONTAINERS_DIR_TO_COPY` - container dir which will be copied after build in format `DOCKER_CONTAINER_NAME:CONTAINER_DIRECTORY:HOST_DIRECTORY`
 * `PROJECT_DOCKER_COMPOSE_CONTAINERS_INSTALL_COMMAND` - install that will be triggered after project build
