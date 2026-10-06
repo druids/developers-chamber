@@ -51,13 +51,8 @@ setup(
             "gitpython==3.1.62",
         ],
         "jira": [
-<<<<<<< HEAD
-            "gitpython==3.1.37",
-            "jira==3.10.5",
-=======
             "gitpython==3.1.62",
-            "jira==2.0.0",
->>>>>>> origin/master
+            "jira==3.10.5",
             "unidecode==1.4.0",
         ],
         "toggle": [
