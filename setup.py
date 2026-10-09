@@ -22,7 +22,7 @@ setup(
     install_requires=[
         "click>=8.1",
         "requests>=2.23.0",
-        "python-dotenv==1.2.3",
+        "python-dotenv==1.2.4",
         "python-hosts==1.1.2",
         "coloredlogs==15.0.1",
         "click-completion==0.5.2",
